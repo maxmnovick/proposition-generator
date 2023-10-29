@@ -625,7 +625,7 @@ def read_player_season_logs(player_name, read_all_seasons=True, player_espn_ids=
 	if player_espn_id == '':
 		print('Warning: player_espn_id blank while trying to get player url! ')
 		
-	season_year = 2023
+	season_year = 2023 # here we decide default season year, so make input variable parameter
 	player_url = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_espn_id + '/type/nba/year/' + str(season_year) #.format(df_Players_Drafted_2000.loc[INDEX, 'ESPN_GAMELOG_ID'])
 	
 	#read_all_seasons = True

@@ -705,9 +705,10 @@ def list_dicts(dicts, desired_order=[]):
     headers = []#[list(dicts[0].keys())]
     for key in desired_order:
         headers.append(key)
-    for key in dicts[0].keys():
-        if key not in desired_order:
-            headers.append(key)
+    if len(dicts) > 0:
+        for key in dicts[0].keys():
+            if key not in desired_order:
+                headers.append(key)
 
 
     dict_list = [headers] + dict_list

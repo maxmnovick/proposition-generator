@@ -17,6 +17,8 @@ from tabulate import tabulate # display output
 
 import sorter 
 
+#import pandas as pd # read html results from webpage. need here to init empty df in case no df passed in list
+
 # sort alphabetical and lower for comparison to other games
 def generate_players_string(players_list):
 
@@ -1070,17 +1072,20 @@ def generate_player_records_dict(player_name, player_stat_dict, projected_lines_
         player_projected_lines = projected_lines_dict[player_name]
     else:
         print('Warning: Player ' + player_name + ' not in projected lines!')
-        projected_lines_dict[player_name] = player_medians_dicts['all'][current_year]
+        if len(player_medians_dicts.keys()) > 0:
+            projected_lines_dict[player_name] = player_medians_dicts['all'][current_year]
 
-        player_avg_lines = player_medians_dicts['all'][current_year]
-        print('player_avg_lines: ' + str(player_avg_lines))
+            player_avg_lines = player_medians_dicts['all'][current_year]
+            print('player_avg_lines: ' + str(player_avg_lines))
 
-        stats_of_interest = ['pts','reb','ast','3pm','blk','stl','to'] # we decided to focus on these stats to begin
-        season_part_of_interest = 'regular' # reg or post season
-        for stat in stats_of_interest:
-            player_projected_lines[stat] = player_avg_lines[season_part_of_interest][stat]
-        
-        print('player_projected_lines: ' + str(player_projected_lines))
+            stats_of_interest = ['pts','reb','ast','3pm','blk','stl','to'] # we decided to focus on these stats to begin
+            season_part_of_interest = 'regular' # reg or post season
+            for stat in stats_of_interest:
+                player_projected_lines[stat] = player_avg_lines[season_part_of_interest][stat]
+            
+            print('player_projected_lines: ' + str(player_projected_lines))
+        else: # player has not played before
+            print('Warning: Player ' + player_name + ' has no stats to average!')
 
     #season_year = 2023
 
@@ -1678,6 +1683,8 @@ def generate_player_outcome_data(condition, year, stat_name, player_outcome_dict
 
 # prediction is really a list of features that we must assess to determine the probability of both/all outcomes
 #def generate_player_prediction(player_name, player_season_logs):
+# all_player_season_logs_dict = {player name:{year:{condition:{stat:[]}}}}
+# player_season_logs = {}
 def generate_player_all_outcomes_dict(player_name, player_season_logs, projected_lines_dict, todays_games_date_obj, player_position='', all_matchup_data=[], all_players_in_games_dict={}, player_team='', player_stat_dict={}):
 
     print('\n===Generate Player Outcome===\n')
@@ -1716,14 +1723,23 @@ def generate_player_all_outcomes_dict(player_name, player_season_logs, projected
     #player_stat_records = generate_player_stat_records(player_name, player_stat_dict)
     #writer.display_consistent_stats(all_player_consistent_stats)
 
+    time_after = '0 after' # could be '0' or '' bc init for case of new player with no log
+    #current_season_log = pd.DataFrame() # init current season log as df
+    if len(player_season_logs) > 0:
+        current_season_log = player_season_logs[0] 
+    
+        # if we have a game log for this player, 
+        # get prev game to compute time_after condition
+        season_year = 2023
+        prev_game_date_obj = determiner.determine_prev_game_date(current_season_log, season_year) # exclude all star and other special games
+        # prev_game_date_string = player_game_log.loc[prev_game_idx, 'Date'].split()[1] + "/" + season_year # eg 'wed 2/15' to '2/15/23'
+        # prev_game_date_obj = datetime.strptime(prev_game_date_string, '%m/%d/%y')
+        days_after_prev_game = (todays_games_date_obj - prev_game_date_obj).days
 
+        time_after = str(days_after_prev_game) + ' after'
+    else:
+        print('Warning: player ' + player_name.title() + ' has not played before!')
 
-    current_season_log = player_season_logs[0]
-    season_year = 2023
-    prev_game_date_obj = determiner.determine_prev_game_date(current_season_log, season_year) # exclude all star and other special games
-    # prev_game_date_string = player_game_log.loc[prev_game_idx, 'Date'].split()[1] + "/" + season_year # eg 'wed 2/15' to '2/15/23'
-    # prev_game_date_obj = datetime.strptime(prev_game_date_string, '%m/%d/%y')
-    days_after_prev_game = (todays_games_date_obj - prev_game_date_obj).days
 
     player_lines = {}
     loc_of_interest = '' # if we want to see both locations we know only home/away
@@ -1738,7 +1754,7 @@ def generate_player_all_outcomes_dict(player_name, player_season_logs, projected
             opponent = reg_player_lines['opp'].lower()
     print('player_lines: ' + str(player_lines))
 
-    time_after = str(days_after_prev_game) + ' after'
+    
     current_dow = todays_games_date_obj.strftime('%a').lower()
 
     current_teammates_str = '' # if we are given current teamates of interest then we can focus on these, else show all
@@ -2699,13 +2715,15 @@ def generate_players_outcomes(player_names=[], settings={}, todays_games_date_ob
         todays_games_date_obj = datetime.strptime(todays_games_date_str, '%m/%d/%y')
     
     # read projected lines or if unavailable get player averages
+    # but if no lines given then we generate most likely lines
     input_type = str(todays_games_date_obj.month) + '/' + str(todays_games_date_obj.day)
 
     # raw projected lines in format: [['Player Name', 'O 10 +100', 'U 10 +100', 'Player Name', 'O 10 +100', 'U 10 +100', Name', 'O 10 +100', 'U 10 +100']]
     raw_projected_lines = reader.extract_data(data_type, input_type, extension='tsv', header=True) # tsv no header
     print("raw_projected_lines: " + str(raw_projected_lines))
 
-    if len(player_names) == 0:
+    # if we gave no names, then get names from input lines, if given
+    if len(player_names) == 0: 
         player_names = determiner.determine_all_player_names(raw_projected_lines)
 
     player_espn_ids_dict = reader.read_all_player_espn_ids(player_names)
@@ -2713,6 +2731,7 @@ def generate_players_outcomes(player_names=[], settings={}, todays_games_date_ob
 
     player_teams = reader.read_all_players_teams(player_espn_ids_dict, read_new_teams=False) # only read team from internet if not saved
 
+    # if we gave player lines, then format them in dict
     projected_lines_dict = {}
     if len(raw_projected_lines) > 0:
         projected_lines_dict = generate_projected_lines_dict(raw_projected_lines, player_espn_ids_dict, player_teams, player_names)
@@ -2720,6 +2739,7 @@ def generate_players_outcomes(player_names=[], settings={}, todays_games_date_ob
 
     # read game logs
     read_all_seasons = False # saves time during testing other parts if we only read 1 season
+    # what if we want to read previous season?
     if 'read all seasons' in settings.keys():
         read_all_seasons = settings['read all seasons']
     all_player_season_logs_dict = reader.read_all_players_season_logs(player_names, read_all_seasons, player_espn_ids_dict)

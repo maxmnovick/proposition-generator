@@ -344,6 +344,8 @@ def determine_matchup_rating(opponent, stat, all_matchup_data):
 
 # exclude all star and other special games
 def determine_prev_game_date(player_game_log, season_year):
+    print('\n===Determine Prev Game Date from Game Log===\n')
+    print('player_game_log:\n' + str(player_game_log))
     # if not all star
     prev_game_idx = 0
     while re.search('\\*', player_game_log.loc[prev_game_idx, 'OPP']):
