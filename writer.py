@@ -12,6 +12,8 @@ import converter # convert dicts to lists
 
 import determiner # determine matching key
 
+import json # for team players
+
 def display_game_data(all_valid_streaks_list):
     print("\n===Game Data===\n")
     # all_player_pre_dicts = [{'prediction':val,'overall record':[],..},{},..]
@@ -497,10 +499,18 @@ def write_data_to_file(data, filepath, write_param, extension='csv'):
             csvwriter = csv.writer(csvfile)
             csvwriter.writerows(data)
 
+    elif extension == 'json':
+        with open(filepath, write_param) as outfile:
+            json.dump(dict, outfile)
+
     else:
         print('Warning: Unknown file extension! ')
     
+def write_json_to_file(dict, filepath, write_param):
+    print('\n===Write JSON to File===\n')
 
+    with open(filepath, write_param) as outfile:
+        json.dump(dict, outfile)
 
 # data = [[name,id],..]
 # for espn id we only want to append new ids bc they do not change
@@ -725,3 +735,6 @@ def list_dicts(dicts, desired_order=[]):
             export_row += str(cell) + ';'
 
         print(export_row)
+
+
+

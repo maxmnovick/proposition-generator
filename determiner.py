@@ -152,6 +152,52 @@ def determine_col_name(keyword,data):
     #print("final_col_name: " + final_col_name)
     return final_col_name
 
+def determine_team_name(team_abbrev, team_abbrevs_dict={}):
+    print("\n===Determine Team Name: " + team_abbrev + "===\n")
+    team_abbrevs_dict = {'atl':'atlanta hawks', 
+                    'bos':'boston celtics', 
+                    'bkn':'brooklyn nets', 
+                    'cha':'charlotte hornets', 
+                    'chi':'chicago bulls',
+                    'cle':'cleveland cavaliers',
+                    'dal':'dallas mavericks',
+                    'den':'denver nuggets',
+                    'det':'detroit pistons',
+                    'gsw':'golden state warriors',
+                    'hou':'houston rockets',
+                    'ind':'indiana pacers',
+                    'lac':'los angeles clippers',
+                    'lal':'los angeles lakers',
+                    'mem':'memphis grizzlies',
+                    'mia':'miami heat',
+                    'mil':'milwaukee bucks',
+                    'min':'minnesota timberwolves',
+                    'nop':'new orleans pelicans',
+                    'nyk':'new york knicks',
+                    'okc':'oklahoma city thunder',
+                    'orl':'orlando magic',
+                    'phi':'philadelphia 76ers',
+                    'phx':'phoenix suns',
+                    'por':'portland trail blazers',
+                    'sac':'sacramento kings',
+                    'sas':'san antonio spurs',
+                    'tor':'toronto raptors',
+                    'uta':'utah jazz',
+                    'wsh':'washington wizards'} # could get from fantasy pros table but simpler to make once bc only 30 immutable vals
+    
+    irregular_abbrevs = {'bro':'bkn', 'okl':'okc', 'nor':'nop', 'pho':'phx', 'was':'wsh', 'uth': 'uta', 'utah': 'uta' } # for these match the first 3 letters of team name instead
+
+    team_name = ''
+    for abbrev, name in team_abbrevs_dict.items():
+        #print('name: ' + str(name))
+        if re.search(team_abbrev.lower(),abbrev): # abbrev may be irregular
+            #print('found match')
+            team_name = name
+            break
+
+    print("team_name: " + str(team_name))
+    return team_name
+
 def determine_team_abbrev(team_name, team_abbrevs_dict={}):
     #print("\n===Determine Team Abbrev: " + team_name + "===\n")
     team_abbrevs_dict = {'atl':'atlanta hawks', 

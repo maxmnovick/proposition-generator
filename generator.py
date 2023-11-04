@@ -1723,13 +1723,13 @@ def generate_player_all_outcomes_dict(player_name, player_season_logs, projected
     #player_stat_records = generate_player_stat_records(player_name, player_stat_dict)
     #writer.display_consistent_stats(all_player_consistent_stats)
 
+    # if we have a game log for this player, 
+    # get prev game to compute time_after condition
     time_after = '0 after' # could be '0' or '' bc init for case of new player with no log
     #current_season_log = pd.DataFrame() # init current season log as df
     if len(player_season_logs) > 0:
         current_season_log = player_season_logs[0] 
     
-        # if we have a game log for this player, 
-        # get prev game to compute time_after condition
         season_year = 2023
         prev_game_date_obj = determiner.determine_prev_game_date(current_season_log, season_year) # exclude all star and other special games
         # prev_game_date_string = player_game_log.loc[prev_game_idx, 'Date'].split()[1] + "/" + season_year # eg 'wed 2/15' to '2/15/23'
@@ -2596,12 +2596,12 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
 
     # determine which keys in dict to sort dicts by
     # we duplicate the corresponding vals in known keys for ref called 'ok val'
-    sort_key1 = 'ok val post prob' # default
-    sort_key2 = 'ok val prob' # default
-    sort_key3 = 'ok val post min margin' # default
-    sort_key4 = 'ok val min margin' # default
-    sort_key5 = 'ok val post mean margin' # default
-    sort_key6 = 'ok val mean margin' # default
+    sort_key2 = 'ok val post prob' # default
+    sort_key1 = 'ok val prob' # default
+    sort_key4 = 'ok val post min margin' # default
+    sort_key3 = 'ok val min margin' # default
+    sort_key6 = 'ok val post mean margin' # default
+    sort_key5 = 'ok val mean margin' # default
 
     # check if regseason stat is available
     ok_stat_vals = [2,5,8,10,12,15,18,20] #standard for dk
@@ -2870,3 +2870,15 @@ def generate_players_props(players, settings={}):
         generate_player_props(player)
 
     return props
+
+
+# gen list of player names given teams so we dont have to type all names
+def generate_players_names(teams):
+    players_names = []
+
+    for team in teams:
+        # go to roster page espn
+        team_players = reader.read_team_roster(team)
+        players_names.extend(team_players)
+
+    return players_names

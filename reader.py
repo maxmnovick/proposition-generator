@@ -857,6 +857,7 @@ def read_all_players_positions(player_espn_ids_dict, season_year=2023):
 	return players_positions_dict
 
 
+
 # return team abbrev lowercase bc used as key
 def read_team_from_internet(player_name, player_id, read_new_teams=False):
 
@@ -910,7 +911,7 @@ def read_team_from_internet(player_name, player_id, read_new_teams=False):
 
 	return team
 
-# get player position from espn game log page bc we already have urls for each player
+# get player team from espn game log page bc we already have urls for each player
 # we are using it get the team the player currently plays on
 # but we can also use it to get the team a player previously played on but that uses a very different method from a different source so assume season year is current season
 def read_player_team(player_name, player_id, existing_player_teams_dict={}, read_new_teams=True):
@@ -920,7 +921,7 @@ def read_player_team(player_name, player_id, existing_player_teams_dict={}, read
 	# read_new_teams can be determined by date bc date of trade deadline, start of season and check if any other trade deadlines
 
 
-	# if not given exisiting positions see if local file saved
+	# if not given exisiting teams see if local file saved
 	if len(existing_player_teams_dict.keys()) == 0:
 		data_type = 'player teams'
 		player_teams = extract_data(data_type, header=True)
@@ -948,8 +949,9 @@ def read_player_team(player_name, player_id, existing_player_teams_dict={}, read
 	print("final team: " + team)
 	return team
 
+# for all given players, read their teams
 def read_all_players_teams(player_espn_ids_dict, read_new_teams=True):
-	#print("\n===Read All Players Positions===\n")
+	#print("\n===Read All Players Teams===\n")
 	players_teams_dict = {}
 
 	
@@ -994,6 +996,191 @@ def read_all_players_teams(player_espn_ids_dict, read_new_teams=True):
 
 	#print("players_teams_dict: " + str(players_teams_dict))
 	return players_teams_dict
+
+# read team players from internet
+# read team roster from internet
+def read_roster_from_internet(team_abbrev, read_new_teams=False):
+	raw_roster = []
+	roster = []
+
+	
+
+	# display player game box scores in readable format
+	pd.set_option('display.max_columns', None)
+
+	# get team name from abbrev
+	team_name = determiner.determine_team_name(team_abbrev)
+	team_name = re.sub(r'\s+','-',team_name)
+
+	irregular_abbrevs = {'bro':'bkn', 'okl':'okc', 'nop':'no', 'nor':'no', 'pho':'phx', 'was':'wsh', 'uth': 'utah', 'uta': 'utah' }
+	if team_abbrev in irregular_abbrevs.keys():
+		team_abbrev = irregular_abbrevs[team_abbrev]
+
+	#try:
+
+	roster_url = 'https://www.espn.com/nba/team/roster/_/name/' + team_abbrev + '/' + team_name #den/denver-nuggets
+
+	html_results = pd.read_html(roster_url)
+	print("html_results: " + str(html_results))
+
+	len_html_results = len(html_results) # each element is a dataframe/table so we loop thru each table
+	print("len_html_results: " + str(len_html_results))
+
+	for order in range(len_html_results):
+		print("order: " + str(order))
+
+		html_result_df = html_results[order]
+		print('html_result: ' + str(html_result_df))
+		print("no. columns: " + str(len(html_result_df.columns.tolist())))
+
+		# very first html result is the game summary quarter by quarter score and total score
+
+
+		# first get players, which is html result with row 0 = 'starters'
+		# for idx, row in html_result.rows:
+		# 	print('row: ' + str(row))
+		print('row 0 loc: ' + str(html_result_df.loc[[0]]))
+
+		if order == 0:
+			raw_roster = html_result_df.loc[:,'Name'].tolist()
+
+	# req = Request(team_roster_url, headers={
+	# 	'User-Agent': 'Mozilla/5.0',
+	# })
+
+	# page = urlopen(req)
+
+	# soup = BeautifulSoup(page, features='lxml')
+
+	# roster_table = str(list(soup.find('table',{'class': 'Table'}))).strip()
+
+	# player_names = roster_table
+
+	# roster = re.split('', player_names)
+
+	# print('Success', str(roster), team_abbrev.upper())
+
+	# remove non word characters
+	
+	for player in raw_roster:
+		player_name = re.sub(r'\.|\d','',player)
+		player_name = re.sub(r'-',' ',player_name)
+		roster.append(player_name)
+
+	# we are reading from the internet so we are definitely going to write the data to a file no matter what so we can access it later
+	# the question is if we are going to append or overwrite
+	# if we are going to overwrite then we must wait till we have all teams so we only overwrite first entry and append all after
+	# if not all new teams then simply append this player's team to the file
+	if not read_new_teams:
+		data = {}
+		data[team_abbrev] = roster
+		write_param = 'a'
+		filepath = 'data/Teams Players.json'
+		writer.write_json_to_file(data, filepath, write_param)
+
+	#except Exception as e:
+		#print('Error', str(roster), team_abbrev.upper(), e)
+
+	#print('roster: ' + str(roster))
+	return roster
+
+# valid for json files
+def read_json(key_type):
+	print('\n===Read JSON: ' + key_type + '===\n')
+	keys_filename = "data/" + key_type.title() + ".json"
+	print("keys_filename: " + keys_filename)
+
+	lines = [] # capture each line in the document
+
+	try:
+		with open(keys_filename, encoding="UTF8") as keys_file:
+			line = ''
+			for key_info in keys_file:
+				line = key_info.strip()
+				lines.append(line)
+
+			keys_file.close()
+	except:
+		print("Warning: No keywords file!")
+
+	# combine into 1 line
+	condensed_json = ''
+	for line in lines:
+		condensed_json += line
+
+	#print("Condensed JSON: " + condensed_json)
+
+	# parse condensed_json
+	keys = json.loads(condensed_json)
+
+	return keys
+
+# read team roster to get team players
+def read_team_roster(team_abbrev, existing_teams_players_dict={}, read_new_teams=True):
+	print('\n===Read Team Roster: ' + team_abbrev)
+	roster = []
+
+	if read_new_teams:
+		roster = read_roster_from_internet(team_abbrev, read_new_teams)
+	else:
+		#if not given existing teams players, see if local file saved
+		if len(existing_teams_players_dict) == 0:
+			data_type = 'teams players'
+			existing_teams_players_dict = read_json(data_type)
+
+		if team_abbrev in existing_teams_players_dict.keys():
+			roster = existing_teams_players_dict[team_abbrev]
+		else:
+			roster = read_roster_from_internet(team_abbrev)
+
+	
+	print('roster: ' + str(roster))
+	return roster
+
+
+
+# read list of player names given teams so we dont have to type all names
+# save in same player teams file used when directly given player names and found team on player page
+# bc the data is the same from both sources, unless we set read new teams=true
+# problem is we need to see if team has been fully saved before
+# to see if we want to read from internet
+# to solve this make new json file for team rosters/players
+# where if roster added then we know fully saved unless we request new teams after trades
+# in theory we could keep 1 file and check that x no. players saved but number might be inconsistent (eg some teams have 18, others 17)
+# if we have the rosters file then it can replace the player teams file
+def read_teams_players(teams, read_new_teams=True):
+	print("\n===Read Teams Players===\n")
+	teams_players_dict = {}
+	players_names = [] # return single list of all players. later could separate by team but really we want to rank all players by prob
+
+	# if not read new teams,
+	# see if team saved in file
+	# bc if read new teams, then we will create new file with today's date in name
+	existing_teams_players_dict = {}
+	if not read_new_teams:
+		data_type = 'teams players'
+		existing_teams_players_dict = read_json(data_type) # returns data dict
+
+		# for team, players in all_teams_players.items():
+		# 	existing_teams_players_dict[team] = players
+
+	for team in teams:
+        # go to roster page espn
+		team_players = read_team_roster(team, existing_teams_players_dict, read_new_teams)
+		teams_players_dict[team] = team_players
+
+		players_names.extend(team_players)
+
+	# if read new teams for all players then we can overwrite the file completely removing all old teams bc we cannot assume any player is on the same team as they were before
+	if read_new_teams:
+		# overwrite bc new teams json single line
+		filepath = 'data/Teams Players.json'
+		write_param = 'w'
+		writer.write_json_to_file(teams_players_dict, filepath, write_param)
+		
+	print('players_names: ' + str(players_names))
+	return players_names
+        
 
 
 # show matchup data against each position so we can see which position has easiest matchup
