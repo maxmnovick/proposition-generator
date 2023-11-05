@@ -18,10 +18,11 @@ def convert_dict_to_list(dict, desired_order=[]):
 
 
 def convert_dicts_to_lists(all_consistent_stat_dicts, desired_order=[]):
-
+    print('\n===Convert Dicts to Lists===\n')
     dict_lists = []
 
     for dict in all_consistent_stat_dicts:
+        print('dict: ' + str(dict))
 
         dict_list = convert_dict_to_list(dict, desired_order)
 

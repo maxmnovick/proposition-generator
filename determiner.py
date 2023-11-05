@@ -1073,3 +1073,11 @@ def determine_ok_val_margin(dict, ok_val, player_stat_dict, stat_name, margin_ty
 
     print('ok_val_post_margin: ' + str(ok_val_post_margin))
     return ok_val_post_margin
+
+# stat available in odds at given value
+def determine_stat_available(stat_dict):
+    stat_available = True
+
+    # get webpage from player name to get team page
+
+    return stat_available

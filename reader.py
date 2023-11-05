@@ -1982,3 +1982,21 @@ def read_all_teammates(player_name, all_players_in_games_dict, player_team=''):
 
 	print('all_teammates: ' + str(all_teammates))
 	return all_teammates
+
+def read_stat_odds(stat_dict):
+	print('\n===Read Stat Odds===\n')
+	odds = '?' # if we dont see name then they might be added later so determine if it is worth waiting
+
+	# use pd df
+	# like for reading roster and box score and game log
+	# display player game box scores in readable format
+	pd.set_option('display.max_columns', None)
+
+	all_players_odds = [] # all players in game
+	player_stat_odds = [] # from +2 to +n depending on stat
+
+	game_odds_url = ''
+
+
+	print('odds: ' + odds)
+	return odds

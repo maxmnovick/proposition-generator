@@ -2456,7 +2456,7 @@ def generate_consistent_stat_vals(player_name, player_stat_dict, player_stat_rec
 # for display
 # simply flatten bottom level of dict
 # by adding its key to header of level above
-def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_stat_records, all_player_stat_dicts):
+def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_stat_records, all_player_stat_dicts, player_teams={}):
     print("\n===Generate All Consistent Stats Dicts===\n")
     #print('all_player_consistent_stats: ' + str(all_player_consistent_stats))
     #print('all_player_stat_records: ' + str(all_player_stat_records))
@@ -2470,7 +2470,10 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
 
     for player_name, player_consistent_stats in all_player_consistent_stats.items():
         print('\n===' + player_name.title() + '===\n')
-        
+
+        player_team = ''
+        if player_name in player_teams.keys():
+            player_team = player_teams[player_name]
 
         # for now, show only conditon=all
         # give option to set condition and sort by condition
@@ -2578,10 +2581,13 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
                                 consistent_stat_dict['post mean margin'] = post_mean_margin
                                 consistent_stat_dict['post second mean margin'] = post_second_mean_margin
 
+                            
+                            consistent_stat_dict['team'] = player_team
+
                             # add another column to classify if postseason stat < regseason stat so we can group those together
 
                             # player name, stat name, consistent stat, consistent stat prob
-                            player_consistent_stat_data = [player_name, stat_name, full_consistent_stat, full_consistent_stat_prob, full_second_consistent_stat, full_second_consistent_stat_prob, post_consistent_stat, post_consistent_stat_prob, post_second_consistent_stat, post_second_consistent_stat_prob]
+                            player_consistent_stat_data = [player_name, stat_name, full_consistent_stat, full_consistent_stat_prob, full_second_consistent_stat, full_second_consistent_stat_prob, post_consistent_stat, post_consistent_stat_prob, post_second_consistent_stat, post_second_consistent_stat_prob, player_team]
                             #consistent_stat_dict = {'player name':player_name, 'stat name':stat_name, 'prob val': full_consistent_stat, 'prob': full_consistent_stat_prob, 'second prob val':full_second_consistent_stat, 'second prob':full_second_consistent_stat_prob}
 
                             #player_season_consistent_stat_data = player_season_consistent_stat_data + player_consistent_stat_data
@@ -2694,6 +2700,43 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
     #     print(export_row)
 
     return sorted_consistent_stat_dicts
+
+def generate_available_stat_dicts(stat_dicts):
+    print('\n===Generate Available Stat Dicts===\n')
+    available_stat_dicts = []
+    maybe_available_stats = []
+
+    # for efficiency first get all diff teams
+    # and then read each team page once and save local
+
+    for stat_dict in stat_dicts:
+        print('stat_dict: ' + str(stat_dict))
+        # see if stat available
+        # could do same check for all and put 0 if na 
+        # and then sort by val/odds or elim 0s
+
+        # add val to dict
+        stat_dict['odds'] = reader.read_stat_odds(stat_dict)
+        print('stat_dict[odds]: ' + stat_dict['odds'])
+
+        #if determiner.determine_stat_available(stat_dict):
+        # if we do not see player in list of odds then they might be available later so put ?
+        # if we see odds for different higher val then NA
+        # if we see odds for lower value then put >P? bc their minutes are probably down but if not then good value
+        if str(stat_dict['odds']) == '?':
+            maybe_available_stats.append(stat_dict)
+
+        elif len(stat_dict['odds']) > 0:
+            if int(stat_dict['odds']) > 0:
+                available_stat_dicts.append(stat_dict)
+
+        else:
+            print('Warning: odds returned invalid value!')
+        
+    available_stat_dicts = available_stat_dicts + maybe_available_stats
+
+    print('available_stat_dicts: ' + str(available_stat_dicts))
+    return available_stat_dicts
 
 # one outcome per stat of interest so each player has multiple outcomes
 def generate_players_outcomes(player_names=[], settings={}, todays_games_date_obj=datetime.today()):
@@ -2833,10 +2876,17 @@ def generate_players_outcomes(player_names=[], settings={}, todays_games_date_ob
 
     
     
-    all_consistent_stat_dicts = generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_stat_records, all_player_stat_dicts)
+    all_consistent_stat_dicts = generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_stat_records, all_player_stat_dicts, player_teams)
     #writer.display_consistent_stats(all_player_consistent_stats, all_player_stat_records)
-    desired_order = ['player name','stat name','ok val','ok val prob','ok val post prob', 'ok val min margin', 'ok val post min margin', 'ok val mean margin', 'ok val post mean margin']
-    writer.list_dicts(all_consistent_stat_dicts, desired_order)
+    
+    # now that we have all consistent stats,
+    # see if each stat is available at a given value
+    # also include given value in stat dict
+    # so we can sort by value to get optimal return
+    available_stat_dicts = generate_available_stat_dicts(all_consistent_stat_dicts)
+    
+    desired_order = ['player name', 'team', 'stat name','ok val','ok val prob','ok val post prob', 'ok val min margin', 'ok val post min margin', 'ok val mean margin', 'ok val post mean margin']
+    writer.list_dicts(available_stat_dicts, desired_order)
 
 
     # todo: make fcn to classify recently broken streaks bc that recent game may be anomaly and they may revert back to streak
