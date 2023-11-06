@@ -4,6 +4,9 @@
 import re
 import pandas as pd # read html results from webpage
 from urllib.request import Request, urlopen # request website, open webpage given req
+from urllib.error import URLError
+import time # halt code to retry website request
+import requests # track timeout error
 from bs4 import BeautifulSoup # read html from webpage
 from tabulate import tabulate # display output, which for the reader is input files to confirm and review their contents
 
@@ -75,6 +78,48 @@ def extract_data(data_type, input_type='', extension='csv', header=False):
 	#print("all_data: " + str(all_data))
 	return all_data
 
+# read website given url, timeout in seconds, and max. no. retries before going to next step
+def read_website(url, timeout=10, max_retries=3):
+	#soup = BeautifulSoup() # return blank soup if request fails
+
+	retries = 0
+
+	while retries < max_retries:
+		try:
+			#make the request
+			req = Request(url, headers={
+				'User-Agent': 'Mozilla/5.0',
+			})
+			page = urlopen(req, timeout=timeout)
+
+			#data = page.read()
+
+			soup = BeautifulSoup(page, features='lxml')
+
+			print("Request successful.")
+
+			return soup
+
+		except URLError as e:
+			if isinstance(e.reason, TimeoutError):
+				# If a timeout occurs, wait for 10 seconds and then retry\
+				retries += 1
+				print(f"Timeout error occurred. Retrying {retries}/{max_retries}...")
+				time.sleep(10)
+				
+			else:
+                # If the error is different than a timeout, raise it
+				raise
+			
+		except Exception as e:
+            # If any other exception occurs, raise it
+			raise
+
+	print("Maximum retries reached.")
+	return None
+
+		
+
 # get game espn id from google
 def read_game_espn_id(game_key, existing_game_ids_dict={}):
 
@@ -92,22 +137,24 @@ def read_game_espn_id(game_key, existing_game_ids_dict={}):
 
 	else:
 
-		try:
+		#try:
 			
-			search_string = game_key.replace(' ', '+') + '+nba+espn+box+score'
-			print('search_string: ' + search_string)
-			
-			site = 'https://www.google.com/search?q=' + search_string
-			print('site: ' + site)
+		search_string = game_key.replace(' ', '+') + '+nba+espn+box+score'
+		print('search_string: ' + search_string)
+		
+		site = 'https://www.google.com/search?q=' + search_string
+		print('site: ' + site)
 
-			req = Request(site, headers={
-				'User-Agent': 'Mozilla/5.0',
-			})
+		soup = read_website(site, timeout=10, max_retries=3)
 
-			page = urlopen(req) # open webpage given request
+			# req = Request(site, headers={
+			# 	'User-Agent': 'Mozilla/5.0',
+			# })
 
-			soup = BeautifulSoup(page, features="lxml")
+			# page = urlopen(req) # open webpage given request
 
+			# soup = BeautifulSoup(page, features="lxml")
+		if soup is not None:
 			links_with_text = [] # id is in first link with text
 
 			for a in soup.find_all('a', href=True):
@@ -127,8 +174,8 @@ def read_game_espn_id(game_key, existing_game_ids_dict={}):
 			write_param = 'a' # append ids to file
 			writer.write_data_to_file(data, filepath, write_param) # write to file so we can check if data already exists to determine how we want to read the data and if we need to request from internet
 
-		except Exception as e:
-			print('Error', espn_id, game_key, e)
+		#except Exception as e:
+			#print('Error', espn_id, game_key, e)
 
 	print("game_espn_id: " + espn_id)
 	return espn_id
@@ -139,7 +186,7 @@ def read_game_espn_id(game_key, existing_game_ids_dict={}):
 # player_id_dict = {player:id,..}
 def read_player_espn_id(player_name, existing_espn_ids_dict={}):
 
-	print('\n===Read Player ESPN ID: ' + player_name.title() + '======\n')
+	print('\n===Read Player ESPN ID: ' + player_name.title() + '===\n')
 
 	espn_id = ''
 
@@ -148,21 +195,26 @@ def read_player_espn_id(player_name, existing_espn_ids_dict={}):
 
 	else:
 
-		try:
+		#try:
 
-			site = 'https://www.google.com/search?q=' + player_name.replace(' ', '+') + '+nba+espn+gamelog'
-			# https://www.google.com/search?q=john+collins+game+log
-			#site = 'https://www.google.com/search?q=help'
-			#print('site: ' + site)
+		site = 'https://www.google.com/search?q=' + player_name.replace(' ', '+') + '+nba+espn+gamelog'
+		# https://www.google.com/search?q=john+collins+game+log
+		#site = 'https://www.google.com/search?q=help'
+		#print('site: ' + site)
 
-			req = Request(site, headers={
-				'User-Agent': 'Mozilla/5.0',
-			})
+		soup = read_website(site, timeout=10, max_retries=3)
+		#print('soup: ' + str(soup))
 
-			page = urlopen(req) # open webpage given request
+		# req = Request(site, headers={
+		# 	'User-Agent': 'Mozilla/5.0',
+		# })
 
-			soup = BeautifulSoup(page, features="lxml")
-			#print('soup: ' + str(soup))
+		# page = urlopen(req) # open webpage given request
+
+		# soup = BeautifulSoup(page, features="lxml")
+		# print('soup: ' + str(soup))
+
+		if soup is not None:
 
 			links_with_text = [] # id is in first link with text
 
@@ -185,8 +237,8 @@ def read_player_espn_id(player_name, existing_espn_ids_dict={}):
 			write_param = 'a' # append ids to file
 			writer.write_data_to_file(data, filepath, write_param) # write to file so we can check if data already exists to determine how we want to read the data and if we need to request from internet
 
-		except Exception as e:
-			print('Error', espn_id, player_name.title(), e)
+		#except Exception as e:
+			#print('Error', espn_id, player_name.title(), e)
 
 		
 
@@ -273,7 +325,7 @@ def read_game_box_scores(game_key, game_id='', game_url='', season_year=2023):
 
 	#try:
 
-	html_results = pd.read_html(game_url)
+	html_results = read_web_data(game_url) #pd.read_html(game_url)
 	print("html_results: " + str(html_results))
 
 
@@ -506,6 +558,43 @@ def read_game_box_scores(game_key, game_id='', game_url='', season_year=2023):
 	print("game_box_scores_dict: " + str(game_box_scores_dict))
 	return game_box_scores_dict # can return this df directly or first arrange into list but seems simpler and more intuitive to keep df so we can access elements by keyword
 
+# read tables in websites with pandas pd dataframes
+def read_web_data(url, timeout=10, max_retries=3):
+	print('\n===Read Web Data===\n')
+	retries = 0
+	while retries < max_retries:
+		try:
+			#response = requests.get(url, timeout=timeout)
+			#response.raise_for_status()  # Will raise an HTTPError if the HTTP request returned an unsuccessful status code
+
+			#list_of_dataframes = pd.read_html(url)
+			headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+			r = requests.get(url, headers=headers, timeout=timeout)
+			#r.raise_for_status(headers=headers)
+			#print('r: ' + str(r))
+			c = r.content
+			#print('c: ' + str(c))
+			list_of_dataframes = pd.read_html(c)
+
+			print("Request successful, data retrieved.\n")
+			#print('list_of_dataframes: ' + str(list_of_dataframes))
+
+			return list_of_dataframes
+
+		except requests.exceptions.Timeout:
+			print(f"Timeout error occurred. Retrying {retries + 1}/{max_retries}...")
+			retries += 1
+			time.sleep(10)
+		except requests.exceptions.HTTPError as e:
+			print(f"HTTP error occurred: {e}")
+			raise
+		except requests.exceptions.RequestException as e:
+			print(f"Request failed: {e}")
+			raise
+
+	print("Maximum retries reached.")
+	return None
+
 
 # get game log from espn.com
 def read_player_season_log(player_name, season_year=2023, player_url='', player_id=''):
@@ -525,76 +614,78 @@ def read_player_season_log(player_name, season_year=2023, player_url='', player_
 
 	#try:
 
-	html_results = pd.read_html(player_url)
+	html_results = read_web_data(player_url) #pd.read_html(player_url)
 	#print("html_results: " + str(html_results))
 
-	parts_of_season = [] # pre season, regular season, post season
+	if html_results is not None:
 
-	len_html_results = len(html_results) # each element is a dataframe/table so we loop thru each table
-	print('len_html_results: ' + str(len_html_results))
-	for order in range(len_html_results):
-		print("order: " + str(order))
+		parts_of_season = [] # pre season, regular season, post season
 
-		if len(html_results[order].columns.tolist()) == 17:
+		len_html_results = len(html_results) # each element is a dataframe/table so we loop thru each table
+		#print('len_html_results: ' + str(len_html_results))
+		for order in range(len_html_results):
+			#print("order: " + str(order))
 
-			part_of_season = html_results[order]
-			print('part_of_season:\n' + str(part_of_season))
+			if len(html_results[order].columns.tolist()) == 17:
 
-			# look at the formatting to figure out how to separate table and elements in table
-			if len_html_results - 2 == order:
-				part_of_season['Type'] = 'Preseason'
+				part_of_season = html_results[order]
+				#print('part_of_season:\n' + str(part_of_season))
+
+				# look at the formatting to figure out how to separate table and elements in table
+				if len_html_results - 2 == order:
+					part_of_season['Type'] = 'Preseason'
+
+				else:
+					# last row of postseason section has 'finals' in it, eg quarter finals, semi finals, finals
+					last_cell = part_of_season.iloc[-1,0]
+					#print('last_cell: ' + str(last_cell))
+					if re.search('final',last_cell.lower()) or re.search('play-in',last_cell.lower()):
+						part_of_season['Type'] = 'Postseason'
+					# if len(part_of_season[(part_of_season['OPP'].str.contains('GAME'))]) > 0:
+					# 	part_of_season['Type'] = 'Postseason'
+					# elif re.search('play-in',last_cell.lower()):
+					# 	part_of_season['Type'] = 'Playin'
+					else:
+						part_of_season['Type'] = 'Regular'
+
+				parts_of_season.append(part_of_season)
 
 			else:
-				# last row of postseason section has 'finals' in it, eg quarter finals, semi finals, finals
-				last_cell = part_of_season.iloc[-1,0]
-				print('last_cell: ' + str(last_cell))
-				if re.search('final',last_cell.lower()) or re.search('play-in',last_cell.lower()):
-					part_of_season['Type'] = 'Postseason'
-				# if len(part_of_season[(part_of_season['OPP'].str.contains('GAME'))]) > 0:
-				# 	part_of_season['Type'] = 'Postseason'
-				# elif re.search('play-in',last_cell.lower()):
-				# 	part_of_season['Type'] = 'Playin'
-				else:
-					part_of_season['Type'] = 'Regular'
+				#print("Warning: table does not have 17 columns so it is not valid game log.")
+				pass
 
-			parts_of_season.append(part_of_season)
+		player_game_log_df = pd.DataFrame()
 
-		else:
-			print("Warning: table does not have 17 columns so it is not valid game log.")
-			pass
+		if len(parts_of_season) > 0:
 
-	player_game_log_df = pd.DataFrame()
+			player_game_log_df = pd.concat(parts_of_season, sort=False, ignore_index=True)
 
-	if len(parts_of_season) > 0:
+			player_game_log_df = player_game_log_df[(player_game_log_df['OPP'].str.startswith('@')) | (player_game_log_df['OPP'].str.startswith('vs'))].reset_index(drop=True)
 
-		player_game_log_df = pd.concat(parts_of_season, sort=False, ignore_index=True)
+			player_game_log_df['Season'] = str(season_year-1) + '-' + str(season_year-2000)
 
-		player_game_log_df = player_game_log_df[(player_game_log_df['OPP'].str.startswith('@')) | (player_game_log_df['OPP'].str.startswith('vs'))].reset_index(drop=True)
+			player_game_log_df['Player'] = player_name
 
-		player_game_log_df['Season'] = str(season_year-1) + '-' + str(season_year-2000)
+			player_game_log_df = player_game_log_df.set_index(['Player', 'Season', 'Type']).reset_index()
 
-		player_game_log_df['Player'] = player_name
+			# Successful 3P Attempts
+			player_game_log_df['3PT_SA'] = player_game_log_df['3PT'].str.split('-').str[0]
 
-		player_game_log_df = player_game_log_df.set_index(['Player', 'Season', 'Type']).reset_index()
-
-		# Successful 3P Attempts
-		player_game_log_df['3PT_SA'] = player_game_log_df['3PT'].str.split('-').str[0]
-
-		# All 3P Attempts
-		player_game_log_df['3PT_A'] = player_game_log_df['3PT'].str.split('-').str[1]
-		player_game_log_df[
-			['MIN', 'FG%', '3P%', 'FT%', 'REB', 'AST', 'BLK', 'STL', 'PF', 'TO', 'PTS', '3PT_SA', '3PT_A']
-
-			] = player_game_log_df[
-
+			# All 3P Attempts
+			player_game_log_df['3PT_A'] = player_game_log_df['3PT'].str.split('-').str[1]
+			player_game_log_df[
 				['MIN', 'FG%', '3P%', 'FT%', 'REB', 'AST', 'BLK', 'STL', 'PF', 'TO', 'PTS', '3PT_SA', '3PT_A']
 
-				].astype(float)
+				] = player_game_log_df[
 
-	# display player game log in readable format
-	#pd.set_option('display.max_columns', 100)
-	pd.set_option('display.max_columns', None)
-	print("player_game_log_df:\n" + str(player_game_log_df))
+					['MIN', 'FG%', '3P%', 'FT%', 'REB', 'AST', 'BLK', 'STL', 'PF', 'TO', 'PTS', '3PT_SA', '3PT_A']
+
+					].astype(float)
+
+		# display player game log in readable format
+		#pd.set_option('display.max_columns', 100)
+		pd.set_option('display.max_columns', None)
+		#print("player_game_log_df:\n" + str(player_game_log_df))
 
 	# except Exception as e:
 	# 	print("Error reading game log " + str(e))
@@ -609,7 +700,7 @@ def read_player_season_log(player_name, season_year=2023, player_url='', player_
 
 	# print("\n===" + player_name + "===\n")
 	# print(tabulate(table))
-	#print("player_game_log: " + str(player_game_log))
+	#print(player_name + " player_game_log returned")# + str(player_game_log_df))
 	return player_game_log_df # can return this df directly or first arrange into list but seems simpler and more intuitive to keep df so we can access elements by keyword
 
 def read_player_season_logs(player_name, read_all_seasons=True, player_espn_ids={}):
@@ -629,9 +720,9 @@ def read_player_season_logs(player_name, read_all_seasons=True, player_espn_ids=
 	player_url = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_espn_id + '/type/nba/year/' + str(season_year) #.format(df_Players_Drafted_2000.loc[INDEX, 'ESPN_GAMELOG_ID'])
 	
 	#read_all_seasons = True
-	while determiner.determine_played_season(player_url):
+	while determiner.determine_played_season(player_url, player_name, season_year):
 
-		print("player_url: " + player_url)
+		#print("player_url: " + player_url)
 		game_log_df = read_player_season_log(player_name, season_year, player_url)
 		if not game_log_df.empty:
 			player_game_logs.append(game_log_df)
@@ -675,7 +766,7 @@ def read_team_season_schedule(team_name, season_year=2023, team_url='', team_id=
 
 	#try:
 
-	html_results = pd.read_html(team_url)
+	html_results = read_web_data(team_url) #pd.read_html(team_url)
 	#print("html_results: " + str(html_results))
 
 	parts_of_season = [] # pre season, regular season, post season
@@ -779,18 +870,20 @@ def read_player_position(player_name, player_id, season_year=2023, existing_play
 
 	else:
 
-		try:
+		#try:
 			
-			site = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_id + '/type/nba/year/' + str(season_year)
+		site = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_id + '/type/nba/year/' + str(season_year)
 
-			req = Request(site, headers={
-				'User-Agent': 'Mozilla/5.0',
-			})
+		soup = read_website(site, timeout=10, max_retries=3)
 
-			page = urlopen(req) # open webpage given request
+		# req = Request(site, headers={
+		# 	'User-Agent': 'Mozilla/5.0',
+		# })
 
-			soup = BeautifulSoup(page, features="lxml")
+		# page = urlopen(req) # open webpage given request
 
+		# soup = BeautifulSoup(page, features="lxml")
+		if soup is not None:
 			# find last element of ul with class PlayerHeader__Team_Info
 			position = str(list(soup.find("ul", {"class": "PlayerHeader__Team_Info"}).descendants)[-1])
 			#print("position_elementn:\n" + str(position_element))
@@ -827,8 +920,8 @@ def read_player_position(player_name, player_id, season_year=2023, existing_play
 			write_param = 'a' # append ids to file
 			writer.write_data_to_file(data, filepath, write_param) # write to file so we can check if data already exists to determine how we want to read the data and if we need to request from internet
 
-		except Exception as e:
-			print('Error', position.upper(), player_name.title())
+		#except Exception as e:
+			#print('Error', position.upper(), player_name.title())
 
 	print("position: " + position)
 	return position
@@ -866,18 +959,20 @@ def read_team_from_internet(player_name, player_id, read_new_teams=False):
 	# get team from internet
 	season_year = datetime.today().year
 
-	try:
+	#try:
 		
-		site = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_id + '/type/nba/year/' + str(season_year)
+	site = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_id + '/type/nba/year/' + str(season_year)
 
-		req = Request(site, headers={
-			'User-Agent': 'Mozilla/5.0',
-		})
+	soup = read_website(site, timeout=10, max_retries=3)
 
-		page = urlopen(req) # open webpage given request
+		# req = Request(site, headers={
+		# 	'User-Agent': 'Mozilla/5.0',
+		# })
 
-		soup = BeautifulSoup(page, features="lxml")
+		# page = urlopen(req) # open webpage given request
 
+		# soup = BeautifulSoup(page, features="lxml")
+	if soup is not None:
 		# find last element of ul with class PlayerHeader__Team_Info
 		team = str(list(soup.find("ul", {"class": "PlayerHeader__Team_Info"}).descendants)[0]).strip()#.split('<')[0]#.split('>')[-1]
 		#print("team_element:\n" + str(team))
@@ -906,8 +1001,8 @@ def read_team_from_internet(player_name, player_id, read_new_teams=False):
 			filepath = 'data/Player Teams.csv'
 			writer.write_data_to_file(data, filepath, write_param) # write to file so we can check if data already exists to determine how we want to read the data and if we need to request from internet
 
-	except Exception as e:
-		print('Error', team.upper(), player_name.title(), e)
+	#except Exception as e:
+		#print('Error', team.upper(), player_name.title(), e)
 
 	return team
 
@@ -915,7 +1010,7 @@ def read_team_from_internet(player_name, player_id, read_new_teams=False):
 # we are using it get the team the player currently plays on
 # but we can also use it to get the team a player previously played on but that uses a very different method from a different source so assume season year is current season
 def read_player_team(player_name, player_id, existing_player_teams_dict={}, read_new_teams=True):
-	print("\n===Read Player Team: " + player_name.title() + "===\n")
+	#print("\n===Read Player Team: " + player_name.title() + "===\n")
 	team = '' # team abbrev lowercase bc used as key
 
 	# read_new_teams can be determined by date bc date of trade deadline, start of season and check if any other trade deadlines
@@ -932,7 +1027,7 @@ def read_player_team(player_name, player_id, existing_player_teams_dict={}, read
 			player_team = row[1]
 
 			existing_player_teams_dict[player_name] = player_team
-		print('existing_player_teams_dict: ' + str(existing_player_teams_dict))
+		#print('existing_player_teams_dict: ' + str(existing_player_teams_dict))
 
 
 	# if read new teams, then read from internet for all
@@ -946,7 +1041,7 @@ def read_player_team(player_name, player_id, existing_player_teams_dict={}, read
 			team = read_team_from_internet(player_name, player_id)
 
 	
-	print("final team: " + team)
+	#print("final team: " + team)
 	return team
 
 # for all given players, read their teams
@@ -1020,18 +1115,18 @@ def read_roster_from_internet(team_abbrev, read_new_teams=False):
 
 	roster_url = 'https://www.espn.com/nba/team/roster/_/name/' + team_abbrev + '/' + team_name #den/denver-nuggets
 
-	html_results = pd.read_html(roster_url)
-	print("html_results: " + str(html_results))
+	html_results = read_web_data(roster_url) #pd.read_html(roster_url)
+	#print("html_results: " + str(html_results))
 
 	len_html_results = len(html_results) # each element is a dataframe/table so we loop thru each table
-	print("len_html_results: " + str(len_html_results))
+	#print("len_html_results: " + str(len_html_results))
 
 	for order in range(len_html_results):
-		print("order: " + str(order))
+		#print("order: " + str(order))
 
 		html_result_df = html_results[order]
-		print('html_result: ' + str(html_result_df))
-		print("no. columns: " + str(len(html_result_df.columns.tolist())))
+		#print('html_result: ' + str(html_result_df))
+		#print("no. columns: " + str(len(html_result_df.columns.tolist())))
 
 		# very first html result is the game summary quarter by quarter score and total score
 
@@ -1039,7 +1134,7 @@ def read_roster_from_internet(team_abbrev, read_new_teams=False):
 		# first get players, which is html result with row 0 = 'starters'
 		# for idx, row in html_result.rows:
 		# 	print('row: ' + str(row))
-		print('row 0 loc: ' + str(html_result_df.loc[[0]]))
+		#print('row 0 loc: ' + str(html_result_df.loc[[0]]))
 
 		if order == 0:
 			raw_roster = html_result_df.loc[:,'Name'].tolist()
@@ -1086,12 +1181,13 @@ def read_roster_from_internet(team_abbrev, read_new_teams=False):
 
 # valid for json files
 def read_json(key_type):
-	print('\n===Read JSON: ' + key_type + '===\n')
+	print('\n===Read JSON: ' + key_type.title() + '===\n')
+	key_type = re.sub('\s+','-',key_type)
 	keys_filename = "data/" + key_type.title() + ".json"
 	print("keys_filename: " + keys_filename)
 
 	lines = [] # capture each line in the document
-
+	keys = {}
 	try:
 		with open(keys_filename, encoding="UTF8") as keys_file:
 			line = ''
@@ -1100,24 +1196,27 @@ def read_json(key_type):
 				lines.append(line)
 
 			keys_file.close()
+
+			# combine into 1 line
+		condensed_json = ''
+		for line in lines:
+			#print('line: ' + str(line))
+			condensed_json += line
+
+		#print("Condensed JSON: " + condensed_json)
+
+		# parse condensed_json
+		keys = json.loads(condensed_json)
 	except:
-		print("Warning: No keywords file!")
+		print("write_json_to_file")
 
-	# combine into 1 line
-	condensed_json = ''
-	for line in lines:
-		condensed_json += line
-
-	#print("Condensed JSON: " + condensed_json)
-
-	# parse condensed_json
-	keys = json.loads(condensed_json)
-
+	
+	print("keys: " + str(keys))
 	return keys
 
 # read team roster to get team players
 def read_team_roster(team_abbrev, existing_teams_players_dict={}, read_new_teams=True):
-	print('\n===Read Team Roster: ' + team_abbrev)
+	#print('\n===Read Team Roster: ' + team_abbrev)
 	roster = []
 
 	if read_new_teams:
@@ -1134,7 +1233,7 @@ def read_team_roster(team_abbrev, existing_teams_players_dict={}, read_new_teams
 			roster = read_roster_from_internet(team_abbrev)
 
 	
-	print('roster: ' + str(roster))
+	#print('roster: ' + str(roster))
 	return roster
 
 
@@ -1395,7 +1494,7 @@ def read_matchup_data(source_url):
 		
 	else:
 		# first get the html as a pandas dataframe format
-		html_results = pd.read_html(source_url)
+		html_results = read_web_data(source_url) #pd.read_html(source_url)
 		print("html_results: " + str(html_results))
 
 	return matchup_data
@@ -1962,23 +2061,27 @@ def read_all_teammates(player_name, all_players_in_games_dict, player_team=''):
 	if player_team == '':
 		player_team = read_player_team(player_name)
 
-	for game_key, game_players in all_players_in_games_dict.items():
+	if len(all_players_in_games_dict.keys()) > 0:
+		for game_key, game_players in all_players_in_games_dict.items():
 
-		game_data = game_key.split() # away,home,date
+			game_data = game_key.split() # away,home,date
 
-		away_team = game_data[0]
-		home_team = game_data[1]
+			away_team = game_data[0]
+			home_team = game_data[1]
 
-		game_teammates = [] # we are looking for games player played in bc they did not play in all games in this dict bc it is dict of all games by team but independent of players
-		if player_team == away_team:
-			game_teammates = game_players['away']
-		elif player_team == home_team:
-			game_teammates = game_players['home']
+			game_teammates = [] # we are looking for games player played in bc they did not play in all games in this dict bc it is dict of all games by team but independent of players
+			if player_team == away_team:
+				game_teammates = game_players['away']
+			elif player_team == home_team:
+				game_teammates = game_players['home']
 
-		# loop thru games to see if we encounter new teammates
-		for teammate in game_teammates:
-			if teammate not in all_teammates:
-				all_teammates.append(teammate)
+			# loop thru games to see if we encounter new teammates
+			for teammate in game_teammates:
+				if teammate not in all_teammates:
+					all_teammates.append(teammate)
+
+	else:
+		print('Warning: all_players_in_games_dict is empty! ' + str(all_players_in_games_dict))
 
 	print('all_teammates: ' + str(all_teammates))
 	return all_teammates

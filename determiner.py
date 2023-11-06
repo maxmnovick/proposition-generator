@@ -391,7 +391,7 @@ def determine_matchup_rating(opponent, stat, all_matchup_data):
 # exclude all star and other special games
 def determine_prev_game_date(player_game_log, season_year):
     print('\n===Determine Prev Game Date from Game Log===\n')
-    print('player_game_log:\n' + str(player_game_log))
+    #print('player_game_log:\n' + str(player_game_log))
     # if not all star
     prev_game_idx = 0
     while re.search('\\*', player_game_log.loc[prev_game_idx, 'OPP']):
@@ -411,7 +411,7 @@ def determine_prev_game_date(player_game_log, season_year):
 
 
 # gather game logs by season and do not pull webpage if it does not exist
-def determine_played_season(player_url):
+def determine_played_season(player_url, player_name='', season_year=0):
     played_season = False
     # response = requests.get(player_url)
     # if response.status_code == 200:
@@ -421,7 +421,7 @@ def determine_played_season(player_url):
     h = httplib2.Http()
     resp = h.request(player_url, 'HEAD')
     status_code = resp[0]['status']
-    print('status_code: ' + str(status_code))
+    
     if int(status_code) < 400:
         # some websites will simply not have the webpage but espn still has the webpage for all years prior to playing with blank game logs
         #if len(game_log) > 0:
@@ -437,9 +437,12 @@ def determine_played_season(player_url):
             if len(html_results[order].columns.tolist()) == 17:
 
                 played_season = True
-                print('played season')
-
                 break
+    else:
+        print('\nstatus_code: ' + str(status_code))
+
+    if not played_season:
+        print('\nWarning: ' + player_name + ' did NOT play season ' + str(season_year) + '!\n')
 
     return played_season
 
@@ -447,7 +450,7 @@ def determine_played_season(player_url):
 def determine_regular_season_games(player_game_log):
 
     print('\n===Determine Regular Season Games for Player===\n')
-    print('player_game_log:\n' + str(player_game_log))
+    #print('player_game_log:\n' + str(player_game_log))
 
     # select reg season games by type
     reg_season_games_df = player_game_log[player_game_log['Type'].str.startswith('Regular')]
@@ -474,7 +477,7 @@ def determine_regular_season_games(player_game_log):
 def determine_season_part_games(player_game_log, season_part):
 
     print('\n===Determine Season Games for Player: ' + season_part + '===\n')
-    print('player_game_log:\n' + str(player_game_log))
+    #print('player_game_log:\n' + str(player_game_log))
 
     season_part_games_df = season_part_games_df = player_game_log[~player_game_log['Type'].str.startswith('Preseason')]#pd.DataFrame()#player_game_log
 
@@ -1004,19 +1007,28 @@ def determine_matching_key(dict, match_val):
     print('match_key: ' + match_key)
     return match_key
 
-
+# see portion of times player reaches stat
 def determine_prob_of_stat_from_records(ok_val, player_stat_records, season_part, stat_name, condition='all', year=2023):
     
     print('\n===Determine Prob of Stat: ' + str(ok_val) + ' ' + stat_name + '===\n')
-    #print('player_stat_records: ' + str(player_stat_records))
+    print('player_stat_records: ' + str(player_stat_records))
     prob_of_stat = 0
 
+    print('condition: ' + condition)
+    print('year: ' + str(year))
+    print('season_part: ' + season_part)
+
+    # iso for a given year
     year_stat_records = player_stat_records[condition][year]
     if season_part in year_stat_records.keys():
         records = year_stat_records[season_part][stat_name]
-        #print('records: ' + str(records))
-        record = records[ok_val]
-        #print('record: ' + str(record))
+        print('records: ' + str(records))
+        record = ''
+        if len(records) > ok_val:
+            record = records[ok_val]
+        else:
+            print('Warning: Stat not in Records! Maybe it is in Reg Season but not in Playoffs!')
+        print('record: ' + str(record))
 
         prob_of_stat = generator.generate_prob_stat_reached(record)         
 

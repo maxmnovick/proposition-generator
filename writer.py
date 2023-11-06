@@ -507,8 +507,9 @@ def write_data_to_file(data, filepath, write_param, extension='csv'):
         print('Warning: Unknown file extension! ')
     
 def write_json_to_file(dict, filepath, write_param):
-    print('\n===Write JSON to File===\n')
+    print('\n===Write JSON to File: ' + filepath + '===\n')
 
+    filepath = re.sub('\s+','-',filepath)
     with open(filepath, write_param) as outfile:
         json.dump(dict, outfile)
 

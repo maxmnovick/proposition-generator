@@ -448,7 +448,14 @@ def generate_player_stat_dict(player_name, player_season_logs, projected_lines_d
     opponent = ''
     print('projected_lines_dict: ' + str(projected_lines_dict))
     if player_name in projected_lines_dict.keys():
-        opponent = projected_lines_dict[player_name]['opp'].lower() # collect data against opponent to see previous matchups
+        player_projected_lines_dict = projected_lines_dict[player_name]
+        print(player_name + ' projected_lines_dict: ' + str(player_projected_lines_dict))
+        # for each player we loop thru we add their avgs to projected line if none given
+        # we want to get projected lines for all conditions, including opponent
+        if 'opp' in player_projected_lines_dict:
+            opponent = player_projected_lines_dict['opp'].lower() # collect data against opponent to see previous matchups
+        else:
+            print('Warning: opp not in projected lines for ' + player_name)
 
 
     season_year = 2023
@@ -1063,13 +1070,28 @@ def generate_player_records_dict(player_name, player_stat_dict, projected_lines_
 
     player_records_dicts = {}
 
-
+    print('projected_lines_dict: ' + str(projected_lines_dict))
+    season_part_of_interest = 'regular' # reg or post season
     # if we do not have projected lines then we can use player means as lines
     # we pass in projected lines as param so at this point we already have actual projected lines or averages to determine record above and below line
     # we could get avgs from stats but we already compute avgs so we can get it from that source before running this fcn
     player_projected_lines = {}
     if player_name in projected_lines_dict.keys():
-        player_projected_lines = projected_lines_dict[player_name]
+        player_all_projected_lines = projected_lines_dict[player_name]
+        
+        if season_part_of_interest not in player_all_projected_lines.keys():
+            print('Warning: Player did not play in one part of the season (either reg or post?)!' + season_part_of_interest)
+            # did not play in one part of season but played in other so use for both
+            if season_part_of_interest == 'regular':
+                season_part_of_interest = 'postseason'
+            else: # = post so change to reg
+                season_part_of_interest = 'regular'
+        
+        if season_part_of_interest in player_all_projected_lines.keys():
+            player_projected_lines = player_all_projected_lines[season_part_of_interest]
+        else:
+            print('Warning: Player did not play in either part of season!')
+            
     else:
         print('Warning: Player ' + player_name + ' not in projected lines!')
         if len(player_medians_dicts.keys()) > 0:
@@ -1079,13 +1101,25 @@ def generate_player_records_dict(player_name, player_stat_dict, projected_lines_
             print('player_avg_lines: ' + str(player_avg_lines))
 
             stats_of_interest = ['pts','reb','ast','3pm','blk','stl','to'] # we decided to focus on these stats to begin
-            season_part_of_interest = 'regular' # reg or post season
+            #season_part_of_interest = 'regular' # reg or post season
             for stat in stats_of_interest:
-                player_projected_lines[stat] = player_avg_lines[season_part_of_interest][stat]
+                if season_part_of_interest in player_avg_lines.keys():
+                    player_projected_lines[stat] = player_avg_lines[season_part_of_interest][stat]
+                else:
+                    print('Warning: Player did not play in one part of the season (either reg or post?)!' + season_part_of_interest)
+                    # did not play in one part of season but played in other so use for both
+                    if season_part_of_interest == 'regular':
+                        season_part_of_interest = 'postseason'
+                    else: # = post so change to reg
+                        season_part_of_interest = 'regular'
+
+                    player_projected_lines[stat] = player_avg_lines[season_part_of_interest][stat]
             
-            print('player_projected_lines: ' + str(player_projected_lines))
+            #print('player_projected_lines: ' + str(player_projected_lines))
         else: # player has not played before
             print('Warning: Player ' + player_name + ' has no stats to average!')
+
+    print('player_projected_lines: ' + str(player_projected_lines))
 
     #season_year = 2023
 
@@ -1577,7 +1611,8 @@ def generate_all_players_avg_range_dicts(all_players_stats_dicts):
 # if player names is blank, use all players found in raw projected lines
 # use player_espn_ids_dict to get teams
 def generate_projected_lines_dict(raw_projected_lines, player_espn_ids_dict={}, player_teams={}, player_names=[]):
-
+    print('\n===Generate Projected Lines Dict===\n')
+    print('raw_projected_lines: ' + str(raw_projected_lines))
     # need data type and input type to get file name
     # data_type = "Player Lines"
 
@@ -1607,8 +1642,8 @@ def generate_projected_lines_dict(raw_projected_lines, player_espn_ids_dict={}, 
     for player_lines in projected_lines[1:]:
         player_name = player_lines[0].lower()
         projected_lines_dict[player_name] = dict(zip(header_row[1:],player_lines[1:]))
+    
     print("projected_lines_dict: " + str(projected_lines_dict))
-
     return projected_lines_dict
 
 
@@ -1705,7 +1740,7 @@ def generate_player_all_outcomes_dict(player_name, player_season_logs, projected
     for key in player_all_avg_range_dicts.keys():
         player_all_avg_range_dicts[key] = generate_player_avg_range_dict(player_name, player_stat_dict, key)
     #player_avg_range_dict = generate_player_all_avg_range_dicts(player_name, player_stat_dict)
-    print('player_all_avg_range_dicts: ' + str(player_all_avg_range_dicts))
+    #print('player_all_avg_range_dicts: ' + str(player_all_avg_range_dicts))
     player_means_dicts = player_all_avg_range_dicts['mean']
     player_medians_dicts = player_all_avg_range_dicts['median']
     player_modes_dicts = player_all_avg_range_dicts['mode']
@@ -1713,7 +1748,7 @@ def generate_player_all_outcomes_dict(player_name, player_season_logs, projected
     player_maxes_dicts = player_all_avg_range_dicts['max']
 
     # determine the record over projected line or avg stat val
-    print('projected_lines_dict before records: ' + str(projected_lines_dict))
+    #print('projected_lines_dict before records: ' + str(projected_lines_dict))
     player_records_dict = generate_player_records_dict(player_name, player_stat_dict, projected_lines_dict, player_medians_dicts)
 
 
@@ -1745,14 +1780,14 @@ def generate_player_all_outcomes_dict(player_name, player_season_logs, projected
     loc_of_interest = '' # if we want to see both locations we know only home/away
     opponent = '' # if we want to see all opponents we need all opp keys to follow unique format or list of all possible opponents to find keys
     if player_name in projected_lines_dict.keys():
-        print('projected_lines_dict: ' + str(projected_lines_dict))
+        #print('projected_lines_dict: ' + str(projected_lines_dict))
         player_lines['regular'] = projected_lines_dict[player_name]
         reg_player_lines = player_lines['regular']
         if 'loc' in reg_player_lines.keys():
             loc_of_interest = reg_player_lines['loc'].lower()
         if 'opp' in reg_player_lines.keys():
             opponent = reg_player_lines['opp'].lower()
-    print('player_lines: ' + str(player_lines))
+    #print('player_lines: ' + str(player_lines))
 
     
     current_dow = todays_games_date_obj.strftime('%a').lower()
@@ -1764,16 +1799,22 @@ def generate_player_all_outcomes_dict(player_name, player_season_logs, projected
 
 
     # make an outcome for each stat
-    print('player_stat_dict: ' + str(player_stat_dict))
+    #print('player_stat_dict: ' + str(player_stat_dict))
     stats_of_interest = ['pts','reb','ast','3pm'] # this is if we have all the lines available but we only want subset. but if some of the lines are unavailable then print out their outcomes using their median as the line but only if they are a stat of interest
     year = 2023
     for season_part, season_part_lines in player_lines.items():
 
         print('\n===Season Part: ' + season_part + '===\n')
-        print('season_part_lines: ' + str(season_part_lines))
+        #print('season_part_lines: ' + str(season_part_lines))
 
         for stat_name in stats_of_interest:
             player_outcome_dict = {} # fields: 'outcome', 'streak', 'record', 'avg', 'range', 'matchup'
+
+            if season_part not in season_part_lines.keys():
+                if season_part == 'regular':
+                    season_part = 'postseason'
+                else:
+                    season_part = 'regular'
 
             stat_line = season_part_lines[season_part][stat_name]
             player_outcome = player_name.title() + ' ' + str(stat_line) + '+ ' + stat_name # initially express over/under as over+ with assumption that under=100-over bc we are displaying possibility before assessing probability
@@ -1982,7 +2023,7 @@ def generate_player_all_outcomes_dict(player_name, player_season_logs, projected
 
 
             #find matchups true
-            print('all_matchup_data: ' + str(all_matchup_data))
+            #print('all_matchup_data: ' + str(all_matchup_data))
             if len(all_matchup_data) > 0:
 
                 print("\n===Find Matchup for Outcome===\n")
@@ -1998,9 +2039,9 @@ def generate_player_all_outcomes_dict(player_name, player_season_logs, projected
                 # loop thru position in matchup data by position
                 # to get matchup table for a given opponent and position
                 matchup_dict = {} # {pg:0, sg:0, ..}, for given opponent
-                print('current_matchup_data: ' + str(current_matchup_data))
+                #print('current_matchup_data: ' + str(current_matchup_data))
                 for pos, sources_results in current_matchup_data.items():
-                    print("Position: " + pos.upper())
+                    #print("Position: " + pos.upper())
 
                     matchup_table_header_row = ['Sources'] # [source1, source2, ..]
                     num_sources = len(sources_results['averages']) #len(source_vals)
@@ -2038,14 +2079,14 @@ def generate_player_all_outcomes_dict(player_name, player_season_logs, projected
 
                 # add matchup dict to all matchup dicts so we can access matchups by opponent, stat and position
                 # we could just populate all matchups dict from all matchups data at the beginning instead of this loop for each streak
-                print("matchup_dict: " + str(matchup_dict))
+                #print("matchup_dict: " + str(matchup_dict))
                 # matchup_dict = { pg: { s1: 0, s2: 0, .. }, sg: { s1: 0 }, .. }
                 for pos, rank_dict in matchup_dict.items():
                     s1_matchup_rank = rank_dict['s1']
                     s2_matchup_rank = rank_dict['s2']
                     s3_matchup_rank = rank_dict['s3']
                     # init dicts
-                    print("all_matchups_dicts: " + str(all_matchups_dicts))
+                    #print("all_matchups_dicts: " + str(all_matchups_dicts))
 
                     rank_avgs = determiner.determine_rank_avgs(pos, matchup_dict)
                     matchup_rank_mean = rank_avgs['mean']
@@ -2059,7 +2100,7 @@ def generate_player_all_outcomes_dict(player_name, player_season_logs, projected
                         all_matchups_dicts[pos][stat_name] = {}
                         #print("all_matchups_dicts: " + str(all_matchups_dicts))
                         all_matchups_dicts[pos][stat_name][opponent] = { 's1': s1_matchup_rank, 's2': s2_matchup_rank, 's3': s3_matchup_rank, 'mean': matchup_rank_mean, 'combined mean': matchup_rank_combined_mean }
-                        print("all_matchups_dicts: " + str(all_matchups_dicts))
+                        #print("all_matchups_dicts: " + str(all_matchups_dicts))
                     else: # pos in matchups dict so check for stat in pos
                         print('position ' + pos + ' in matchups dict')
 
@@ -2073,7 +2114,7 @@ def generate_player_all_outcomes_dict(player_name, player_season_logs, projected
 
                             all_matchups_dicts[pos][stat_name] = {}
                             all_matchups_dicts[pos][stat_name][opponent] = { 's1': s1_matchup_rank, 's2': s2_matchup_rank, 's3': s3_matchup_rank, 'mean': matchup_rank_mean, 'combined mean': matchup_rank_combined_mean }
-                            print("all_matchups_dicts: " + str(all_matchups_dicts))
+                            #print("all_matchups_dicts: " + str(all_matchups_dicts))
                         else: # stat_name is in pos matchups so check if opp in stats
                             print('stat_name ' + stat_name + ' in position matchups dict')
                             if not opponent in all_matchups_dicts[pos][stat_name].keys():
@@ -2084,7 +2125,7 @@ def generate_player_all_outcomes_dict(player_name, player_season_logs, projected
                                 # matchup_rank_combined_mean = rank_avgs['combined mean']
 
                                 all_matchups_dicts[pos][stat_name][opponent] = { 's1': s1_matchup_rank, 's2': s2_matchup_rank, 's3': s3_matchup_rank, 'mean': matchup_rank_mean, 'combined mean': matchup_rank_combined_mean }
-                                print("all_matchups_dicts: " + str(all_matchups_dicts))
+                                #print("all_matchups_dicts: " + str(all_matchups_dicts))
                             else:
                                 print('opponent rating added already so continue to next streak')
                                 break
@@ -2101,7 +2142,7 @@ def generate_player_all_outcomes_dict(player_name, player_season_logs, projected
 
                     #opponent_matchups_dicts = all_matchups_dicts[opponent] # {team name: { position : rank } }
 
-                print("all_matchups_dicts: " + str(all_matchups_dicts))
+                #print("all_matchups_dicts: " + str(all_matchups_dicts))
 
 
 
@@ -2109,8 +2150,8 @@ def generate_player_all_outcomes_dict(player_name, player_season_logs, projected
                 # currently pre_dict from valid streaks but eventually will be narrowed down further into valid preidctions=streaks+matchups+avg+range etc
                 print('\n===Add Matchups to Outcome===\n')
                 print('We got matchups so add matchups to outcome. ') # should we do this for each player or even each condition or can we do this 1 big loop after we populate all matchups dict?
-                print("all_matchups_dicts: " + str(all_matchups_dicts))
-                print("projected_lines_dict: " + str(projected_lines_dict))
+                #print("all_matchups_dicts: " + str(all_matchups_dicts))
+                #print("projected_lines_dict: " + str(projected_lines_dict))
 
 
                 #player_lines = projected_lines_dict[player_name]
@@ -2158,7 +2199,7 @@ def generate_player_all_outcomes_dict(player_name, player_season_logs, projected
 
 
             #if find players in games true we will have populated all_players_in_games_dict
-            print('all_players_in_games_dict: ' + str(all_players_in_games_dict))
+            #print('all_players_in_games_dict: ' + str(all_players_in_games_dict))
             if len(all_players_in_games_dict.keys()) > 0:
 
                 print("\n===Find Players in Games for Outcome===\n")
@@ -2183,7 +2224,7 @@ def generate_player_all_outcomes_dict(player_name, player_season_logs, projected
                 player_all_outcomes_dict[season_part] = {}
             player_all_outcomes_dict[season_part][stat_name] = player_outcome_dict
 
-    print('player_all_outcomes_dict: ' + str(player_all_outcomes_dict))
+    #print('player_all_outcomes_dict: ' + str(player_all_outcomes_dict))
     return player_all_outcomes_dict
 
 # determine min margin bt ok val and min stat val
@@ -2199,7 +2240,7 @@ def generate_min_margin(init_val, stat_dict):
     #min_margin = 0
 
     stat_vals = list(stat_dict.values())
-    print('stat_vals: ' + str(stat_vals))
+    #print('stat_vals: ' + str(stat_vals))
 
     min_val = 0 # init
     if len(stat_vals) > 0:
@@ -2220,7 +2261,7 @@ def generate_mean_margin(init_val, stat_dict):
     #min_margin = 0
 
     stat_vals = list(stat_dict.values())
-    print('stat_vals: ' + str(stat_vals))
+    #print('stat_vals: ' + str(stat_vals))
 
     mean_val = 0 # init
     if len(stat_vals) > 0:
@@ -2241,7 +2282,7 @@ def generate_margin(init_val, stat_dict, margin_type='min'):
     #min_margin = 0
 
     stat_vals = list(stat_dict.values())
-    print('stat_vals: ' + str(stat_vals))
+    #print('stat_vals: ' + str(stat_vals))
 
     val = 0 # init
     margin = 0
@@ -2266,11 +2307,12 @@ def generate_margin(init_val, stat_dict, margin_type='min'):
 
 # record input is prob stat reached as fraction
 # output is prob 0-1
+# record = x/y = num_games_reached / num_games_played
 def generate_prob_stat_reached(record):
 
     print('\n===Generate Prob Stat Reached===\n')
 
-    print('record: ' + str(record))
+    #print('record: ' + str(record))
 
     # if we have no record for a given stat val we will pass record=''
     # bc prob=0
@@ -2278,6 +2320,7 @@ def generate_prob_stat_reached(record):
 
     if record != '':
 
+        # record = x/y = num_games_reached / num_games_played
         record_data = record.split('/')
         num_games_reached = record_data[0]
         num_games_played = record_data[1]
@@ -2447,7 +2490,7 @@ def generate_consistent_stat_vals(player_name, player_stat_dict, player_stat_rec
     # add prob of reaching reg season val in postseason, if different consistent vals
 
     #consistent_stat_vals: {'all': {2023: {'regular': {'pts': {'prob val':
-    print('consistent_stat_vals: ' + str(consistent_stat_vals))
+    #print('consistent_stat_vals: ' + str(consistent_stat_vals))
     return consistent_stat_vals
 
 
@@ -2778,7 +2821,7 @@ def generate_players_outcomes(player_names=[], settings={}, todays_games_date_ob
     projected_lines_dict = {}
     if len(raw_projected_lines) > 0:
         projected_lines_dict = generate_projected_lines_dict(raw_projected_lines, player_espn_ids_dict, player_teams, player_names)
-
+    print('projected_lines_dict after gen projected lines: ' + str(projected_lines_dict))
 
     # read game logs
     read_all_seasons = False # saves time during testing other parts if we only read 1 season
@@ -2786,6 +2829,8 @@ def generate_players_outcomes(player_names=[], settings={}, todays_games_date_ob
     if 'read all seasons' in settings.keys():
         read_all_seasons = settings['read all seasons']
     all_player_season_logs_dict = reader.read_all_players_season_logs(player_names, read_all_seasons, player_espn_ids_dict)
+    
+    print('projected_lines_dict after read season logs: ' + str(projected_lines_dict))
 
     # find defensive rating/ranking by player position
     find_matchups = False
@@ -2857,6 +2902,7 @@ def generate_players_outcomes(player_names=[], settings={}, todays_games_date_ob
         # get player team so we can determine away/home team so we can determine teammatea/opponents from players in games
         player_team = reader.read_player_team(player_name, player_id, player_teams, read_new_teams=False) #player_teams[player_name]
 
+        print('projected_lines_dict passed to generate stat dict: ' + str(projected_lines_dict))
         player_stat_dict = generate_player_stat_dict(player_name, player_season_logs, projected_lines_dict, todays_games_date_obj, all_players_in_games_dict, player_team)
 
         player_all_outcomes_dict = generate_player_all_outcomes_dict(player_name, player_season_logs, projected_lines_dict, todays_games_date_obj, player_position, all_matchup_data, all_players_in_games_dict, player_team, player_stat_dict) # each player has an outcome for each stat
