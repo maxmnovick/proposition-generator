@@ -1139,24 +1139,8 @@ def read_roster_from_internet(team_abbrev, read_new_teams=False):
 		if order == 0:
 			raw_roster = html_result_df.loc[:,'Name'].tolist()
 
-	# req = Request(team_roster_url, headers={
-	# 	'User-Agent': 'Mozilla/5.0',
-	# })
-
-	# page = urlopen(req)
-
-	# soup = BeautifulSoup(page, features='lxml')
-
-	# roster_table = str(list(soup.find('table',{'class': 'Table'}))).strip()
-
-	# player_names = roster_table
-
-	# roster = re.split('', player_names)
-
-	# print('Success', str(roster), team_abbrev.upper())
 
 	# remove non word characters
-	
 	for player in raw_roster:
 		player_name = re.sub(r'\.|\d','',player)
 		player_name = re.sub(r'-',' ',player_name)
@@ -1166,12 +1150,13 @@ def read_roster_from_internet(team_abbrev, read_new_teams=False):
 	# the question is if we are going to append or overwrite
 	# if we are going to overwrite then we must wait till we have all teams so we only overwrite first entry and append all after
 	# if not all new teams then simply append this player's team to the file
-	if not read_new_teams:
-		data = {}
-		data[team_abbrev] = roster
-		write_param = 'a'
-		filepath = 'data/Teams Players.json'
-		writer.write_json_to_file(data, filepath, write_param)
+	# for json we must add new key,val to existing dict and overwrite file
+	# if not read_new_teams:
+	# 	data = {}
+	# 	data[team_abbrev] = roster
+	# 	write_param = 'a'
+	# 	filepath = 'data/Teams-Players.json'
+	# 	writer.write_json_to_file(data, filepath, write_param)
 
 	#except Exception as e:
 		#print('Error', str(roster), team_abbrev.upper(), e)
@@ -1231,6 +1216,10 @@ def read_team_roster(team_abbrev, existing_teams_players_dict={}, read_new_teams
 			roster = existing_teams_players_dict[team_abbrev]
 		else:
 			roster = read_roster_from_internet(team_abbrev)
+			existing_teams_players_dict[team_abbrev] = roster
+			write_param = 'w'
+			filepath = 'data/Teams-Players.json'
+			writer.write_json_to_file(existing_teams_players_dict, filepath, write_param)
 
 	
 	#print('roster: ' + str(roster))
@@ -1273,7 +1262,7 @@ def read_teams_players(teams, read_new_teams=True):
 	# if read new teams for all players then we can overwrite the file completely removing all old teams bc we cannot assume any player is on the same team as they were before
 	if read_new_teams:
 		# overwrite bc new teams json single line
-		filepath = 'data/Teams Players.json'
+		filepath = 'data/Teams-Players.json'
 		write_param = 'w'
 		writer.write_json_to_file(teams_players_dict, filepath, write_param)
 		
