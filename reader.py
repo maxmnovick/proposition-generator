@@ -304,7 +304,7 @@ def read_players_in_box_score(game_box_scores_dict):
 
 # get game box scores from espn.com
 # 1 box score per team
-def read_game_box_scores(game_key, game_id='', game_url='', season_year=2023):
+def read_game_box_scores(game_key, game_id='', game_url=''):
 	print("\n===Read Game Box Score: " + game_key.upper() + "===\n")
 
 	# display player game box scores in readable format
@@ -319,7 +319,7 @@ def read_game_box_scores(game_key, game_id='', game_url='', season_year=2023):
 	if game_url == '':
 		if game_id == '':
 			game_id = read_game_espn_id(game_key)
-		season_year = 2023
+		#season_year = 2023
 		game_url = 'https://www.espn.com/nba/boxscore/_/gameId/' + game_id #.format(df_Players_Drafted_2000.loc[INDEX, 'ESPN_GAMELOG_ID'])
 		print("game_url: " + game_url)
 
@@ -597,14 +597,14 @@ def read_web_data(url, timeout=10, max_retries=3):
 
 
 # get game log from espn.com
-def read_player_season_log(player_name, season_year=2023, player_url='', player_id=''):
+def read_player_season_log(player_name, season_year=2024, player_url='', player_id=''):
 	print("\n===Read Player Game Log: " + player_name.title() + "===\n")
 
 	# get espn player id from google so we can get url
 	if player_url == '':
 		if player_id == '':
 			player_id = read_player_espn_id(player_name)
-		season_year = 2023
+		#season_year = 2023
 		player_url = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_id + '/type/nba/year/' + str(season_year) #.format(df_Players_Drafted_2000.loc[INDEX, 'ESPN_GAMELOG_ID'])
 		#print("player_url: " + player_url)
 
@@ -703,7 +703,8 @@ def read_player_season_log(player_name, season_year=2023, player_url='', player_
 	#print(player_name + " player_game_log returned")# + str(player_game_log_df))
 	return player_game_log_df # can return this df directly or first arrange into list but seems simpler and more intuitive to keep df so we can access elements by keyword
 
-def read_player_season_logs(player_name, read_all_seasons=True, player_espn_ids={}):
+# here we decide default season year, so make input variable parameter
+def read_player_season_logs(player_name, read_x_seasons=1, player_espn_ids={}, season_year=2024):
 
 	player_game_logs = []
 
@@ -716,46 +717,61 @@ def read_player_season_logs(player_name, read_all_seasons=True, player_espn_ids=
 	if player_espn_id == '':
 		print('Warning: player_espn_id blank while trying to get player url! ')
 		
-	season_year = 2023 # here we decide default season year, so make input variable parameter
+	#season_year = 2023 # here we decide default season year, so make input variable parameter
 	player_url = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_espn_id + '/type/nba/year/' + str(season_year) #.format(df_Players_Drafted_2000.loc[INDEX, 'ESPN_GAMELOG_ID'])
 	
-	#read_all_seasons = True
-	while determiner.determine_played_season(player_url, player_name, season_year):
+	if read_x_seasons == 0:
+		while determiner.determine_played_season(player_url, player_name, season_year):
 
-		#print("player_url: " + player_url)
-		game_log_df = read_player_season_log(player_name, season_year, player_url)
-		if not game_log_df.empty:
-			player_game_logs.append(game_log_df)
+			#print("player_url: " + player_url)
+			game_log_df = read_player_season_log(player_name, season_year, player_url)
+			if not game_log_df.empty:
+				player_game_logs.append(game_log_df)
 
-		if not read_all_seasons:
-			break
+			# if not read_all_seasons:
+			# 	break
 
-		season_year -= 1
-		player_url = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_espn_id + '/type/nba/year/' + str(season_year) #.format(df_Players_Drafted_2000.loc[INDEX, 'ESPN_GAMELOG_ID'])
+			season_year -= 1
+			player_url = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_espn_id + '/type/nba/year/' + str(season_year) #.format(df_Players_Drafted_2000.loc[INDEX, 'ESPN_GAMELOG_ID'])
+			
+	for season_idx in range(read_x_seasons):
+		if determiner.determine_played_season(player_url, player_name, season_year):
+
+			#print("player_url: " + player_url)
+			game_log_df = read_player_season_log(player_name, season_year, player_url)
+			if not game_log_df.empty:
+				player_game_logs.append(game_log_df)
+
+			season_year -= 1
+			player_url = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_espn_id + '/type/nba/year/' + str(season_year)
 		
+		# after we reach season they did not play it is possible they may have played before but taken break
+		# so keep checking prev 5 years before breaking
+		# else:
+		# 	break
 
 	return player_game_logs
 
-def read_all_players_season_logs(player_names, read_all_seasons=True, player_espn_ids={}):
+def read_all_players_season_logs(player_names, read_x_seasons=1, player_espn_ids={}, season_year=2024):
 
 	all_players_season_logs = {}
 
 	for player_name in player_names:
-		players_season_logs = read_player_season_logs(player_name, read_all_seasons, player_espn_ids)
+		players_season_logs = read_player_season_logs(player_name, read_x_seasons, player_espn_ids, season_year)
 		all_players_season_logs[player_name] = players_season_logs
 
 	return all_players_season_logs
 
 
 # get team season schedule from espn.com
-def read_team_season_schedule(team_name, season_year=2023, team_url='', team_id=''):
+def read_team_season_schedule(team_name, season_year=2024, team_url='', team_id=''):
 	print("\n===Read Team " + team_name.title() + ", Season " + str(season_year) + " Schedule===\n")
 
 	# get espn player id from google so we can get url
 	if team_url == '':
 		if team_id == '':
 			team_id = read_team_espn_id(team_name)
-		season_year = 2023
+		#season_year = 2023
 		team_url = 'https://www.espn.com/nba/player/gamelog/_/id/' + team_id + '/type/nba/year/' + str(season_year) #.format(df_Players_Drafted_2000.loc[INDEX, 'ESPN_GAMELOG_ID'])
 		print("team_url: " + team_url)
 
@@ -848,7 +864,7 @@ def read_team_season_schedule(team_name, season_year=2023, team_url='', team_id=
 
 
 # get player position from espn game log page bc we already have urls for each player
-def read_player_position(player_name, player_id, season_year=2023, existing_player_positions_dict={}):
+def read_player_position(player_name, player_id, season_year=2024, existing_player_positions_dict={}):
 	print("\n===Read Player Position: " + player_name.title() + "===\n")
 	position = ''
 
@@ -926,7 +942,7 @@ def read_player_position(player_name, player_id, season_year=2023, existing_play
 	print("position: " + position)
 	return position
 
-def read_all_players_positions(player_espn_ids_dict, season_year=2023):
+def read_all_players_positions(player_espn_ids_dict, season_year=2024):
 	#print("\n===Read All Players Positions===\n")
 	players_positions_dict = {}
 
@@ -957,6 +973,7 @@ def read_team_from_internet(player_name, player_id, read_new_teams=False):
 	team = ''
 
 	# get team from internet
+	# this method only works for current team bc format of page
 	season_year = datetime.today().year
 
 	#try:
@@ -1022,7 +1039,7 @@ def read_player_team(player_name, player_id, existing_player_teams_dict={}, read
 		player_teams = extract_data(data_type, header=True)
 		
 		for row in player_teams:
-			print('row: ' + str(row))
+			#print('row: ' + str(row))
 			player_name = row[0]
 			player_team = row[1]
 
@@ -1911,13 +1928,13 @@ def read_team_abbrev(team_str):
 
 # find teammates and opponents for each game played by each player
 # all_players_in_games_dict = {player:{game:{teammates:[],opponents:[]}}}
-def read_all_players_in_games(all_player_season_logs_dict, player_teams):
+def read_all_players_in_games(all_player_season_logs_dict, player_teams, season_year=2024):
 	
 	print('\n===Read All Players in Games===\n')
 	
 	all_players_in_games_dict = {} # {player:{game:{teammates:[],opponents:[]}}}
 	
-	season_year = 2023
+	#season_year = 2023
 	
 	for player_name, player_season_logs in all_player_season_logs_dict.items():
 

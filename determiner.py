@@ -1008,18 +1008,20 @@ def determine_matching_key(dict, match_val):
     return match_key
 
 # see portion of times player reaches stat
-def determine_prob_of_stat_from_records(ok_val, player_stat_records, season_part, stat_name, condition='all', year=2023):
+# player_stat_records: {'all': {2023: {'regular': {'pts': ['6/6',...
+# shows fraction of times stat reached
+def determine_prob_of_stat_from_records(ok_val, player_stat_records, season_part, stat_name, condition='all', season_year=2024):
     
     print('\n===Determine Prob of Stat: ' + str(ok_val) + ' ' + stat_name + '===\n')
-    print('player_stat_records: ' + str(player_stat_records))
+    #print('player_stat_records: ' + str(player_stat_records))
     prob_of_stat = 0
 
     print('condition: ' + condition)
-    print('year: ' + str(year))
+    print('season_year: ' + str(season_year))
     print('season_part: ' + season_part)
 
     # iso for a given year
-    year_stat_records = player_stat_records[condition][year]
+    year_stat_records = player_stat_records[condition][season_year]
     if season_part in year_stat_records.keys():
         records = year_stat_records[season_part][stat_name]
         print('records: ' + str(records))
@@ -1035,7 +1037,7 @@ def determine_prob_of_stat_from_records(ok_val, player_stat_records, season_part
     print('prob_of_stat: ' + str(prob_of_stat))
     return prob_of_stat
 
-def determine_ok_val_prob(dict, ok_val, player_stat_records, season_part, stat_name):
+def determine_ok_val_prob(dict, ok_val, player_stat_records, season_part, stat_name, season_year=2024):
 
     print('\n===Determine Postseason Prob for OK Value: ' + str(ok_val) + ' ' + stat_name + '===\n')
 
@@ -1048,7 +1050,7 @@ def determine_ok_val_prob(dict, ok_val, player_stat_records, season_part, stat_n
     #player_stat_records: {'all': {2023: {'regular': {'pts': 
     if ok_val_post_val_key == '':
         # we can find post prob from stat records
-        ok_val_post_prob = determine_prob_of_stat_from_records(ok_val, player_stat_records, season_part, stat_name)
+        ok_val_post_prob = determine_prob_of_stat_from_records(ok_val, player_stat_records, season_part, stat_name, season_year=season_year)
         ok_val_post_prob = round(ok_val_post_prob * 100)
     else:
         ok_val_post_prob_key = re.sub('val','',ok_val_post_val_key).strip()

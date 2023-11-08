@@ -707,11 +707,14 @@ def convert_list_to_string(init_list):
 
 #desired_order=list  headers
 def list_dicts(dicts, desired_order=[]):
+    print('\n===List Dicts===\n')
+
     # desired_order = ['player name','stat name','ok val','ok pp','ok p']
     dict_list = converter.convert_dicts_to_lists(dicts, desired_order)
 
-    print('dict_list')
-    print(tabulate(dict_list))
+    # we cannot see clearly in tabulate format for big data
+    #print('dict_list')
+    #print(tabulate(dict_list))
 
     headers = []#[list(dicts[0].keys())]
     for key in desired_order:
@@ -725,6 +728,8 @@ def list_dicts(dicts, desired_order=[]):
     dict_list = [headers] + dict_list
 
     # export
+    # to semicolon separated value
+    # or csv bc semicolon only needed if comma used in cell
     for row in dict_list:
         export_row = ''
         for cell in row:

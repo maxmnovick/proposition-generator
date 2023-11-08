@@ -62,13 +62,18 @@ players_names = ['deandre ayton', 'jerami grant', 'matisse thybulle', 'robert wi
 teams = ['phi']#,'phi','dal','orl','sas','ind','gsw','det','lac','lal','nyk','mia','mil','bkn','atl','okc','bos','min','sac','hou','uta','chi','nop','den']
 # we can make read new teams var false at first bc the file has not been created yet so we will write for the first time
 # we make it true to read new teams after trades, which tells it to overwrite existing file or make a new file with the date in the title
-players_names = reader.read_teams_players(teams, read_new_teams=False) #generator.generate_players_names(teams) # generate is wrong term bc we are not computing anything only reading players on each team
-#players_names = ['lamelo ball']
+#players_names = reader.read_teams_players(teams, read_new_teams=False) #generator.generate_players_names(teams) # generate is wrong term bc we are not computing anything only reading players on each team
+players_names = ['lamelo ball']
 
 # settings
 find_matchups = False
 find_players = False
-settings = {'find matchups': find_matchups, 'find players': find_players}
+# read new teams after trades and acquisitions new players
+read_new_teams = False
+# read all seasons to compare and see trend
+read_x_seasons = 1 # set 0 or high number to read all seasons
+read_season_year = 2024 # user can choose year. read x seasons previous
+settings = {'find matchups': find_matchups, 'find players': find_players, 'read new teams': read_new_teams, 'read x seasons': read_x_seasons, 'read season year': read_season_year}
 
 players_outcomes = generator.generate_players_outcomes(players_names, settings)
 

@@ -22,7 +22,7 @@ def convert_dicts_to_lists(all_consistent_stat_dicts, desired_order=[]):
     dict_lists = []
 
     for dict in all_consistent_stat_dicts:
-        print('dict: ' + str(dict))
+        #print('dict: ' + str(dict))
 
         dict_list = convert_dict_to_list(dict, desired_order)
 
