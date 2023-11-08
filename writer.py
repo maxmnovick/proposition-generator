@@ -66,7 +66,7 @@ def display_game_data(all_valid_streaks_list):
 
 
 
-def display_stat_plot(all_valid_streaks_list, all_players_stats_dicts, stat_of_interest, player_of_interest):
+def display_stat_plot(all_valid_streaks_list, all_players_stats_dicts, stat_of_interest, player_of_interest, season_year=2024):
     print('\n===Plot Stats===\n')
     #Three lines to make our compiler able to draw:
     import matplotlib.pyplot as plt
@@ -86,7 +86,7 @@ def display_stat_plot(all_valid_streaks_list, all_players_stats_dicts, stat_of_i
 
             stat_name = valid_streak['prediction'].split()[-1].lower()
             condition = 'all'
-            season_year = 2023
+            #season_year = 2023
             stat_vals_dict = all_players_stats_dicts[player_name][season_year][stat_name][condition]
             print('stat_vals_dict: ' + str(stat_vals_dict))
 

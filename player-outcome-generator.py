@@ -72,7 +72,7 @@ find_players = False
 read_new_teams = False
 # read all seasons to compare and see trend
 read_x_seasons = 1 # set 0 or high number to read all seasons
-read_season_year = 2024 # user can choose year. read x seasons previous
+read_season_year = 2023 # user can choose year. read x seasons previous
 settings = {'find matchups': find_matchups, 'find players': find_players, 'read new teams': read_new_teams, 'read x seasons': read_x_seasons, 'read season year': read_season_year}
 
 players_outcomes = generator.generate_players_outcomes(players_names, settings)

@@ -2717,7 +2717,7 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
             stat_dict['ok val'] = reg_season_second_stat_val # ok=available
 
             stat_dict['ok val prob'] = reg_season_second_stat_prob 
-            stat_dict['ok val post prob'] = determiner.determine_ok_val_prob(stat_dict, stat_dict['ok val'], player_stat_records, season_part, stat_name) #post_season_stat_prob 
+            stat_dict['ok val post prob'] = determiner.determine_ok_val_prob(stat_dict, stat_dict['ok val'], player_stat_records, season_part, stat_name, season_year=season_year) #post_season_stat_prob 
             
             stat_dict['ok val min margin'] = reg_season_second_min_margin
             stat_dict['ok val post min margin'] = determiner.determine_ok_val_margin(stat_dict, stat_dict['ok val'], player_stat_dict, stat_name, 'min')
@@ -2917,7 +2917,7 @@ def generate_players_outcomes(player_names=[], settings={}, todays_games_date_ob
         print('projected_lines_dict passed to generate stat dict: ' + str(projected_lines_dict))
         player_stat_dict = generate_player_stat_dict(player_name, player_season_logs, projected_lines_dict, todays_games_date_obj, all_players_in_games_dict, player_team, season_year=season_year)
 
-        player_all_outcomes_dict = generate_player_all_outcomes_dict(player_name, player_season_logs, projected_lines_dict, todays_games_date_obj, player_position, all_matchup_data, all_players_in_games_dict, player_team, player_stat_dict) # each player has an outcome for each stat
+        player_all_outcomes_dict = generate_player_all_outcomes_dict(player_name, player_season_logs, projected_lines_dict, todays_games_date_obj, player_position, all_matchup_data, all_players_in_games_dict, player_team, player_stat_dict, season_year=season_year) # each player has an outcome for each stat
         player_outcomes[player_name] = player_all_outcomes_dict
 
         # generate stat val reached at desired consistency
@@ -2943,7 +2943,7 @@ def generate_players_outcomes(player_names=[], settings={}, todays_games_date_ob
     # so we can sort by value to get optimal return
     available_stat_dicts = generate_available_stat_dicts(all_consistent_stat_dicts)
     
-    desired_order = ['player name', 'team', 'stat name','ok val','ok val prob','ok val post prob', 'ok val min margin', 'ok val post min margin', 'ok val mean margin', 'ok val post mean margin']
+    desired_order = ['player name', 'team', 'stat name','ok val','ok val prob','odds','ok val post prob', 'ok val min margin', 'ok val post min margin', 'ok val mean margin', 'ok val post mean margin']
     writer.list_dicts(available_stat_dicts, desired_order)
 
 
