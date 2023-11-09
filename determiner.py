@@ -471,7 +471,7 @@ def determine_regular_season_games(player_game_log):
 
     # reg_season_games_df = pd.concat(reg_season_games)
 
-    print("final reg_season_games_df:\n" + str(reg_season_games_df) + '\n')
+    #print("final reg_season_games_df:\n" + str(reg_season_games_df) + '\n')
     return reg_season_games_df
 
 def determine_season_part_games(player_game_log, season_part):
@@ -495,7 +495,7 @@ def determine_season_part_games(player_game_log, season_part):
 
 
 
-    print("final season_part_games_df:\n" + str(season_part_games_df) + '\n')
+    #print("final season_part_games_df:\n" + str(season_part_games_df) + '\n')
     return season_part_games_df
 
 # is it an over or under? above 7/10 or 4/5 or 3/3, or below 3/10 and not 2/2 bc maybe teammate injury so more playing time?

@@ -41,7 +41,7 @@ def generate_players_string(players_list):
             
     p_string = p_string.lower() # lowercase and possibly remove period after first initial?
     
-    print('p_string: ' + p_string)
+    #print('p_string: ' + p_string)
     return p_string
 
 # each player has a stat dict for each stat so gen all of them for a given player
@@ -105,7 +105,7 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, play
 
             # get game type so we can add stat to reg or post season game
             game_type = player_game_log.loc[game_idx, 'Type']
-            print('game_type: ' + str(game_type))
+            #print('game_type: ' + str(game_type))
 
             # make list to loop through so we can add all stats to dicts with 1 fcn
             game_stats = determiner.determine_game_stats(player_game_log, game_idx) #[pts,rebs,asts,winning_score,losing_score,minutes,fgm,fga,fg_rate,threes_made,threes_attempts,three_rate,ftm,fta,ft_rate,bs,ss,fs,tos] 
@@ -149,8 +149,8 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, play
                     stat_dict['away'][game_idx] = stat
 
                 
-            print('away_abbrev: ' + away_abbrev)
-            print('home_abbrev: ' + home_abbrev)
+            #print('away_abbrev: ' + away_abbrev)
+            #print('home_abbrev: ' + home_abbrev)
 
             # matchup against opponent
             # only add key for current opp bc we dont need to see all opps here
@@ -293,12 +293,12 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, play
             # we need to get the game key so that we can determine the players in this game
             # we got away/home team from vs|@ in opp field in game log
             game_key = away_abbrev + ' ' + home_abbrev + ' ' + game_date_string
-            print('game_key: ' + str(game_key))
+            #print('game_key: ' + str(game_key))
             # if we do not have the game box score bc it does not exist yet then pass to the next game
             # the order we fill the stats dict depends on the order of games played bc we are going game by game
             if game_key in all_players_in_games_dict.keys():
                 game_players = all_players_in_games_dict[game_key] # {away:[],home:[]}
-                print('game_players: ' + str(game_players))
+                #print('game_players: ' + str(game_players))
 
                 game_teammates = game_players['away']
                 if player_team == home_abbrev:
@@ -333,7 +333,7 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, play
 
                 # for each player/teammate in game, make a new record or add to existing record
                 for teammate in game_teammates:
-                    print('teammate: ' + teammate)
+                    #print('teammate: ' + teammate)
 
                     for stat_idx in range(len(all_stats_dicts.values())):
                         stat_dict = list(all_stats_dicts.values())[stat_idx]
@@ -411,7 +411,8 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, play
         # player_season_log = reader.read_season_log_from_file(data_type, player_name, 'tsv')
         print('Warning: No game log for player: ' + player_name)
 
-    print('all_stats_dicts: ' + str(all_stats_dicts))
+    # all_stats_dicts: {'pts': {'all': {0: 18, 1: 19...
+    #print('all_stats_dicts: ' + str(all_stats_dicts))
     return all_stats_dicts
 
 # at this point we have reg season and postseason separately so get avg of them
@@ -922,7 +923,8 @@ def generate_player_stat_dict(player_name, player_season_logs, projected_lines_d
 
         season_year -= 1
 
-    print('player_stat_dict: ' + str(player_stat_dict))
+    # player_stat_dict: {2023: {'regular': {'pts': {'all': {0: 18, 1: 19...
+    #print('player_stat_dict: ' + str(player_stat_dict))
     return player_stat_dict
 
 # we use all_players_stats_dicts = {player name:{stat name:{}}}
@@ -999,9 +1001,9 @@ def generate_player_stat_records(player_name, player_stat_dict):
                         all_probs_stat_reached = []
 
                         stat_vals = list(player_season_stat_dict[stat_name][condition].values())
-                        print('stat_vals: ' + str(stat_vals))
+                        #print('stat_vals: ' + str(stat_vals))
                         num_games_played = len(stat_vals)
-                        print('num games played ' + condition + ': ' + str(num_games_played))
+                        #print('num games played ' + condition + ': ' + str(num_games_played))
                         if num_games_played > 0:
                             # max(stat_vals)+1 bc we want to include 0 and max stat val
                             for stat_val in range(0,max(stat_vals)+1):
@@ -1014,11 +1016,11 @@ def generate_player_stat_records(player_name, player_stat_dict):
 
                                     all_games_reached.append(num_games_reached) # one count for each game
 
-                                print('num_games_reached ' + str(stat_val) + ' ' + stat_name + ' for ' + condition + ' games: ' + str(num_games_reached)) 
+                                #print('num_games_reached ' + str(stat_val) + ' ' + stat_name + ' for ' + condition + ' games: ' + str(num_games_reached)) 
                                 
 
                                 prob_stat_reached = str(num_games_reached) + '/' + str(num_games_played)
-                                print('prob_stat_reached ' + str(stat_val) + ' ' + stat_name + ' for ' + condition + ' games: ' + str(prob_stat_reached)) 
+                                #print('prob_stat_reached ' + str(stat_val) + ' ' + stat_name + ' for ' + condition + ' games: ' + str(prob_stat_reached)) 
 
                                 all_probs_stat_reached.append(prob_stat_reached)
 
@@ -1055,7 +1057,7 @@ def generate_player_stat_records(player_name, player_stat_dict):
                             player_season_condition_records_dicts[season_part] = { stat_name: all_probs_stat_reached }
 
     #player_stat_records: {'all': {2023: {'regular': {'pts': 
-    print('player_stat_records: ' + str(player_stat_records))
+    # print('player_stat_records: ' + str(player_stat_records))
     return player_stat_records
 
 
@@ -1384,7 +1386,8 @@ def generate_player_records_dict(player_name, player_stat_dict, projected_lines_
                     # first we get all stats and then we can analyze subsections of stats
                     # eg last 10 games
 
-    print('player_records_dicts: ' + str(player_records_dicts))
+    # player_records_dicts: {'all': {2023: {'regular': {'pts': ['0/1',...
+    #print('player_records_dicts: ' + str(player_records_dicts))
     return player_records_dicts
 
 # all players stats dicts = { player: year: stat name: condition: game idx: stat val }
@@ -1417,14 +1420,14 @@ def generate_player_avg_range_dict(player_name, player_stat_dict, key):
     for season_year, player_full_season_stat_dict in player_stat_dict.items():
 
         print("\n===Year " + str(season_year) + "===\n")
-        print('player_full_season_stat_dict: ' + str(player_full_season_stat_dict))
+        #print('player_full_season_stat_dict: ' + str(player_full_season_stat_dict))
         #player_game_log = player_season_logs[0] #start with current season. all_player_game_logs[player_idx]
         #player_name = player_names[player_idx] # player names must be aligned with player game logs
 
         for season_part, player_season_stat_dict in player_full_season_stat_dict.items():
 
             print("\n===Season Part " + str(season_part) + "===\n")
-            print('player_season_stat_dict: ' + str(player_season_stat_dict))
+            #print('player_season_stat_dict: ' + str(player_season_stat_dict))
 
             all_pts_dicts = player_season_stat_dict['pts']
             if len(all_pts_dicts['all'].keys()) > 0:
@@ -1437,7 +1440,7 @@ def generate_player_avg_range_dict(player_name, player_stat_dict, key):
 
                 # at this point we have added all keys to dict eg all_pts_dict = {'1of2':[],'2of2':[]}
                 #print("all_pts_dict: " + str(all_pts_dict))
-                print("all_pts_dicts: " + str(all_pts_dicts))
+                #print("all_pts_dicts: " + str(all_pts_dicts))
                 # all_pts_dicts = {'all':{1:20}}
                 # key=condition, val={idx:stat}
 
@@ -1573,7 +1576,8 @@ def generate_player_avg_range_dict(player_name, player_stat_dict, key):
                     # print(output_title)
                     # print(tabulate(output_table))
 
-    print('player_avg_range_dict: ' + str(player_avg_range_dict))
+    # player_avg_range_dict: {'all': {2023: {'regular': {'pts': 33, 'reb': 1...
+    #print('player_avg_range_dict: ' + str(player_avg_range_dict))
     return player_avg_range_dict
 
 
@@ -2294,7 +2298,7 @@ def generate_margin(init_val, stat_dict, margin_type='min'):
     if len(stat_vals) > 0:
         if margin_type == 'mean':
             val = numpy.mean(stat_vals)
-            print('val: ' + str(val))
+            #print('val: ' + str(val))
             # we want to round to whole number for easy comparison and we cannot be certain with any more accuracy due to other conditions
             margin = round(val - init_val) 
         else:
@@ -2359,7 +2363,7 @@ def generate_consistent_stat_vals(player_name, player_stat_dict, player_stat_rec
 
                 for stat_name, stat_records in season_stat_dicts.items():
                     print("\n===Stat Name " + str(stat_name) + "===\n")
-                    print('stat_records: ' + str(stat_records))
+                    #print('stat_records: ' + str(stat_records))
 
                     # get prob from 0 to 1 to compare to desired consistency
                     consistent_stat_val = 0
@@ -2531,7 +2535,7 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
 
             if condition in conditions_of_interest:
 
-                years_of_interest = [season_year]
+                years_of_interest = [season_year, season_year-1]
                 for year, year_consistent_stats in condition_consistent_stats.items():
                     print('\n===' + str(year) + '===\n')
 
@@ -2618,7 +2622,7 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
 
                                 season_part_key = re.sub('season','',season_part)
                                 # prob_stat_key = 'prob val' defined above
-                                prob_val_key = season_part_key + ' ' + prob_stat_key
+                                prob_val_key = season_part_key + ' ' + prob_stat_key# + ' ' + str(season_year) # eg post prob val
                                 consistent_stat_dict[prob_val_key] = post_consistent_stat
                                 consistent_stat_dict['post prob'] = post_consistent_stat_prob
                                 consistent_stat_dict['post second prob val'] = post_second_consistent_stat
@@ -2645,7 +2649,7 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
                             all_consistent_stat_dicts.append(consistent_stat_dict)
                             
 
-
+    # all_consistent_stat_dicts: [{'player name': 'lamelo ball', 'stat name': 'pts', 'prob val': 15, 'prob': 94, ...}, {'player name': 'lamelo ball', 'stat name': 'reb', 'prob val': 2...}]
     print('all_consistent_stat_dicts: ' + str(all_consistent_stat_dicts))
 
     # determine which keys in dict to sort dicts by
@@ -2667,10 +2671,15 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
 
         stat_name = stat_dict['stat name']
         #year = 2023
-        season_part = 'postseason' # we want to see postseason prob of regseason stat
+        # change to get season part by current date if after playoff schedule start?
+        # no bc here we are processing postseason separately
+        # we would like to get consistent postseason stat but small sample size?
+        season_part = 'postseason' # if we are in posteason, do we also want to see postseason prob of regseason stat???
         condition = 'all'
+        # player_stat_dict: {2023: {'postseason': {'pts': {'all': {0: 18, 1: 19,...
         player_stat_dict = all_player_stat_dicts[stat_dict['player name']][season_year][season_part][stat_name][condition]
 
+        prob_val_key = 'prob val ' + str(season_year)
         reg_season_stat_val = stat_dict['prob val']
         reg_season_second_stat_val = stat_dict['second prob val']
         reg_season_stat_prob = stat_dict['prob']
@@ -2685,6 +2694,7 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
         #post_season_stat_prob = stat_dict['post prob']
 
         if reg_season_stat_val in ok_stat_vals: #is available (ie in ok stat vals list)
+            ok_val_key = 'ok val ' + str(season_year)
             stat_dict['ok val'] = reg_season_stat_val # default, ok=available
 
             stat_dict['ok val prob'] = reg_season_stat_prob 
