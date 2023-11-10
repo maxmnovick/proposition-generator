@@ -567,6 +567,9 @@ def read_game_box_scores(game_key, game_id='', game_url=''):
 # read tables in websites with pandas pd dataframes
 def read_web_data(url, timeout=10, max_retries=3):
 	print('\n===Read Web Data===\n')
+	# display tables in readable format
+	pd.set_option('display.max_columns', None)
+
 	retries = 0
 	while retries < max_retries:
 		try:
@@ -1058,7 +1061,11 @@ def read_team_from_internet(player_name, player_id, read_new_teams=False):
 # get player team from espn game log page bc we already have urls for each player
 # we are using it get the team the player currently plays on
 # but we can also use it to get the team a player previously played on but that uses a very different method from a different source so assume season year is current season
-def read_player_team(player_name, player_id, existing_player_teams_dict={}, read_new_teams=True):
+# read_new_teams false by default bc if it does not find existing team it will find on web
+# the difference is read new teams will always read new teams even if team already saved locally and unchanged
+# user will set input var after trades or aquisitions
+# later program will get news and decide off that instead of requiring user input
+def read_player_team(player_name, player_id, existing_player_teams_dict={}, read_new_teams=False):
 	#print("\n===Read Player Team: " + player_name.title() + "===\n")
 	team = '' # team abbrev lowercase bc used as key
 
@@ -2124,6 +2131,7 @@ def read_all_teammates(player_name, all_players_in_games_dict, player_team=''):
 	print('all_teammates: ' + str(all_teammates))
 	return all_teammates
 
+# stat_dict: {'player name': 'Trevelin Queen', 'stat name': 'ast', 'prob val': 0, 'prob': 100
 def read_stat_odds(stat_dict):
 	print('\n===Read Stat Odds===\n')
 	odds = '?' # if we dont see name then they might be added later so determine if it is worth waiting
@@ -2136,8 +2144,24 @@ def read_stat_odds(stat_dict):
 	all_players_odds = [] # all players in game
 	player_stat_odds = [] # from +2 to +n depending on stat
 
-	game_odds_url = ''
+	team_name = re.sub(' ','-', determiner.determine_team_name(stat_dict['team']))
+	print("team_name: " + str(team_name))
 
+	# https://sportsbook.draftkings.com/teams/basketball/nba/memphis-grizzlies--odds?sgpmode=true
+	game_odds_url = 'https://sportsbook.draftkings.com/teams/basketball/nba/' + team_name + '--odds?sgpmode=true'
+
+	html_results = read_web_data(game_odds_url) #pd.read_html(game_odds_url)
+	print("html_results: " + str(html_results))
+
+	len_html_results = len(html_results) # each element is a dataframe/table so we loop thru each table
+	print("len_html_results: " + str(len_html_results))
+
+	for order in range(len_html_results):
+		print("order: " + str(order))
+
+		html_result_df = html_results[order]
+		print('html_result: ' + str(html_result_df))
+		print("no. columns: " + str(len(html_result_df.columns.tolist())))
 
 	print('odds: ' + odds)
 	return odds

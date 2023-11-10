@@ -2759,6 +2759,7 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
 
     return sorted_consistent_stat_dicts
 
+# stat_dict: {'player name': 'Trevelin Queen', 'stat name': 'ast', 'prob val': 0, 'prob': 100...
 def generate_available_stat_dicts(stat_dicts):
     print('\n===Generate Available Stat Dicts===\n')
     available_stat_dicts = []
