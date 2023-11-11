@@ -2767,6 +2767,21 @@ def generate_available_stat_dicts(stat_dicts):
 
     # for efficiency first get all diff teams
     # and then read each team page once and save local
+    teams = []
+    for stat_dict in stat_dicts:
+        teams.append(stat_dict['team'])
+    teams = list(set(teams))
+    print('teams: ' + str(teams))
+
+    # we know we will need odds for each team so read each team page at least once per day
+    # actually to save odds in a local var we need to sort by team in a duplicate array
+    #teams_stat_dicts = sorter.sort_dicts_by_key(stat_dicts, 'team')
+    # and we need to isolate into separate loops
+    # so we can read page once and use for all teammates
+    all_players_odds = reader.read_all_players_odds(teams) # {team: { player: odds,... }}
+
+    #for team in teams:
+        #all_players_odds = reader.read_all_stat_odds(stat_dict, all_players_odds)
 
     for stat_dict in stat_dicts:
         print('stat_dict: ' + str(stat_dict))
@@ -2775,8 +2790,21 @@ def generate_available_stat_dicts(stat_dicts):
         # and then sort by val/odds or elim 0s
 
         # add val to dict
-        stat_dict['odds'] = reader.read_stat_odds(stat_dict)
-        print('stat_dict[odds]: ' + stat_dict['odds'])
+        odds = '?'#all_players_odds[team][stat_name][player] #reader.read_stat_odds(stat_dict, all_players_odds)
+        print('odds: ' + odds)
+
+        stat_dict['odds'] = odds
+        
+        # if team odds saved locally then no need to read again from internet same day bc unchanged
+        team = stat_dict['team']
+        stat_name = stat_dict['stat name']
+        player = stat_dict['player name']
+        if team not in all_players_odds.keys():
+            all_players_odds[team] = {}
+        if stat_name not in all_players_odds[team].keys():
+            all_players_odds[team][stat_name] = {}
+        all_players_odds[team][stat_name][player] = odds
+        print('all_players_odds: ' + str(all_players_odds))
 
         #if determiner.determine_stat_available(stat_dict):
         # if we do not see player in list of odds then they might be available later so put ?
@@ -2786,7 +2814,7 @@ def generate_available_stat_dicts(stat_dicts):
             maybe_available_stats.append(stat_dict)
 
         elif len(stat_dict['odds']) > 0:
-            if int(stat_dict['odds']) > 0:
+            if abs(int(stat_dict['odds'])) > 0:
                 available_stat_dicts.append(stat_dict)
 
         else:
@@ -2876,7 +2904,7 @@ def generate_players_outcomes(player_names=[], settings={}, todays_games_date_ob
         # print('existing_player_positions_dict: ' + str(existing_player_positions_dict))
 
 
-        player_positions = reader.read_all_players_positions(player_espn_ids_dict[player_name], season_year)
+        player_positions = reader.read_all_players_positions(player_espn_ids_dict, season_year)
         
 
         # get matchup data before looping thru consistent streaks bc we will present matchup data alongside consistent streaks for comparison

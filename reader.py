@@ -80,6 +80,8 @@ def extract_data(data_type, input_type='', extension='csv', header=False):
 
 # read website given url, timeout in seconds, and max. no. retries before going to next step
 def read_website(url, timeout=10, max_retries=3):
+	print('\n===Read Website===\n')
+	print('url: ' + url)
 	#soup = BeautifulSoup() # return blank soup if request fails
 
 	retries = 0
@@ -970,7 +972,8 @@ def read_player_position(player_name, player_id, season_year=2024, existing_play
 			filepath = 'data/Player Positions.csv'
 			write_param = 'a' # append ids to file
 			writer.write_data_to_file(data, filepath, write_param) # write to file so we can check if data already exists to determine how we want to read the data and if we need to request from internet
-
+		else:
+			print('Warning: website has no soup!')
 		#except Exception as e:
 			#print('Error', position.upper(), player_name.title())
 
@@ -1378,6 +1381,7 @@ def read_matchup_data(source_url):
 		#time.sleep(3)
 
 		if re.search('fantasypro',source_url):
+			# close ad
 			if driver.find_elements("id", "google_ads_iframe_/2705664/fantasypros_interstitial_1_0"):
 				driver.switch_to.frame(driver.find_element("id", "google_ads_iframe_/2705664/fantasypros_interstitial_1_0"))
 				#l = driver.find_element('xpath', 'html/body/div')
@@ -2131,8 +2135,136 @@ def read_all_teammates(player_name, all_players_in_games_dict, player_team=''):
 	print('all_teammates: ' + str(all_teammates))
 	return all_teammates
 
+def read_react_web_data(url):
+	print('\n===Read React Web Data===\n')
+	print('url: ' + url)
+
+	web_data = [] # web_data = [dataframe1,...]
+
+	driver = webdriver.Chrome(ChromeDriverManager().install())
+	driver.implicitly_wait(3)
+
+	driver.get(url) # Open the URL on a google chrome window
+
+	# check if no tables found	
+	html_result = pd.read_html(driver.find_element('id','dom_SameGameParlayWeb').get_attribute('outerHTML'))[0]
+	print('dom_SameGameParlayWeb:\n' + str(html_result))
+	
+	web_data.append(html_result)
+
+	#print('web_data:\n' + str(web_data))
+	return web_data
+
+# finding element by class name will return 1st instance of class
+# but unusual error may occur
+# .ElementClickInterceptedException: Message: element click intercepted: Element <button role="tab" class="rj-market__group" aria-selected="false" data-testid="button-market-group">...</button> is not clickable at point (763, 135). Other element would receive the click: 
+def read_react_website(url):
+	print('\n===Read React Web Data===\n')
+	print('url: ' + url)
+
+	web_data = [] # web_data = [dataframe1,...]
+
+	driver = webdriver.Chrome(ChromeDriverManager().install())
+	driver.implicitly_wait(3)
+
+	driver.get(url) # Open the URL on a google chrome window
+
+	# check if no tables found
+	soup = driver.find_element('id','dom_SameGameParlayWeb').get_attribute('outerHTML')	
+	#soup = BeautifulSoup(page, features='lxml')
+
+	# click pts btn
+	pts_btn = driver.find_element('class name','rj-market__groups').find_element('xpath','button[4]')
+	print("pts_btn: " + pts_btn.get_attribute('innerHTML'))
+	pts_btn.click()
+
+	# not all dropdowns are open so program must click each one
+
+	pts_data = driver.find_element('class name', "rj-markerboard-markets").get_attribute('outerHTML')
+	print('pts_data:\n' + str(pts_data))
+	pts_data = driver.find_element('class name', "rj-market").get_attribute('outerHTML')
+	print('rj-market:\n' + str(pts_data))
+
+	# click reb btn
+	reb_btn = driver.find_element('class name','rj-market__groups').find_element('xpath','button[7]')
+	print("reb_btn: " + reb_btn.get_attribute('innerHTML'))
+	reb_btn.click()
+
+
+
+	# click ast btn
+	ast_btn = driver.find_element('class name','rj-market__groups').find_element('xpath','button[8]')
+	print("ast_btn: " + ast_btn.get_attribute('innerHTML'))
+	ast_btn.click()
+
+	print("Request successful.")
+
+	print('soup:\n' + str(soup))
+	return soup
+
+def read_all_players_odds(teams):
+	print('\n===Read All Players Odds===\n')
+	all_players_odds = {}
+	odds = '?' # if we dont see name then they might be added later so determine if it is worth waiting
+
+	# use pd df
+	# like for reading roster and box score and game log
+	# display player game box scores in readable format
+	pd.set_option('display.max_columns', None)
+
+	#all_players_odds = [] # all players in game
+	#player_stat_odds = [] # from +2 to +n depending on stat
+
+	for team in teams:
+
+		all_players_odds[team] = {}
+
+		team_name = re.sub(' ','-', determiner.determine_team_name(team))
+		print("team_name: " + str(team_name))
+
+		# https://sportsbook.draftkings.com/teams/basketball/nba/memphis-grizzlies--odds?sgpmode=true
+		game_odds_url = 'https://sportsbook.draftkings.com/teams/basketball/nba/' + team_name + '--odds?sgpmode=true'
+		print('game_odds_url: ' + game_odds_url)
+
+		soup = read_react_website(game_odds_url)
+
+		if soup is not None:
+			print('soup:\n' + str(soup))
+
+			# if team odds saved locally then no need to read again from internet same day bc unchanged
+			#team = stat_dict['team']
+			# stat_name = stat_dict['stat name']
+			# player = stat_dict['player name']
+			# if team not in all_players_odds.keys():
+			# 	all_players_odds[team] = {}
+			# if stat_name not in all_players_odds[team].keys():
+			# 	all_players_odds[team][stat_name] = {}
+			# all_players_odds[team][stat_name][player] = odds
+			# print('all_players_odds: ' + str(all_players_odds))
+
+			print('Success')
+		else:
+			print('Warning: website has no soup!')
+
+		# html_results = read_web_data(game_odds_url) #pd.read_html(game_odds_url)
+		# print("html_results: " + str(html_results))
+
+		# len_html_results = len(html_results) # each element is a dataframe/table so we loop thru each table
+		# print("len_html_results: " + str(len_html_results))
+
+		# for order in range(len_html_results):
+		# 	print("order: " + str(order))
+
+		# 	html_result_df = html_results[order]
+		# 	print('html_result: ' + str(html_result_df))
+		# 	print("no. columns: " + str(len(html_result_df.columns.tolist())))
+
+	print('all_players_odds: ' + str(all_players_odds))
+	return all_players_odds
+
 # stat_dict: {'player name': 'Trevelin Queen', 'stat name': 'ast', 'prob val': 0, 'prob': 100
-def read_stat_odds(stat_dict):
+# all_players_odds = {team:{stat:{player:odds...}
+def read_stat_odds(stat_dict, all_players_odds={}):
 	print('\n===Read Stat Odds===\n')
 	odds = '?' # if we dont see name then they might be added later so determine if it is worth waiting
 
@@ -2149,19 +2281,30 @@ def read_stat_odds(stat_dict):
 
 	# https://sportsbook.draftkings.com/teams/basketball/nba/memphis-grizzlies--odds?sgpmode=true
 	game_odds_url = 'https://sportsbook.draftkings.com/teams/basketball/nba/' + team_name + '--odds?sgpmode=true'
+	print('game_odds_url: ' + game_odds_url)
 
-	html_results = read_web_data(game_odds_url) #pd.read_html(game_odds_url)
-	print("html_results: " + str(html_results))
+	web_data = read_react_web_data(game_odds_url)
 
-	len_html_results = len(html_results) # each element is a dataframe/table so we loop thru each table
-	print("len_html_results: " + str(len_html_results))
+	if web_data is not None:
+		print('web_data:\n' + str(web_data))
 
-	for order in range(len_html_results):
-		print("order: " + str(order))
 
-		html_result_df = html_results[order]
-		print('html_result: ' + str(html_result_df))
-		print("no. columns: " + str(len(html_result_df.columns.tolist())))
+		print('Success')
+	else:
+		print('Warning: website has no soup!')
+
+	# html_results = read_web_data(game_odds_url) #pd.read_html(game_odds_url)
+	# print("html_results: " + str(html_results))
+
+	# len_html_results = len(html_results) # each element is a dataframe/table so we loop thru each table
+	# print("len_html_results: " + str(len_html_results))
+
+	# for order in range(len_html_results):
+	# 	print("order: " + str(order))
+
+	# 	html_result_df = html_results[order]
+	# 	print('html_result: ' + str(html_result_df))
+	# 	print("no. columns: " + str(len(html_result_df.columns.tolist())))
 
 	print('odds: ' + odds)
 	return odds
