@@ -706,7 +706,7 @@ def convert_list_to_string(init_list):
 #         print(export_row)
 
 #desired_order=list  headers
-def list_dicts(dicts, desired_order=[]):
+def list_dicts(dicts, desired_order=[], separator=','):
     print('\n===List Dicts===\n')
 
     # desired_order = ['player name','stat name','ok val','ok pp','ok p']
@@ -738,7 +738,7 @@ def list_dicts(dicts, desired_order=[]):
             #print('cell: ' + str(cell))
             if str(cell) == '3pm':
                 cell = '\'3pm'
-            export_row += str(cell) + ';'
+            export_row += str(cell) + separator
 
         print(export_row)
 

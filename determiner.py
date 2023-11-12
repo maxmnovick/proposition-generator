@@ -153,7 +153,7 @@ def determine_col_name(keyword,data):
     return final_col_name
 
 def determine_team_name(team_abbrev, team_abbrevs_dict={}):
-    print("\n===Determine Team Name: " + team_abbrev + "===\n")
+    #print("\n===Determine Team Name: " + team_abbrev + "===\n")
     team_abbrevs_dict = {'atl':'atlanta hawks', 
                     'bos':'boston celtics', 
                     'bkn':'brooklyn nets', 
@@ -195,7 +195,7 @@ def determine_team_name(team_abbrev, team_abbrevs_dict={}):
             team_name = name
             break
 
-    print("team_name: " + str(team_name))
+    #print("team_name: " + str(team_name))
     return team_name
 
 def determine_team_abbrev(team_name, team_abbrevs_dict={}):
@@ -442,7 +442,7 @@ def determine_played_season(player_url, player_name='', season_year=0):
         print('\nstatus_code: ' + str(status_code))
 
     if not played_season:
-        print('\nWarning: ' + player_name + ' did NOT play season ' + str(season_year) + '!\n')
+        print('\nWarning: ' + player_name.title() + ' did NOT play season ' + str(season_year) + '!\n')
 
     return played_season
 
