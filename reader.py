@@ -871,14 +871,14 @@ def read_all_players_season_logs(player_names, read_x_seasons=1, player_espn_ids
 
 	# much faster to save in one file
 	# but too large for single variable in memory?
-	todays_date = datetime.today().strftime('%m-%d-%y') 
-	all_logs_filename = 'data/game logs/all game logs ' + todays_date + '.json'
-	print('all_logs_filename: ' + all_logs_filename)
-	print('Try to find local game logs for all games.')
-	init_all_game_logs = read_json(all_logs_filename)
-	print('init_all_game_logs: ' + str(init_all_game_logs))
+	# todays_date = datetime.today().strftime('%m-%d-%y') 
+	# all_logs_filename = 'data/game logs/all game logs ' + todays_date + '.json'
+	# print('all_logs_filename: ' + all_logs_filename)
+	# print('Try to find local game logs for all games.')
+	# init_all_game_logs = read_json(all_logs_filename)
+	# print('init_all_game_logs: ' + str(init_all_game_logs))
 	# need to copy init game logs bc this run may not have all players but we dont want to remove other players
-	all_game_logs = copy.deepcopy(init_all_game_logs)
+	all_game_logs = {}#copy.deepcopy(init_all_game_logs)
 	
 
 	for player_name in player_names:
@@ -894,11 +894,11 @@ def read_all_players_season_logs(player_names, read_x_seasons=1, player_espn_ids
 		#init_all_game_logs: {'bruce brown': {'2023': {'Player': {'0': 
 		#final_all_game_logs: {'bruce brown': {2023: {'Player': {'0': 'br
 		
-		print('init_all_game_logs: ' + str(init_all_game_logs))
-		print('final_all_game_logs: ' + str(all_game_logs))
-		if not all_game_logs == init_all_game_logs:
-			print('all game logs changed so write to file for player ' + player_name)
-			writer.write_json_to_file(all_game_logs, all_logs_filename, 'w')
+		# print('init_all_game_logs: ' + str(init_all_game_logs))
+		# print('final_all_game_logs: ' + str(all_game_logs))
+		# if not all_game_logs == init_all_game_logs:
+		# 	print('all game logs changed so write to file for player ' + player_name)
+		# 	writer.write_json_to_file(all_game_logs, all_logs_filename, 'w')
 	
 	print('all_players_season_logs: ' + str(all_players_season_logs))
 	return all_players_season_logs

@@ -2519,7 +2519,7 @@ def generate_consistent_stat_vals(player_name, player_stat_dict, player_stat_rec
 # by adding its key to header of level above
 def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_stat_records, all_player_stat_dicts, player_teams={}, season_year=2024):
     print("\n===Generate All Consistent Stats Dicts===\n")
-    #print('all_player_consistent_stats: ' + str(all_player_consistent_stats))
+    print('all_player_consistent_stats: ' + str(all_player_consistent_stats))
     #print('all_player_stat_records: ' + str(all_player_stat_records))
 
     player_consistent_stat_data_headers = ['Player', 'S Name', 'Stat', 'Prob', '2nd Stat', '2nd Prob', 'PS', 'PP', '2nd PS', '2nd PP', 'OK Val', 'OK P', 'OK PP']
@@ -2564,83 +2564,102 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
                             # use consistent_stat_dict to sort
                             consistent_stat_dict = {'player name':player_name, 'stat name':stat_name}
                             
+                            # fields of interest
+                            prob_stat_key = 'prob val' #defined in loop
+                            prob_key = 'prob'
+                            min_margin_key = 'min margin'
+                            mean_margin_key = 'mean margin'
+
+                            second_prob_stat_key = 'second ' + prob_stat_key
+                            second_prob_key = 'second ' + prob_key
 
                             #player_consistent_stat_data = [player_name, stat_name]
 
                             # simply flatten bottom level of dict
                             # by adding its key to header of level above
                             # eg in this case blank for full season and post for postseason
-                            season_part = 'full'
-                            prob_stat_dict = year_consistent_stats[season_part][stat_name]
-                            print('prob_stat_dict: ' + str(prob_stat_dict))
+                            season_parts = ['full','reg','post']
 
-                            prob_stat_key = 'prob val'
-                            prob_val = prob_stat_dict[prob_stat_key]
-                            full_consistent_stat = prob_val
-                            
-                            prob_stat_key = 'prob'
-                            prob = prob_stat_dict[prob_stat_key]
-                            print('prob: ' + str(prob))
-                            full_consistent_stat_prob = round(prob * 100)
-                            print('full_consistent_stat_prob: ' + str(full_consistent_stat_prob))
+                            for season_part in season_parts:
+                                season_part_key = season_part
+                                if season_part == 'full':
+                                    season_part_key = ''
 
-                            full_second_consistent_stat = prob_stat_dict['second prob val']
-                            full_second_consistent_stat_prob = round(prob_stat_dict['second prob'] * 100)
+                                if season_part == 'full':
 
-                            min_margin = prob_stat_dict['min margin']
-                            second_min_margin = prob_stat_dict['second min margin']
-                            mean_margin = round(prob_stat_dict['mean margin'])
-                            second_mean_margin = round(prob_stat_dict['second mean margin'])
+                                    prob_stat_dict = year_consistent_stats[season_part][stat_name]
+                                    print('prob_stat_dict: ' + str(prob_stat_dict))
 
-                            consistent_stat_dict['prob val'] = full_consistent_stat
-                            consistent_stat_dict['prob'] = full_consistent_stat_prob
-                            consistent_stat_dict['second prob val'] = full_second_consistent_stat
-                            consistent_stat_dict['second prob'] = full_second_consistent_stat_prob
+                                    prob_val = prob_stat_dict[prob_stat_key]
+                                    full_consistent_stat = prob_val
+                                    
+                                    prob = prob_stat_dict[prob_key]
+                                    print('prob: ' + str(prob))
+                                    full_consistent_stat_prob = round(prob * 100)
+                                    print('full_consistent_stat_prob: ' + str(full_consistent_stat_prob))
 
-                            consistent_stat_dict['min margin'] = min_margin
-                            consistent_stat_dict['second min margin'] = second_min_margin
-                            consistent_stat_dict['mean margin'] = mean_margin
-                            consistent_stat_dict['second mean margin'] = second_mean_margin
+                                    full_second_consistent_stat = prob_stat_dict[second_prob_stat_key]
+                                    full_second_consistent_stat_prob = round(prob_stat_dict[second_prob_key] * 100)
+
+                                    min_margin = prob_stat_dict['min margin']
+                                    second_min_margin = prob_stat_dict['second min margin']
+                                    mean_margin = round(prob_stat_dict['mean margin'])
+                                    second_mean_margin = round(prob_stat_dict['second mean margin'])
+
+                                    consistent_stat_dict['prob val'] = full_consistent_stat
+                                    consistent_stat_dict['prob'] = full_consistent_stat_prob
+                                    consistent_stat_dict['second prob val'] = full_second_consistent_stat
+                                    consistent_stat_dict['second prob'] = full_second_consistent_stat_prob
+
+                                    consistent_stat_dict['min margin'] = min_margin
+                                    consistent_stat_dict['second min margin'] = second_min_margin
+                                    consistent_stat_dict['mean margin'] = mean_margin
+                                    consistent_stat_dict['second mean margin'] = second_mean_margin
 
 
 
-                            # add postseason stat probs separately
-                            season_part = 'postseason'
+                                # add postseason stat probs separately
+                                elif season_part == 'postseason':
 
-                            post_consistent_stat = 0
-                            post_consistent_stat_prob = 0
+                                    
 
-                            post_second_consistent_stat = 0
-                            post_second_consistent_stat_prob = 0
+                                    post_consistent_stat = 0
+                                    post_consistent_stat_prob = 0
 
-                            if season_part in year_consistent_stats.keys():
-                                prob_stat_dict = year_consistent_stats[season_part][stat_name]
-                                print('prob_stat_dict: ' + str(prob_stat_dict))
+                                    post_second_consistent_stat = 0
+                                    post_second_consistent_stat_prob = 0
 
-                                prob_stat_key = 'prob val' #defined in loop
-                                post_consistent_stat = prob_stat_dict[prob_stat_key]
-                                post_consistent_stat_prob = round(prob_stat_dict['prob'] * 100)
+                                    if season_part in year_consistent_stats.keys():
+                                        prob_stat_dict = year_consistent_stats[season_part][stat_name]
+                                        print('prob_stat_dict: ' + str(prob_stat_dict))
 
-                                post_second_consistent_stat = prob_stat_dict['second prob val']
-                                post_second_consistent_stat_prob = round(prob_stat_dict['second prob'] * 100)
+                                        post_consistent_stat = prob_stat_dict[prob_stat_key]
+                                        
+                                        post_consistent_stat_prob = round(prob_stat_dict[prob_key] * 100)
 
-                                post_min_margin = prob_stat_dict['min margin']
-                                post_second_min_margin = prob_stat_dict['second min margin']
-                                post_mean_margin = round(prob_stat_dict['mean margin'])
-                                post_second_mean_margin = round(prob_stat_dict['second mean margin'])
+                                        
+                                        post_second_consistent_stat = prob_stat_dict[second_prob_stat_key]
+                                        
+                                        post_second_consistent_stat_prob = round(prob_stat_dict[second_prob_key] * 100)
 
-                                season_part_key = re.sub('season','',season_part)
-                                # prob_stat_key = 'prob val' defined above
-                                prob_val_key = season_part_key + ' ' + prob_stat_key# + ' ' + str(season_year) # eg post prob val
-                                consistent_stat_dict[prob_val_key] = post_consistent_stat
-                                consistent_stat_dict['post prob'] = post_consistent_stat_prob
-                                consistent_stat_dict['post second prob val'] = post_second_consistent_stat
-                                consistent_stat_dict['post second prob'] = post_second_consistent_stat_prob
+                                        post_min_margin = prob_stat_dict[min_margin_key]
+                                        post_second_min_margin = prob_stat_dict['second min margin']
+                                        post_mean_margin = round(prob_stat_dict[mean_margin_key])
+                                        post_second_mean_margin = round(prob_stat_dict['second mean margin'])
 
-                                consistent_stat_dict['post min margin'] = post_min_margin
-                                consistent_stat_dict['post second min margin'] = post_second_min_margin
-                                consistent_stat_dict['post mean margin'] = post_mean_margin
-                                consistent_stat_dict['post second mean margin'] = post_second_mean_margin
+                                        
+                                        # prob_stat_key = 'prob val' defined above
+                                        prob_val_key = season_part_key + ' ' + prob_stat_key + ' ' + str(season_year) # eg post prob val
+                                        consistent_stat_dict[prob_val_key] = post_consistent_stat
+                                        
+                                        consistent_stat_dict['post prob'] = post_consistent_stat_prob
+                                        consistent_stat_dict['post second prob val'] = post_second_consistent_stat
+                                        consistent_stat_dict['post second prob'] = post_second_consistent_stat_prob
+
+                                        consistent_stat_dict['post min margin'] = post_min_margin
+                                        consistent_stat_dict['post second min margin'] = post_second_min_margin
+                                        consistent_stat_dict['post mean margin'] = post_mean_margin
+                                        consistent_stat_dict['post second mean margin'] = post_second_mean_margin
 
                             
                             consistent_stat_dict['team'] = player_team
