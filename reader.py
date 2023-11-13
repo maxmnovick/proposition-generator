@@ -27,6 +27,8 @@ import writer # write to file so we can check if data exists in local file so we
 
 from datetime import datetime # get current year so we can get current teams
 
+import copy # deepcopy game logs json so we can add to it before writing to file without losing data
+
 # get data from a file and format into a list (same as generator version of this fcn but more general)
 # input such as Game Data - All Games
 # or Game Log - All Players
@@ -612,146 +614,196 @@ def read_web_data(url, timeout=10, max_retries=3):
 			#raise
 			retries += 1
 			time.sleep(10)
+		except:
+			print(f"server not found?")
+			#raise
+			retries += 1
+			time.sleep(10)
 
 	print("Maximum retries reached.")
 	return None
 
 
 # get game log from espn.com
-def read_player_season_log(player_name, season_year=2024, player_url='', player_id=''):
-	print("\n===Read Player Game Log: " + player_name.title() + "===\n")
+def read_player_season_log(player_name, season_year=2024, player_url='', player_id='', all_game_logs={}, todays_date=datetime.today().strftime('%m-%d-%y'), player_game_logs={}):
+	print('\n===Read Player Game Log: ' + player_name.title() + ', ' + str(season_year) + '===\n')
 
 	player_game_log_df = pd.DataFrame()
+	player_game_log_dict = {}
 
-	# see if saved locally
-	todays_date = datetime.today().strftime('%m-%d-%y') 
-	# data/lamelo ball 2024 game log 11-08-23.csv
-	log_filename = 'data/game logs/' + player_name + ' ' + str(season_year) + ' game log ' + todays_date + '.csv'
-	print('log_filename: ' + log_filename)
+	# much faster to save in one file
+	# print('Try to find local game logs for ' + str(season_year))
+	# all_game_logs = read_json(all_logs_filename)
+	#print('all_game_logs:\n' + str(all_game_logs))
 	try:
-		print('Try to find local game log for ' + player_name.title())
-		player_game_log_df = pd.read_csv(log_filename)
-		#print('local player_game_log_df:\n' + str(player_game_log_df))
+		if player_name in all_game_logs.keys() and str(season_year) in all_game_logs[player_name].keys():
+			
+			player_game_log_dict = all_game_logs[player_name][str(season_year)]
+			#print('local player_game_log_dict:\n' + str(player_game_log_dict))
+			print('found local game log for player ' + player_name + ' in ALL game logs')
+		elif str(season_year) in player_game_logs.keys():
+			player_game_log_dict = player_game_logs[str(season_year)]
+			#print('local player_game_log_dict:\n' + str(player_game_log_dict))
+			print('found local game log for player ' + player_name + ' in PLAYER game logs')
+		else:
+			# if player in logs but season not then maybe we only ran for 1 season so check if season is on web
 
-	except:
-		print('Could not find local game log, so read from web.')
-		# get espn player id from google so we can get url
-		if player_url == '':
-			if player_id == '':
-				player_id = read_player_espn_id(player_name)
-			#season_year = 2023
-			player_url = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_id + '/type/nba/year/' + str(season_year) #.format(df_Players_Drafted_2000.loc[INDEX, 'ESPN_GAMELOG_ID'])
-			#print("player_url: " + player_url)
 
-		#player_game_log = []
-		#dfs = pd.read_html(player_url)
-		#print(f'Total tables: {len(dfs)}')
+		# see if saved locally
+		#todays_date = datetime.today().strftime('%m-%d-%y') 
+		# data/lamelo ball 2024 game log 11-08-23.csv
+		# log_filename = 'data/game logs/' + player_name + ' ' + str(season_year) + ' game log ' + todays_date + '.csv'
+		# print('log_filename: ' + log_filename)
+		
+		# try:
+		# 	print('Try to find local game log for ' + player_name.title())
+		# 	player_game_log_df = pd.read_csv(log_filename)
+		# 	#print('local player_game_log_df:\n' + str(player_game_log_df))
 
-		#try:
+		# except:
 
-		html_results = read_web_data(player_url) #pd.read_html(player_url)
-		#print("html_results: " + str(html_results))
 
-		if html_results is not None:
+			print('Could not find local game log, so read from web.')
+			# get espn player id from google so we can get url
+			if player_url == '':
+				if player_id == '':
+					player_id = read_player_espn_id(player_name)
+				#season_year = 2023
+				player_url = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_id + '/type/nba/year/' + str(season_year) #.format(df_Players_Drafted_2000.loc[INDEX, 'ESPN_GAMELOG_ID'])
+				#print("player_url: " + player_url)
 
-			parts_of_season = [] # pre season, regular season, post season
+			#player_game_log = []
+			#dfs = pd.read_html(player_url)
+			#print(f'Total tables: {len(dfs)}')
 
-			len_html_results = len(html_results) # each element is a dataframe/table so we loop thru each table
-			#print('len_html_results: ' + str(len_html_results))
-			for order in range(len_html_results):
-				#print("order: " + str(order))
+			#try:
 
-				if len(html_results[order].columns.tolist()) == 17:
+			# returns list_of_dataframes
+			html_results = read_web_data(player_url) #pd.read_html(player_url)
+			#print("html_results: " + str(html_results))
 
-					part_of_season = html_results[order]
-					#print('part_of_season:\n' + str(part_of_season))
+			if html_results is not None:
 
-					# look at the formatting to figure out how to separate table and elements in table
-					if len_html_results - 2 == order:
-						part_of_season['Type'] = 'Preseason'
+				parts_of_season = [] # pre season, regular season, post season
+
+				len_html_results = len(html_results) # each element is a dataframe/table so we loop thru each table
+				#print('len_html_results: ' + str(len_html_results))
+				for order in range(len_html_results):
+					#print("order: " + str(order))
+
+					if len(html_results[order].columns.tolist()) == 17:
+
+						part_of_season = html_results[order]
+						#print('part_of_season:\n' + str(part_of_season))
+
+						# look at the formatting to figure out how to separate table and elements in table
+						if len_html_results - 2 == order:
+							part_of_season['Type'] = 'Preseason'
+
+						else:
+							# last row of postseason section has 'finals' in it, eg quarter finals, semi finals, finals
+							last_cell = part_of_season.iloc[-1,0]
+							#print('last_cell: ' + str(last_cell))
+							if re.search('final',last_cell.lower()) or re.search('play-in',last_cell.lower()):
+								part_of_season['Type'] = 'Postseason'
+							# if len(part_of_season[(part_of_season['OPP'].str.contains('GAME'))]) > 0:
+							# 	part_of_season['Type'] = 'Postseason'
+							# elif re.search('play-in',last_cell.lower()):
+							# 	part_of_season['Type'] = 'Playin'
+							else:
+								part_of_season['Type'] = 'Regular'
+
+						parts_of_season.append(part_of_season)
 
 					else:
-						# last row of postseason section has 'finals' in it, eg quarter finals, semi finals, finals
-						last_cell = part_of_season.iloc[-1,0]
-						#print('last_cell: ' + str(last_cell))
-						if re.search('final',last_cell.lower()) or re.search('play-in',last_cell.lower()):
-							part_of_season['Type'] = 'Postseason'
-						# if len(part_of_season[(part_of_season['OPP'].str.contains('GAME'))]) > 0:
-						# 	part_of_season['Type'] = 'Postseason'
-						# elif re.search('play-in',last_cell.lower()):
-						# 	part_of_season['Type'] = 'Playin'
-						else:
-							part_of_season['Type'] = 'Regular'
+						#print("Warning: table does not have 17 columns so it is not valid game log.")
+						pass
 
-					parts_of_season.append(part_of_season)
+				
 
-				else:
-					#print("Warning: table does not have 17 columns so it is not valid game log.")
-					pass
+				if len(parts_of_season) > 0:
 
-			
+					player_game_log_df = pd.concat(parts_of_season, sort=False, ignore_index=True)
 
-			if len(parts_of_season) > 0:
+					player_game_log_df = player_game_log_df[(player_game_log_df['OPP'].str.startswith('@')) | (player_game_log_df['OPP'].str.startswith('vs'))].reset_index(drop=True)
 
-				player_game_log_df = pd.concat(parts_of_season, sort=False, ignore_index=True)
+					player_game_log_df['Season'] = str(season_year-1) + '-' + str(season_year-2000)
 
-				player_game_log_df = player_game_log_df[(player_game_log_df['OPP'].str.startswith('@')) | (player_game_log_df['OPP'].str.startswith('vs'))].reset_index(drop=True)
+					player_game_log_df['Player'] = player_name
 
-				player_game_log_df['Season'] = str(season_year-1) + '-' + str(season_year-2000)
+					player_game_log_df = player_game_log_df.set_index(['Player', 'Season', 'Type']).reset_index()
 
-				player_game_log_df['Player'] = player_name
+					# Successful 3P Attempts
+					player_game_log_df['3PT_SA'] = player_game_log_df['3PT'].str.split('-').str[0]
 
-				player_game_log_df = player_game_log_df.set_index(['Player', 'Season', 'Type']).reset_index()
-
-				# Successful 3P Attempts
-				player_game_log_df['3PT_SA'] = player_game_log_df['3PT'].str.split('-').str[0]
-
-				# All 3P Attempts
-				player_game_log_df['3PT_A'] = player_game_log_df['3PT'].str.split('-').str[1]
-				player_game_log_df[
-					['MIN', 'FG%', '3P%', 'FT%', 'REB', 'AST', 'BLK', 'STL', 'PF', 'TO', 'PTS', '3PT_SA', '3PT_A']
-
-					] = player_game_log_df[
-
+					# All 3P Attempts
+					player_game_log_df['3PT_A'] = player_game_log_df['3PT'].str.split('-').str[1]
+					player_game_log_df[
 						['MIN', 'FG%', '3P%', 'FT%', 'REB', 'AST', 'BLK', 'STL', 'PF', 'TO', 'PTS', '3PT_SA', '3PT_A']
 
-						].astype(float)
+						] = player_game_log_df[
 
-			# display player game log in readable format
-			#pd.set_option('display.max_columns', 100)
-			pd.set_option('display.max_columns', None)
-			#print("player_game_log_df:\n" + str(player_game_log_df))
+							['MIN', 'FG%', '3P%', 'FT%', 'REB', 'AST', 'BLK', 'STL', 'PF', 'TO', 'PTS', '3PT_SA', '3PT_A']
 
-			# save each game log to a file
-			# filename: <player> <season> game log <todays d/m/y>
-			# we put todays date so we can see if already read today
-			# bc if not read today then read new 
-			# index=False: means that the index of the DataFrame will not be included in the CSV file.
-			
-			player_game_log_df.to_csv(log_filename, index=False)
+							].astype(float)
 
-		# except Exception as e:
-		# 	print("Error reading game log " + str(e))
-		# 	pass
+				# display player game log in readable format
+				#pd.set_option('display.max_columns', 100)
+				pd.set_option('display.max_columns', None)
+				#print("player_game_log_df:\n" + str(player_game_log_df))
 
-	# if we want to format table in 1 window we can get df elements in lists and then print lists in table
-	# header_row = ['Date', 'OPP', 'Result', 'MIN', 'FG', 'FG%', '3P', '3P%', 'FT', 'FT%', 'REB', 'AST', 'BLK', 'STL', 'PF', 'TO', 'PTS']
+				# save each game log to a file
+				# filename: <player> <season> game log <todays d/m/y>
+				# we put todays date so we can see if already read today
+				# bc if not read today then read new 
+				# index=False: means that the index of the DataFrame will not be included in the CSV file.
+				
+				#player_game_log_df.to_csv(log_filename, index=False)
+				# append game log to existing days file if possible
+				# if first run of the day, then write new file with days date
+				# see other instances of write to json
+				# all_game_logs = all_game_logs
+				# writer.write_json_to_file(all_game_logs, all_l)
 
-	# table = [header_row]
-	# for row in player_game_data:
-	# 	table.append(row)
+				player_game_log_dict = player_game_log_df.to_dict()
+
+			# except Exception as e:
+			# 	print("Error reading game log " + str(e))
+			# 	pass
+
+		# if we want to format table in 1 window we can get df elements in lists and then print lists in table
+		# header_row = ['Date', 'OPP', 'Result', 'MIN', 'FG', 'FG%', '3P', '3P%', 'FT', 'FT%', 'REB', 'AST', 'BLK', 'STL', 'PF', 'TO', 'PTS']
+
+		# table = [header_row]
+		# for row in player_game_data:
+		# 	table.append(row)
+	except:
+		print('Warning: Error getting game log!')
 
 	# print("\n===" + player_name + "===\n")
 	# print(tabulate(table))
 	#print(player_name + " player_game_log returned")# + str(player_game_log_df))
-	return player_game_log_df # can return this df directly or first arrange into list but seems simpler and more intuitive to keep df so we can access elements by keyword
+	print('player_game_log_df:\n' + str(player_game_log_df))
+	print('player_game_log_dict: ' + str(player_game_log_dict))
+	return player_game_log_dict#player_game_log_df # can return this df directly or first arrange into list but seems simpler and more intuitive to keep df so we can access elements by keyword
 
 # here we decide default season year, so make input variable parameter
-def read_player_season_logs(player_name, read_x_seasons=1, player_espn_ids={}, season_year=2024):
+def read_player_season_logs(player_name, read_x_seasons=1, player_espn_ids={}, season_year=2024, all_game_logs={}, todays_date=datetime.today().strftime('%m-%d-%y') ):
+	print('\n===Read Player Season Logs: ' + player_name.title() + '===\n')
+
+	# see if saved season logs for player
+	player_game_logs_filename = 'data/game logs/' + player_name + ' game logs ' + todays_date + '.json'
+	print('player_game_logs_filename: ' + player_game_logs_filename)
+	print('Try to find local game logs for ' + player_name + '.')
+	init_player_game_logs = read_json(player_game_logs_filename)
+	print('init_player_game_logs: ' + str(init_player_game_logs))
+	# need to copy init game logs bc this run may not have all players but we dont want to remove other players
+	player_game_logs = copy.deepcopy(init_player_game_logs) # season logs for a player
 
 	player_name = player_name.lower()
 
-	player_game_logs = []
+	#player_game_logs = []
+	player_season_logs = {}
 
 	player_espn_id = ''
 	if len(player_espn_ids.keys()) == 0:
@@ -766,45 +818,89 @@ def read_player_season_logs(player_name, read_x_seasons=1, player_espn_ids={}, s
 	player_url = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_espn_id + '/type/nba/year/' + str(season_year) #.format(df_Players_Drafted_2000.loc[INDEX, 'ESPN_GAMELOG_ID'])
 	
 	if read_x_seasons == 0:
-		while determiner.determine_played_season(player_url, player_name, season_year):
+		while determiner.determine_played_season(player_url, player_name, season_year, all_game_logs, player_game_logs):
 
 			#print("player_url: " + player_url)
-			game_log_df = read_player_season_log(player_name, season_year, player_url)
-			if not game_log_df.empty:
-				player_game_logs.append(game_log_df)
+			game_log_dict = read_player_season_log(player_name, season_year, player_url, all_game_logs=all_game_logs, todays_date=todays_date, player_game_logs=player_game_logs)
+			player_season_logs[str(season_year)] = game_log_dict
+			# if not game_log_df.empty:
+			# 	player_game_logs.append(game_log_df)
+			# 	player_season_logs[season_year] = game_log_df.to_dict()
 
 			# if not read_all_seasons:
 			# 	break
 
+			player_game_logs[str(season_year)] = game_log_dict # includes all players saved before not just players input this run
+
 			season_year -= 1
 			player_url = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_espn_id + '/type/nba/year/' + str(season_year) #.format(df_Players_Drafted_2000.loc[INDEX, 'ESPN_GAMELOG_ID'])
-			
+
 	for season_idx in range(read_x_seasons):
-		if determiner.determine_played_season(player_url, player_name, season_year):
+		if determiner.determine_played_season(player_url, player_name, season_year, all_game_logs, player_game_logs):
 
 			#print("player_url: " + player_url)
-			game_log_df = read_player_season_log(player_name, season_year, player_url)
-			if not game_log_df.empty:
-				player_game_logs.append(game_log_df)
+			game_log_dict = read_player_season_log(player_name, season_year, player_url, all_game_logs=all_game_logs, todays_date=todays_date, player_game_logs=player_game_logs)
+			player_season_logs[str(season_year)] = game_log_dict
+			# if not game_log_df.empty:
+			# 	player_game_logs.append(game_log_df)
+			# 	player_season_logs[season_year] = game_log_df.to_dict()
+
+			player_game_logs[str(season_year)] = game_log_dict # includes all players saved before not just players input this run
 
 			season_year -= 1
 			player_url = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_espn_id + '/type/nba/year/' + str(season_year)
-		
 		# after we reach season they did not play it is possible they may have played before but taken break
 		# so keep checking prev 5 years before breaking
 		# else:
 		# 	break
 
-	return player_game_logs
+	print('init_player_game_logs: ' + str(init_player_game_logs))
+	print('final_player_game_logs: ' + str(player_game_logs))
+	if not player_game_logs == init_player_game_logs:
+		print('player ' + player_name + ' game logs changed so write to file for player ' + player_name)
+		writer.write_json_to_file(player_game_logs, player_game_logs_filename, 'w')
+
+	print('player_season_logs: ' + str(player_season_logs))
+	return player_season_logs#player_game_logs
 
 def read_all_players_season_logs(player_names, read_x_seasons=1, player_espn_ids={}, season_year=2024):
 
+	print('\n===Read All Players Season Logs===\n')
+
 	all_players_season_logs = {}
 
+	# much faster to save in one file
+	# but too large for single variable in memory?
+	todays_date = datetime.today().strftime('%m-%d-%y') 
+	all_logs_filename = 'data/game logs/all game logs ' + todays_date + '.json'
+	print('all_logs_filename: ' + all_logs_filename)
+	print('Try to find local game logs for all games.')
+	init_all_game_logs = read_json(all_logs_filename)
+	print('init_all_game_logs: ' + str(init_all_game_logs))
+	# need to copy init game logs bc this run may not have all players but we dont want to remove other players
+	all_game_logs = copy.deepcopy(init_all_game_logs)
+	
+
 	for player_name in player_names:
-		players_season_logs = read_player_season_logs(player_name, read_x_seasons, player_espn_ids, season_year)
+		# {player:season:log}
+		players_season_logs = read_player_season_logs(player_name, read_x_seasons, player_espn_ids, season_year, all_game_logs)
 		all_players_season_logs[player_name] = players_season_logs
 
+		# if log is already in file no need to overwrite but the output will be the same as all game logs so it makes no difference
+		all_game_logs[player_name] = players_season_logs # {player:season:log}
+
+		# write for each player is if error interrupts it can resume where it left off
+		# if all game logs unchanged then no need to write to file
+		#init_all_game_logs: {'bruce brown': {'2023': {'Player': {'0': 
+		#final_all_game_logs: {'bruce brown': {2023: {'Player': {'0': 'br
+		
+		print('init_all_game_logs: ' + str(init_all_game_logs))
+		print('final_all_game_logs: ' + str(all_game_logs))
+		if not all_game_logs == init_all_game_logs:
+			print('all game logs changed so write to file for player ' + player_name)
+			writer.write_json_to_file(all_game_logs, all_logs_filename, 'w')
+	
+	print('all_players_season_logs: ' + str(all_players_season_logs))
 	return all_players_season_logs
 
 
@@ -1233,9 +1329,11 @@ def read_roster_from_internet(team_abbrev, read_new_teams=False):
 
 # valid for json files
 def read_json(key_type):
-	print('\n===Read JSON: ' + key_type.title() + '===\n')
-	key_type = re.sub('\s+','-',key_type)
-	keys_filename = "data/" + key_type.title() + ".json"
+	print('\n===Read JSON===\n')
+	keys_filename = key_type
+	if not re.search('\.',key_type): # filename
+		key_type = re.sub('\s+','-',key_type)
+		keys_filename = "data/" + key_type.title() + ".json"
 	print("keys_filename: " + keys_filename)
 
 	lines = [] # capture each line in the document
@@ -1260,10 +1358,10 @@ def read_json(key_type):
 		# parse condensed_json
 		keys = json.loads(condensed_json)
 	except:
-		print("write_json_to_file")
+		print("Warning: no json file: " + key_type)
 
 	
-	print("keys: " + str(keys))
+	#print("keys: " + str(keys))
 	return keys
 
 # read team roster to get team players
@@ -2012,9 +2110,11 @@ def read_all_players_in_games(all_player_season_logs_dict, player_teams, season_
 			
 		print('existing_game_ids_dict: ' + str(existing_game_ids_dict))
 	
-		for player_season_log in player_season_logs:
+		for player_season_log in player_season_logs.values():
+
+			player_season_log_df = pd.DataFrame(player_season_log)
 			
-			player_reg_season_log = determiner.determine_regular_season_games(player_season_log)
+			player_reg_season_log = determiner.determine_regular_season_games(player_season_log_df)
 			
 			players_in_game = [] # unordered list of all players in game independent of team
 			players_in_game_dict = {} # {teammates:[],opponents:[]}
@@ -2307,7 +2407,7 @@ def read_react_website(url):
 		print("Request successful.")
 
 	except:
-		print('Warning: No SGP element: ' + str(sgp_element))
+		print('Warning: No SGP element!')
 
 	# pts_data = driver.find_element('class name', "rj-markerboard-markets").get_attribute('outerHTML')
 	# print('pts_data:\n' + str(pts_data))

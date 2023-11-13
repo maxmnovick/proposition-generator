@@ -17,7 +17,7 @@ from tabulate import tabulate # display output
 
 import sorter 
 
-#import pandas as pd # read html results from webpage. need here to init empty df in case no df passed in list
+import pandas as pd # read html results from webpage. need here to convert game log dict to df
 
 # sort alphabetical and lower for comparison to other games
 def generate_players_string(players_list):
@@ -47,6 +47,9 @@ def generate_players_string(players_list):
 # each player has a stat dict for each stat so gen all of them for a given player
 # run separately for each part of each season
 def generate_player_all_stats_dicts(player_name, player_game_log, opponent, player_team, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part):
+
+    print('\n===Generate Player All Stats Dicts===\n')
+    print('player_game_log:\n' + str(player_game_log))
 
     # get no. games played this season
     # so we can compare game with the same idx bt seasons
@@ -196,7 +199,7 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, play
 
             # if current loop is most recent game (idx 0) then today's game is the next game, if current season
             # if last game of prev season then next game after idx 0 (bc from recent to distant) is next season game 1
-            if game_idx == 0: # see how many days after prev game is date of today's projected lines
+            if game_idx == '0': # see how many days after prev game is date of today's projected lines
                 # already defined or passed todays_games_date_obj
                 # todays_games_date_obj = datetime.strptime(todays_games_date, '%m/%d/%y')
                 # print("todays_games_date_obj: " + str(todays_games_date_obj))
@@ -230,8 +233,9 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, play
                 stat_dict[days_before_next_game][game_idx] = stat
 
             init_prev_game_date_string = ''
-            if len(player_game_log.index) > game_idx+1:
-                init_prev_game_date_string = player_game_log.loc[game_idx+1, 'Date'].lower().split()[1]
+            prev_game_idx = int(game_idx) + 1
+            if len(player_game_log.index) > prev_game_idx:
+                init_prev_game_date_string = player_game_log.loc[str(prev_game_idx), 'Date'].lower().split()[1]
             
                 prev_game_mth = init_prev_game_date_string.split('/')[0]
                 final_season_year = str(season_year)
@@ -385,7 +389,7 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, play
                             stat_dict[game_date_string][game_idx] = [stat]
                 #print("all_seasons_stats_dicts: " + str(all_seasons_stats_dicts))
             # add key for the current game number for this season and add games played from previous seasons (1 per season)
-            game_num = total_season_games - game_idx # bc going from recent to past
+            game_num = total_season_games - int(game_idx) # bc going from recent to past
             if game_num == num_games_played:
                 #print("found same game num in previous season")
                 for stat_idx in range(len(all_seasons_stats_dicts.values())):
@@ -489,7 +493,11 @@ def generate_player_stat_dict(player_name, player_season_logs, projected_lines_d
 
     all_seasons_stats_dicts = {'pts':all_seasons_pts_dicts, 'reb':all_seasons_rebs_dicts, 'ast':all_seasons_asts_dicts, 'w score':all_seasons_winning_scores_dicts, 'l score':all_seasons_losing_scores_dicts, 'min':all_seasons_minutes_dicts, 'fgm':all_seasons_fgms_dicts, 'fga':all_seasons_fgas_dicts, 'fg%':all_seasons_fg_rates_dicts, '3pm':all_seasons_threes_made_dicts, '3pa':all_seasons_threes_attempts_dicts, '3p%':all_seasons_threes_rates_dicts, 'ftm':all_seasons_ftms_dicts, 'fta':all_seasons_ftas_dicts, 'ft%':all_seasons_ft_rates_dicts, 'blk':all_seasons_bs_dicts, 'stl':all_seasons_ss_dicts, 'pf':all_seasons_fs_dicts, 'to':all_seasons_tos_dicts} # loop through to add all new stats with 1 fcn
 
-    for player_game_log in player_season_logs:
+    for player_game_log in player_season_logs.values():
+
+        player_game_log_df = pd.DataFrame(player_game_log)#.from_dict(player_game_log) #pd.DataFrame(player_game_log)
+        player_game_log_df.index = player_game_log_df.index.map(str)
+        print('converted_player_game_log_df:\n' + str(player_game_log_df))
 
         print("\n===Year " + str(season_year) + "===\n")
         #player_game_log = player_season_logs[0] #start with current season. all_player_game_logs[player_idx]
@@ -909,17 +917,17 @@ def generate_player_stat_dict(player_name, player_season_logs, projected_lines_d
         if season_year not in player_stat_dict.keys():
             player_stat_dict[season_year] = {}
         
-        player_stat_dict[season_year][season_part] = generate_player_all_stats_dicts(player_name, player_game_log, opponent, player_team, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part) 
+        player_stat_dict[season_year][season_part] = generate_player_all_stats_dicts(player_name, player_game_log_df, opponent, player_team, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part) 
         # test
         #player_stat_dict[season_year] = generate_player_all_stats_dicts(player_name, player_game_log, opponent, player_team, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part) 
 
         # after adding reg season stats, add postseason stats
         season_part = 'postseason'
-        player_stat_dict[season_year][season_part] = generate_player_all_stats_dicts(player_name, player_game_log, opponent, player_team, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part) 
+        player_stat_dict[season_year][season_part] = generate_player_all_stats_dicts(player_name, player_game_log_df, opponent, player_team, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part) 
         
         # combine reg and postseason
         season_part = 'full'
-        player_stat_dict[season_year][season_part] = generate_player_all_stats_dicts(player_name, player_game_log, opponent, player_team, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part) #generate_full_season_stat_dict(player_stat_dict)
+        player_stat_dict[season_year][season_part] = generate_player_all_stats_dicts(player_name, player_game_log_df, opponent, player_team, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part) #generate_full_season_stat_dict(player_stat_dict)
 
         season_year -= 1
 
@@ -1771,8 +1779,9 @@ def generate_player_all_outcomes_dict(player_name, player_season_logs, projected
     # get prev game to compute time_after condition
     time_after = '0 after' # could be '0' or '' bc init for case of new player with no log
     #current_season_log = pd.DataFrame() # init current season log as df
-    if len(player_season_logs) > 0:
-        current_season_log = player_season_logs[0] 
+    if len(player_season_logs.values()) > 0:
+        current_season_log = pd.DataFrame(player_season_logs[str(season_year)])
+        current_season_log.index = current_season_log.index.map(str)
     
         #season_year = 2023
         prev_game_date_obj = determiner.determine_prev_game_date(current_season_log, season_year) # exclude all star and other special games

@@ -509,7 +509,7 @@ def write_data_to_file(data, filepath, write_param, extension='csv'):
 def write_json_to_file(dict, filepath, write_param):
     print('\n===Write JSON to File: ' + filepath + '===\n')
 
-    filepath = re.sub('\s+','-',filepath)
+    #filepath = re.sub('\s+','-',filepath) # is this needed or are spaces ok?
     with open(filepath, write_param) as outfile:
         json.dump(dict, outfile)
 

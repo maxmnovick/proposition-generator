@@ -394,10 +394,10 @@ def determine_prev_game_date(player_game_log, season_year):
     #print('player_game_log:\n' + str(player_game_log))
     # if not all star
     prev_game_idx = 0
-    while re.search('\\*', player_game_log.loc[prev_game_idx, 'OPP']):
+    while re.search('\\*', player_game_log.loc[str(prev_game_idx), 'OPP']):
         prev_game_idx += 1
 
-    init_game_date_string = player_game_log.loc[prev_game_idx, 'Date'].split()[1] # 'wed 2/15'
+    init_game_date_string = player_game_log.loc[str(prev_game_idx), 'Date'].split()[1] # 'wed 2/15'
     game_mth = init_game_date_string.split('/')[0]
     final_season_year = str(season_year)
     if int(game_mth) in range(10,13):
@@ -411,35 +411,49 @@ def determine_prev_game_date(player_game_log, season_year):
 
 
 # gather game logs by season and do not pull webpage if it does not exist
-def determine_played_season(player_url, player_name='', season_year=0):
+# season_year=0 so hard fail if no season given but then why not make required var?
+# bc default should assume current season? no bc if we are looking them up they are probably in current season and it is more likely they did not play past season
+def determine_played_season(player_url, player_name='', season_year=0, all_game_logs={}, player_game_logs={}):
     played_season = False
-    # response = requests.get(player_url)
-    # if response.status_code == 200:
-    #     played_season = True
-    #     print('played season')
 
-    h = httplib2.Http()
-    resp = h.request(player_url, 'HEAD')
-    status_code = resp[0]['status']
-    
-    if int(status_code) < 400:
-        # some websites will simply not have the webpage but espn still has the webpage for all years prior to playing with blank game logs
-        #if len(game_log) > 0:
+    # all game logs too big as one var so consider replacing next version with player game logs
+    if player_name in all_game_logs.keys() and str(season_year) in all_game_logs[player_name].keys():
+        print('player season game log found in ALL game logs')
+        played_season = True
 
-        html_results = pd.read_html(player_url)
-        #print("html_results: " + str(html_results))
+    elif str(season_year) in player_game_logs.keys():
+        print('player season game log found in PLAYER game logs')
+        played_season = True
 
-        len_html_results = len(html_results) # each element is a dataframe/table so we loop thru each table
-
-        for order in range(len_html_results):
-            #print("order: " + str(order))
-
-            if len(html_results[order].columns.tolist()) == 17:
-
-                played_season = True
-                break
     else:
-        print('\nstatus_code: ' + str(status_code))
+
+        # response = requests.get(player_url)
+        # if response.status_code == 200:
+        #     played_season = True
+        #     print('played season')
+
+        h = httplib2.Http()
+        resp = h.request(player_url, 'HEAD')
+        status_code = resp[0]['status']
+        
+        if int(status_code) < 400:
+            # some websites will simply not have the webpage but espn still has the webpage for all years prior to playing with blank game logs
+            #if len(game_log) > 0:
+
+            html_results = pd.read_html(player_url)
+            #print("html_results: " + str(html_results))
+
+            len_html_results = len(html_results) # each element is a dataframe/table so we loop thru each table
+
+            for order in range(len_html_results):
+                #print("order: " + str(order))
+
+                if len(html_results[order].columns.tolist()) == 17:
+
+                    played_season = True
+                    break
+        else:
+            print('\nstatus_code: ' + str(status_code))
 
     if not played_season:
         print('\nWarning: ' + player_name.title() + ' did NOT play season ' + str(season_year) + '!\n')
