@@ -124,6 +124,11 @@ def read_website(url, timeout=10, max_retries=3):
 			retries += 1
 			print(f"Exception error occurred. Retrying {retries}/{max_retries}...")
 			time.sleep(10)
+		except:
+			print(f"server not found?")
+			#raise
+			retries += 1
+			time.sleep(10)
 
 	print("Maximum retries reached.")
 	return None
@@ -614,6 +619,12 @@ def read_web_data(url, timeout=10, max_retries=3):
 			#raise
 			retries += 1
 			time.sleep(10)
+		except Exception as e:
+            # If any other exception occurs, retry
+			#raise
+			retries += 1
+			print(f"Exception error occurred. Retrying {retries}/{max_retries}...")
+			time.sleep(10)
 		except:
 			print(f"server not found?")
 			#raise
@@ -783,8 +794,8 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 	# print("\n===" + player_name + "===\n")
 	# print(tabulate(table))
 	#print(player_name + " player_game_log returned")# + str(player_game_log_df))
-	print('player_game_log_df:\n' + str(player_game_log_df))
-	print('player_game_log_dict: ' + str(player_game_log_dict))
+	#print('player_game_log_df:\n' + str(player_game_log_df))
+	#print('player_game_log_dict: ' + str(player_game_log_dict))
 	return player_game_log_dict#player_game_log_df # can return this df directly or first arrange into list but seems simpler and more intuitive to keep df so we can access elements by keyword
 
 # here we decide default season year, so make input variable parameter
@@ -796,7 +807,7 @@ def read_player_season_logs(player_name, read_x_seasons=1, player_espn_ids={}, s
 	print('player_game_logs_filename: ' + player_game_logs_filename)
 	print('Try to find local game logs for ' + player_name + '.')
 	init_player_game_logs = read_json(player_game_logs_filename)
-	print('init_player_game_logs: ' + str(init_player_game_logs))
+	#print('init_player_game_logs: ' + str(init_player_game_logs))
 	# need to copy init game logs bc this run may not have all players but we dont want to remove other players
 	player_game_logs = copy.deepcopy(init_player_game_logs) # season logs for a player
 
@@ -854,13 +865,13 @@ def read_player_season_logs(player_name, read_x_seasons=1, player_espn_ids={}, s
 		# else:
 		# 	break
 
-	print('init_player_game_logs: ' + str(init_player_game_logs))
-	print('final_player_game_logs: ' + str(player_game_logs))
+	#print('init_player_game_logs: ' + str(init_player_game_logs))
+	#print('final_player_game_logs: ' + str(player_game_logs))
 	if not player_game_logs == init_player_game_logs:
 		print('player ' + player_name + ' game logs changed so write to file for player ' + player_name)
 		writer.write_json_to_file(player_game_logs, player_game_logs_filename, 'w')
 
-	print('player_season_logs: ' + str(player_season_logs))
+	#print('player_season_logs: ' + str(player_season_logs))
 	return player_season_logs#player_game_logs
 
 def read_all_players_season_logs(player_names, read_x_seasons=1, player_espn_ids={}, season_year=2024):
@@ -2370,6 +2381,7 @@ def read_react_website(url):
 						print("player_element: " + player_element.get_attribute('innerHTML'))
 
 						player_name = re.sub('Points|Rebounds|Assists','',player_btn_header).strip().lower()
+						player_name = re.sub('−|-','',player_name)
 						print('player_name: ' + player_name)
 
 						web_dict[key][player_name] = {}

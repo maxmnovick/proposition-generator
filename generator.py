@@ -506,412 +506,6 @@ def generate_player_stat_dict(player_name, player_season_logs, projected_lines_d
         # for each part of season, reg and post:
         # first get stats for reg season
         season_part = 'regular'
-
-        # all_pts_dicts = {'all':{idx:val,..},..}
-        # all_pts_dicts = { 'all':{}, 'home':{}, 'away':{} } # 'opp eg okc':{}, 'day of week eg tue':{}
-        # all_rebs_dicts = { 'all':{}, 'home':{}, 'away':{} }
-        # all_asts_dicts = { 'all':{}, 'home':{}, 'away':{} }
-        # all_winning_scores_dicts = { 'all':{}, 'home':{}, 'away':{} }
-        # all_losing_scores_dicts = { 'all':{}, 'home':{}, 'away':{} }
-        # all_minutes_dicts = { 'all':{}, 'home':{}, 'away':{} }
-        # all_fgms_dicts = { 'all':{}, 'home':{}, 'away':{} }
-        # all_fgas_dicts = { 'all':{}, 'home':{}, 'away':{} }
-        # all_fg_rates_dicts = { 'all':{}, 'home':{}, 'away':{} }
-        # all_threes_made_dicts = { 'all':{}, 'home':{}, 'away':{} }
-        # all_threes_attempts_dicts = { 'all':{}, 'home':{}, 'away':{} }
-        # all_threes_rates_dicts = { 'all':{}, 'home':{}, 'away':{} }
-        # all_ftms_dicts = { 'all':{}, 'home':{}, 'away':{} }
-        # all_ftas_dicts = { 'all':{}, 'home':{}, 'away':{} }
-        # all_ft_rates_dicts = { 'all':{}, 'home':{}, 'away':{} }
-        # all_bs_dicts = { 'all':{}, 'home':{}, 'away':{} }
-        # all_ss_dicts = { 'all':{}, 'home':{}, 'away':{} }
-        # all_fs_dicts = { 'all':{}, 'home':{}, 'away':{} }
-        # all_tos_dicts = { 'all':{}, 'home':{}, 'away':{} }
-
-        # all_stats_dicts = {'pts':all_pts_dicts, 'reb':all_rebs_dicts, 'ast':all_asts_dicts, 'w score':all_winning_scores_dicts, 'l score':all_losing_scores_dicts, 'min':all_minutes_dicts, 'fgm':all_fgms_dicts, 'fga':all_fgas_dicts, 'fg%':all_fg_rates_dicts, '3pm':all_threes_made_dicts, '3pa':all_threes_attempts_dicts, '3p%':all_threes_rates_dicts, 'ftm':all_ftms_dicts, 'fta':all_ftas_dicts, 'ft%':all_ft_rates_dicts, 'blk':all_bs_dicts, 'stl':all_ss_dicts, 'pf':all_fs_dicts, 'to':all_tos_dicts} # loop through to add all new stats with 1 fcn
-
-
-        # # if getting data from player game logs read from internet
-        # # for game log for particular given season/year
-        # # for season in all seasons
-        # if len(player_game_log) > 0:
-        #     #season_year = '23'
-        #     #print("player_game_log:\n" + str(player_game_log))
-        #     # we pulled game log from internet
-
-        #     # if we do not know current opponent then show for all opps
-        #     opponent = ''
-        #     print('projected_lines_dict: ' + str(projected_lines_dict))
-        #     if player_name in projected_lines_dict.keys():
-        #         opponent = projected_lines_dict[player_name]['opp'].lower() # collect data against opponent to see previous matchups
-            
-        #     # first loop thru all regular season games, then thru subset of games such as home/away
-        #     # or just append to subset array predefined such as all_home_pts = []
-        #     next_game_date_obj = datetime.today() # need to see if back to back games 1 day apart
-
-        #     # do 1 loop for reg season and 1 loop for post season
-        #     reg_season_game_log = determiner.determine_regular_season_games(player_game_log)
-
-        #     total_season_games = len(reg_season_game_log.index) # so we can get game num from game idx
-            
-        #     for game_idx, row in reg_season_game_log.iterrows():
-
-        #         # get game type so we can add stat to reg or post season game
-        #         game_type = player_game_log.loc[game_idx, 'Type']
-        #         print('game_type: ' + str(game_type))
-                
-        #         #game = player_game_log[game_idx, row]
-        #         #print("game:\n" + str(game))
-        #         #print("player_game_log.loc[game_idx, 'Type']: " + player_game_log.loc[game_idx, 'Type'])  
-
-        #         # === Collect Stats for Current Game ===
-
-        #         # pts = int(player_game_log.loc[game_idx, 'PTS'])
-        #         # rebs = int(player_game_log.loc[game_idx, 'REB'])
-        #         # asts = int(player_game_log.loc[game_idx, 'AST'])
-
-        #         # results = player_game_log.loc[game_idx, 'Result']
-        #         # #print("results: " + results)
-        #         # results = re.sub('[a-zA-Z]', '', results)
-        #         # # remove #OT from result string
-        #         # results = re.split("\\s+", results)[0]
-        #         # #print("results_data: " + str(results_data))
-        #         # score_data = results.split('-')
-        #         # #print("score_data: " + str(score_data))
-        #         # winning_score = int(score_data[0])
-        #         # losing_score = int(score_data[1])
-
-        #         # minutes = int(player_game_log.loc[game_idx, 'MIN'])
-
-        #         # fgs = player_game_log.loc[game_idx, 'FG']
-        #         # fg_data = fgs.split('-')
-        #         # fgm = int(fg_data[0])
-        #         # fga = int(fg_data[1])
-        #         # fg_rate = round(float(player_game_log.loc[game_idx, 'FG%']), 1)
-
-        #         # #threes = game[three_idx]
-        #         # #threes_data = threes.split('-')
-        #         # #print("threes_data: " + str(threes_data))
-        #         # threes_made = int(player_game_log.loc[game_idx, '3PT_SA'])
-        #         # threes_attempts = int(player_game_log.loc[game_idx, '3PT_A'])
-        #         # three_rate = round(float(player_game_log.loc[game_idx, '3P%']), 1)
-
-        #         # fts = player_game_log.loc[game_idx, 'FT']
-        #         # ft_data = fts.split('-')
-        #         # ftm = int(ft_data[0])
-        #         # fta = int(ft_data[1])
-        #         # ft_rate = round(float(player_game_log.loc[game_idx, 'FT%']), 1)
-
-        #         # bs = int(player_game_log.loc[game_idx, 'BLK'])
-        #         # ss = int(player_game_log.loc[game_idx, 'STL'])
-        #         # fs = int(player_game_log.loc[game_idx, 'PF'])
-        #         # tos = int(player_game_log.loc[game_idx, 'TO'])
-
-        #         # make list to loop through so we can add all stats to dicts with 1 fcn
-        #         game_stats = determiner.determine_game_stats(player_game_log, game_idx) #[pts,rebs,asts,winning_score,losing_score,minutes,fgm,fga,fg_rate,threes_made,threes_attempts,three_rate,ftm,fta,ft_rate,bs,ss,fs,tos] 
-
-
-        #         # === Add Stats to Dict ===
-
-        #         # now that we have game stats add them to dict by condition
-
-        #         # values is list of dicts
-        #         for stat_idx in range(len(all_stats_dicts.values())):
-        #             stat_dict = list(all_stats_dicts.values())[stat_idx]
-        #             stat = game_stats[stat_idx]
-        #             stat_dict['all'][game_idx] = stat
-
-
-        #         # define away/home team so we can determine teammates/opponents in players in game
-        #         away_abbrev = player_team
-
-        #         game_opp_str = player_game_log.loc[game_idx, 'OPP']
-        #         game_opp_abbrev = reader.read_team_abbrev(game_opp_str) # remove leading characters and change irregular abbrevs
-        #         home_abbrev = game_opp_abbrev
-
-        #         if re.search('vs',game_opp_str):
-
-        #             # values is list of dicts
-        #             for stat_idx in range(len(all_stats_dicts.values())):
-        #                 stat_dict = list(all_stats_dicts.values())[stat_idx]
-        #                 stat = game_stats[stat_idx]
-        #                 stat_dict['home'][game_idx] = stat
-
-                    
-        #             away_abbrev = game_opp_abbrev
-        #             home_abbrev = player_team
-
-                    
-        #         else: # if not home then away
-        #             for stat_idx in range(len(all_stats_dicts.values())):
-        #                 stat_dict = list(all_stats_dicts.values())[stat_idx]
-        #                 stat = game_stats[stat_idx]
-        #                 stat_dict['away'][game_idx] = stat
-
-                    
-        #         print('away_abbrev: ' + away_abbrev)
-        #         print('home_abbrev: ' + home_abbrev)
-
-        #         # matchup against opponent
-        #         # only add key for current opp bc we dont need to see all opps here
-        #         # look for irregular abbrevs like NO and NY
-        #         # opponent in form 'gsw' but game log in form 'gs'
-        #         # if we do not know the current opponent then show all opps
-        #         #game_log_team_abbrev = re.sub('vs|@','',player_game_log.loc[game_idx, 'OPP'].lower()) # eg 'gs'
-        #         game_log_team_abbrev = reader.read_team_abbrev(player_game_log.loc[game_idx, 'OPP'])
-        #         #print('game_log_team_abbrev: ' + game_log_team_abbrev)
-        #         #opp_abbrev = opponent # default if regular
-        #         #print('opp_abbrev: ' + opp_abbrev)
-
-        #         # irregular_abbrevs = {'nop':'no', 'nyk':'ny', 'sas': 'sa', 'gsw':'gs' } # for these match the first 3 letters of team name instead
-        #         # if opp_abbrev in irregular_abbrevs.keys():
-        #         #     #print("irregular abbrev: " + team_abbrev)
-        #         #     opp_abbrev = irregular_abbrevs[opp_abbrev]
-
-        #         # if we do not know the current opponent 
-        #         # or if we are not given a specific opponent (bc we may want to compare opps)
-        #         # then show all opps
-        #         if opponent == game_log_team_abbrev or opponent == '':
-        #             #print('opp_abbrev == game_log_team_abbrev')
-        #             for stat_idx in range(len(all_stats_dicts.values())):
-        #                 stat_dict = list(all_stats_dicts.values())[stat_idx]
-        #                 stat = game_stats[stat_idx]
-        #                 if not game_log_team_abbrev in stat_dict.keys():
-        #                     stat_dict[game_log_team_abbrev] = {}
-        #                 stat_dict[game_log_team_abbrev][game_idx] = stat
-
-                    
-
-
-        #         # see if this game is 1st or 2nd night of back to back bc we want to see if pattern for those conditions
-        #         init_game_date_string = player_game_log.loc[game_idx, 'Date'].lower().split()[1] # 'wed 2/15'[1]='2/15'
-        #         game_mth = init_game_date_string.split('/')[0]
-        #         final_season_year = str(season_year)
-        #         if int(game_mth) in range(10,13):
-        #             final_season_year = str(season_year - 1)
-        #         game_date_string = init_game_date_string + "/" + final_season_year
-        #         #print("game_date_string: " + str(game_date_string))
-        #         game_date_obj = datetime.strptime(game_date_string, '%m/%d/%Y')
-        #         #print("game_date_obj: " + str(game_date_obj))
-
-        #         # if current loop is most recent game (idx 0) then today's game is the next game, if current season
-        #         # if last game of prev season then next game after idx 0 (bc from recent to distant) is next season game 1
-        #         if game_idx == 0: # see how many days after prev game is date of today's projected lines
-        #             # already defined or passed todays_games_date_obj
-        #             # todays_games_date_obj = datetime.strptime(todays_games_date, '%m/%d/%y')
-        #             # print("todays_games_date_obj: " + str(todays_games_date_obj))
-        #             current_year = 2023
-        #             if season_year == current_year: # current year
-        #                 next_game_date_obj = todays_games_date_obj # today's game is the next game relative to the previous game
-        #             else:
-        #                 next_game_date_obj = game_date_obj # should be 0 unless we want to get date of next season game
-        #         #print("next_game_date_obj: " + str(next_game_date_obj))
-        #         # no need to get next game date like this bc we can see last loop
-        #         # else: # if not most recent game then we can see the following game in the game log at prev idx
-        #         #     next_game_date_string = player_game_log.loc[game_idx-1, 'Date'].lower().split()[1] + "/" + season_year
-        #         #     print("next_game_date_string: " + str(next_game_date_string))
-        #         #     next_game_date_obj = datetime.strptime(next_game_date_string, '%m/%d/%y')
-        #         #     print("next_game_date_obj: " + str(next_game_date_obj))
-
-        #         days_before_next_game_int = (next_game_date_obj - game_date_obj).days
-        #         days_before_next_game = str(days_before_next_game_int) + ' before'
-        #         #print("days_before_next_game: " + days_before_next_game)
-
-        #         for stat_idx in range(len(all_stats_dicts.values())):
-        #             stat_dict = list(all_stats_dicts.values())[stat_idx]
-        #             stat = game_stats[stat_idx]
-        #             if not days_before_next_game in stat_dict.keys():
-        #                 stat_dict[days_before_next_game] = {}
-        #             stat_dict[days_before_next_game][game_idx] = stat
-
-        #         init_prev_game_date_string = ''
-        #         if len(player_game_log.index) > game_idx+1:
-        #             init_prev_game_date_string = player_game_log.loc[game_idx+1, 'Date'].lower().split()[1]
-                
-        #             prev_game_mth = init_prev_game_date_string.split('/')[0]
-        #             final_season_year = str(season_year)
-        #             if int(prev_game_mth) in range(10,13):
-        #                 final_season_year = str(season_year - 1)
-        #             prev_game_date_string = init_prev_game_date_string + "/" + final_season_year
-        #             #print("prev_game_date_string: " + str(prev_game_date_string))
-        #             prev_game_date_obj = datetime.strptime(prev_game_date_string, '%m/%d/%Y')
-        #             #print("prev_game_date_obj: " + str(prev_game_date_obj))
-
-        #             days_after_prev_game_int = (game_date_obj - prev_game_date_obj).days
-        #             days_after_prev_game = str(days_after_prev_game_int) + ' after'
-        #             #print("days_after_prev_game: " + days_after_prev_game)
-
-        #             for stat_idx in range(len(all_stats_dicts.values())):
-        #                 stat_dict = list(all_stats_dicts.values())[stat_idx]
-        #                 stat = game_stats[stat_idx]
-        #                 if not days_after_prev_game in stat_dict.keys():
-        #                     stat_dict[days_after_prev_game] = {}
-        #                 stat_dict[days_after_prev_game][game_idx] = stat
-
-                
-
-                
-
-
-        #         # add keys for each day of the week so we can see performance by day of week
-        #         # only add key for current dow bc we dont need to see all dows here
-                
-        #         game_dow = player_game_log.loc[game_idx, 'Date'].lower().split()[0].lower() # 'wed 2/15'[0]='wed'
-        #         current_dow = todays_games_date_obj.strftime('%a').lower()
-        #         #print('current_dow: ' + str(current_dow))
-        #         if current_dow == game_dow:
-        #             #print("found same game day of week: " + game_dow)
-        #             for stat_idx in range(len(all_stats_dicts.values())):
-        #                 stat_dict = list(all_stats_dicts.values())[stat_idx]
-        #                 stat = game_stats[stat_idx]
-        #                 if not game_dow in stat_dict.keys():
-        #                     stat_dict[game_dow] = {}
-        #                 stat_dict[game_dow][game_idx] = stat
-        #             #print("stat_dict: " + str(stat_dict))
-
-
-
-        #         #====Players in Game stats
-        #         # get game players from all game players dict
-        #         #game_players = []
-        #         #teammates = []
-        #         #opponents = []
-        #         #print('game_players: ' + str(game_players))
-        #         # get current players from roster minus inactive players
-        #         # we get current players when we know about the current game 
-                
-        #         current_players = { 'away': [], 'home': [] } # we get current players from team rosters
-        #         #print('current_players: ' + str(current_players))
-        #         current_teammates = [] # if blank then show all possible combos/lineups
-        #         #print('current_teammates: ' + str(current_teammates))
-
-        #         # we need to get the game key so that we can determine the players in this game
-        #         # we got away/home team from vs|@ in opp field in game log
-        #         game_key = away_abbrev + ' ' + home_abbrev + ' ' + game_date_string
-        #         print('game_key: ' + str(game_key))
-        #         # if we do not have the game box score bc it does not exist yet then pass to the next game
-        #         # the order we fill the stats dict depends on the order of games played bc we are going game by game
-        #         if game_key in all_players_in_games_dict.keys():
-        #             game_players = all_players_in_games_dict[game_key] # {away:[],home:[]}
-        #             print('game_players: ' + str(game_players))
-
-        #             game_teammates = game_players['away']
-        #             if player_team == home_abbrev:
-        #                 game_teammates = game_players['home']
-
-        #             # we need players in alphabetical string so we can compare to other games
-        #             game_teammates_str = generate_players_string(game_teammates)
-
-        #             # only add key for current teammates bc we dont need to see all teammates here
-        #             # if no inactive players given then we can see all previous games with any (even 1) of current teammates
-        #             # but what if a prev game has a player that is not playing in current game?
-        #             # then that player completely changes the composition of stats
-        #             # does the prev game have to have all the current teammates to pass the check?
-        #             # or can it be missing a current player? 
-        #             # if prev game is missing current player then that will completely change the comp also
-        #             # if we are not sure who is playing in current game then show all possible teammates
-        #             # once we get current roster, we can narrow it down to those possible players
-        #             # then we can narrow it down further when we get inactive players list for the current game
-        #             #current_teammates_in_prev_game = determiner.determine_current_teammates_in_game(game_teammates, current_teammates)
-        #             #if len(current_teammates_in_prev_game) > 0: # if any of the current teammates are in the prev game of interest, then add to stats dict for review
-        #                 #print("found same game teammates: " + game_teammates)
-
-
-        #             for stat_idx in range(len(all_stats_dicts.values())):
-        #                 stat_dict = list(all_stats_dicts.values())[stat_idx]
-        #                 stat = game_stats[stat_idx]
-        #                 if not game_teammates_str in stat_dict.keys():
-        #                     stat_dict[game_teammates_str] = {}
-        #                 stat_dict[game_teammates_str][game_idx] = stat
-        #             #print("stat_dict: " + str(stat_dict))
-
-
-        #             # for each player/teammate in game, make a new record or add to existing record
-        #             for teammate in game_teammates:
-        #                 print('teammate: ' + teammate)
-
-        #                 for stat_idx in range(len(all_stats_dicts.values())):
-        #                     stat_dict = list(all_stats_dicts.values())[stat_idx]
-        #                     stat = game_stats[stat_idx]
-        #                     if not teammate in stat_dict.keys():
-        #                         stat_dict[teammate] = {}
-        #                     stat_dict[teammate][game_idx] = stat
-        #                 #print("stat_dict: " + str(stat_dict))
-
-
-        #             # for each teammate out of game (dnp inactive injured), make a new record or add to existing record
-        #             # we need to know all possible teammates, which we get above, once per player
-        #             for teammate in all_teammates:
-        #                 if teammate not in game_teammates: # teammate out
-        #                     teammate_out_key = teammate + ' out'
-        #                     for stat_idx in range(len(all_stats_dicts.values())):
-        #                         stat_dict = list(all_stats_dicts.values())[stat_idx]
-        #                         stat = game_stats[stat_idx]
-        #                         if not teammate_out_key in stat_dict.keys():
-        #                             stat_dict[teammate_out_key] = {}
-        #                         stat_dict[teammate_out_key][game_idx] = stat
-        #                     #print("stat_dict: " + str(stat_dict))
-
-        #         else:
-        #             print('Warning: Game key not in players in games dict so box score not available!')
-
-
-
-
-
-
-
-        #         # ====Career/All Seasons Stats
-        #         # if we find a game played on the same day/mth previous seasons, add a key for this/today's day/mth
-        #         #today_date_data = todays_games_date.split('/')
-        #         today_mth_day = str(todays_games_date_obj.month) + '/' + str(todays_games_date_obj.day) #today_date_data[0] + '/' + today_date_data[1]
-        #         if init_game_date_string == today_mth_day:
-        #             #print("found same game day/mth in previous season")
-        #             for stat_idx in range(len(all_seasons_stats_dicts.values())):
-        #                 stat_dict = list(all_seasons_stats_dicts.values())[stat_idx]
-        #                 stat = game_stats[stat_idx]
-        #                 if not game_date_string in stat_dict.keys():
-        #                     stat_dict[game_date_string] = {}
-        #                     stat_dict[game_date_string][game_idx] = [stat] # we cant use game idx as key bc it gets replaced instead of adding vals
-        #                 else:
-        #                     if game_idx in stat_dict[game_date_string].keys():
-        #                         stat_dict[game_date_string][game_idx].append(stat)
-        #                     else:
-        #                         stat_dict[game_date_string][game_idx] = [stat]
-        #             #print("all_seasons_stats_dicts: " + str(all_seasons_stats_dicts))
-        #         # add key for the current game number for this season and add games played from previous seasons (1 per season)
-        #         game_num = total_season_games - game_idx # bc going from recent to past
-        #         if game_num == num_games_played:
-        #             #print("found same game num in previous season")
-        #             for stat_idx in range(len(all_seasons_stats_dicts.values())):
-        #                 stat_dict = list(all_seasons_stats_dicts.values())[stat_idx]
-        #                 stat = game_stats[stat_idx]
-        #                 if not num_games_played in stat_dict.keys():
-        #                     stat_dict[num_games_played] = {}
-        #                     stat_dict[num_games_played][game_idx] = [stat] # we cant use game idx as key bc it gets replaced instead of adding vals
-        #                 else:
-        #                     if game_idx in stat_dict[num_games_played].keys():
-        #                         stat_dict[num_games_played][game_idx].append(stat)
-        #                     else:
-        #                         stat_dict[num_games_played][game_idx] = [stat]
-        #             #print("all_seasons_stats_dicts: " + str(all_seasons_stats_dicts))
-
-
-        #         # after all keys are set, set next game as current game for next loop
-        #         next_game_date_obj = game_date_obj # next game bc we loop from most to least recent
-
-        # else:
-        #     # if getting data from file, may not have game log from internet source
-        #     # data_type = "Game Log"
-        #     # player_season_log = reader.read_season_log_from_file(data_type, player_name, 'tsv')
-        #     print('Warning: No game log for player: ' + player_name)
-
-        # at this point we have fully populated all stats dicts for this player's season
-        # add all stats for this player's season to all players stats dicts
-        # if player_name not in all_players_stats_dicts.keys():
-        #     all_players_stats_dicts[player_name] = {}
-        # all_players_stats_dicts[player_name][season_year] = all_stats_dicts
-        # print('all_players_stats_dicts: ' + str(all_players_stats_dicts))
         
         # gen all stats dicts for this part of this season
         if season_year not in player_stat_dict.keys():
@@ -2348,9 +1942,22 @@ def generate_prob_stat_reached(record):
     #print('prob_stat_reached: ' + str(prob_stat_reached))
     return prob_stat_reached
 
+# from 0 to n gen prob over and under stat val
+# first overall and then for conditions
+# stat_val_probs = {}
+#player_stat_records: {'all': {2023: {'regular': {'pts': 
+# generate_stat_val_probs
+def generate_player_stat_probs(player_name, player_stat_records):
+    print('\n===Generate Stat Val Probs===\n')
+
+    stat_val_probs = {}
+
+    return stat_val_probs
+
 
 # consistency=0.9 is desired probability of player reaching stat val
 #consistent_stat_vals: {'all': {2023: {'regular': {'pts': {'prob val':
+#player_stat_records: {'all': {2023: {'regular': {'pts': 
 def generate_consistent_stat_vals(player_name, player_stat_dict, player_stat_records={}, consistency=0.9):
     
     print('\n===Generate Consistent Stat Vals===\n')
@@ -2529,8 +2136,24 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
     all_consistent_stat_dicts = [] 
     consistent_stat_dict = {}
 
+    # {player:stat:condition:val,prob,margin...}
+    # where condition could be year, part or sub-condition like location
+    all_consistent_stats_dict = {} # organize by stat, more flexible than old version list
+    # for each player
+    # for each stat
+    # get consistent stat data for
+    # year
+    # part
+    # condition
+
+    # populate consistent_stat_dict and append to all_consistent_stat_dicts
+    # all_consistent_stat_dicts: [{'player name': 'lamelo ball', 'stat name': 'pts', 'prob val': 15, 'prob': 94, ...}, {'player name': 'lamelo ball', 'stat name': 'reb', 'prob val': 2...}]
+    # all_player_consistent_stats, consistent_stat_vals: {'all': {2023: {'regular': {'pts': {'prob val':
+    years_of_interest = [season_year, season_year-1]
     for player_name, player_consistent_stats in all_player_consistent_stats.items():
         print('\n===' + player_name.title() + '===\n')
+
+        all_consistent_stats_dict[player_name] = {}
 
         player_team = ''
         if player_name in player_teams.keys():
@@ -2544,7 +2167,9 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
 
             if condition in conditions_of_interest:
 
-                years_of_interest = [season_year, season_year-1]
+                
+
+                
                 for year, year_consistent_stats in condition_consistent_stats.items():
                     print('\n===' + str(year) + '===\n')
 
@@ -2556,153 +2181,173 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
                         #     player_season_consistent_stat_data = []
 
                         # first look at full season, then postseason
-                        season_part_consistent_stats = year_consistent_stats['full'] 
+                        # consistent_stat_dict will need another level for the year or season part
+                        # so we can loop thru in order
+                        # or we can change order of input dict
+                        season_part_consistent_stats = year_consistent_stats['full'] # old version manually set season parts but now we just loop thru all season parts
+                        part_consistent_stat_dict = {}
+                        for season_part, season_part_consistent_stats in year_consistent_stats.items():
+                            print('\n===season_part: ' + season_part + '===\n')
 
-                        for stat_name in season_part_consistent_stats.keys():
-                            print('\n===' + stat_name.upper() + '===\n')
+                            part_consistent_stat_dict[season_part] = {}
 
-                            # use consistent_stat_dict to sort
-                            consistent_stat_dict = {'player name':player_name, 'stat name':stat_name, 'team':player_team}
+                            for stat_name in season_part_consistent_stats.keys():
+                                print('\n===' + stat_name.upper() + '===\n')
+
+                                
+
+                                # use consistent_stat_dict to sort
+                                #consistent_stat_dict = {'player name':player_name, 'stat name':stat_name, 'team':player_team}
+                                
+                                # fields of interest
+                                prob_stat_key = 'prob val' #defined in loop
+                                prob_key = 'prob'
+                                min_margin_key = 'min margin'
+                                mean_margin_key = 'mean margin'
+
+                                second_prob_stat_key = 'second ' + prob_stat_key
+                                second_prob_key = 'second ' + prob_key
+                                second_min_margin_key = 'second ' + min_margin_key
+                                second_mean_margin_key = 'second ' + mean_margin_key
+
+                                #player_consistent_stat_data = [player_name, stat_name]
+
+                                # player name, stat name, consistent stat, consistent stat prob
+                                #consistent_stat_dict['team'] = player_team already defined when init dict
+
+                                player_consistent_stat_data = [player_name, stat_name]#, full_consistent_stat, full_consistent_stat_prob, full_second_consistent_stat, full_second_consistent_stat_prob, post_consistent_stat, post_consistent_stat_prob, post_second_consistent_stat, post_second_consistent_stat_prob, player_team]
+
+                                # simply flatten bottom level of dict
+                                # by adding its key to header of level above
+                                # eg in this case blank for full season and post for postseason
+                                #season_parts = ['full','regular','postseason']
+
+                                # for season_part in season_parts:
+                                #     print('season_part: ' + season_part)
+
+                                #if season_part in year_consistent_stats.keys():
+
+                                season_part_key = re.sub('ular|season','',season_part) # full, reg, or post
+                                # make full blank to save space and differentiate from reg and post?
+                                # make sure to strip blank space at start of string
+                                # or add space in other part of string for season parts
+                                # if season_part == 'full':
+                                #     season_part_key = ''
+                                # elif season_part == 'regular':
+                                #     season_part_key = 'reg'
+                                
+
+                                #if season_part == 'full':
+
+                                prob_stat_dict = year_consistent_stats[season_part][stat_name]
+                                print('prob_stat_dict: ' + str(prob_stat_dict))
+
+                                prob_val = prob_stat_dict[prob_stat_key]
+                                consistent_stat = prob_val
+                                
+                                prob = prob_stat_dict[prob_key]
+                                print('prob: ' + str(prob))
+                                consistent_stat_prob = round(prob * 100)
+                                print('consistent_stat_prob: ' + str(consistent_stat_prob))
+
+                                second_consistent_stat = prob_stat_dict[second_prob_stat_key]
+                                second_consistent_stat_prob = round(prob_stat_dict[second_prob_key] * 100)
+
+                                min_margin = prob_stat_dict[min_margin_key]
+                                second_min_margin = prob_stat_dict[second_min_margin_key]
+                                mean_margin = round(prob_stat_dict[mean_margin_key])
+                                second_mean_margin = round(prob_stat_dict[second_mean_margin_key])
+
+                                # set keys for each field for each part of season and for each season
+                                part_prob_stat_key = season_part_key + ' ' + prob_stat_key
+                                part_prob_key = season_part_key + ' ' + prob_key
+                                part_second_prob_stat_key = season_part_key + ' ' + second_prob_stat_key
+                                part_second_prob_key = season_part_key + ' ' + second_prob_key
+
+                                part_min_margin_key = season_part_key + ' ' + min_margin_key
+                                part_second_min_margin_key = season_part_key + ' ' + second_min_margin_key
+                                part_mean_margin_key = season_part_key + ' ' + mean_margin_key
+                                part_second_mean_margin_key = season_part_key + ' ' + second_mean_margin_key
+                                
+                                consistent_stat_dict[part_prob_stat_key] = consistent_stat
+                                consistent_stat_dict[part_prob_key] = consistent_stat_prob
+                                consistent_stat_dict[part_second_prob_stat_key] = second_consistent_stat
+                                consistent_stat_dict[part_second_prob_key] = second_consistent_stat_prob
+
+                                consistent_stat_dict[part_min_margin_key] = min_margin
+                                consistent_stat_dict[part_second_min_margin_key] = second_min_margin
+                                consistent_stat_dict[part_mean_margin_key] = mean_margin
+                                consistent_stat_dict[part_second_mean_margin_key] = second_mean_margin
+
+                                
+
+
+                                season_part_prob_data = [consistent_stat, consistent_stat_prob, second_consistent_stat, second_consistent_stat_prob]
+                                player_consistent_stat_data.extend(season_part_prob_data)
+
+                                # add postseason stat probs separately
+                                # elif season_part == 'postseason': incorporated into loop
+
+                                
+                                # now that we looped thru all parts of season we can see which is available for ok val
+                                ok_val_key = 'ok val'
+                                #ok_val_season_prob_key = ok_val_key + ' prob ' + str(year)
+
+                                # add another column to classify if postseason stat < regseason stat so we can group those together
+
+                                # player name, stat name, consistent stat, consistent stat prob
+                                #player_consistent_stat_data = [player_name, stat_name, full_consistent_stat, full_consistent_stat_prob, full_second_consistent_stat, full_second_consistent_stat_prob, post_consistent_stat, post_consistent_stat_prob, post_second_consistent_stat, post_second_consistent_stat_prob, player_team]
+                                #consistent_stat_dict = {'player name':player_name, 'stat name':stat_name, 'prob val': full_consistent_stat, 'prob': full_consistent_stat_prob, 'second prob val':full_second_consistent_stat, 'second prob':full_second_consistent_stat_prob}
+
+                                #player_season_consistent_stat_data = player_season_consistent_stat_data + player_consistent_stat_data
+
+                                final_consistent_stats.append(player_consistent_stat_data)
+                                # need to save all parts of season for each stat
+                                # this is how we save as many fields/columns we want in a single row
+                                part_consistent_stat_dict[season_part][stat_name] = consistent_stat_dict
+
+                                if stat_name not in all_consistent_stats_dict[player_name]:
+                                    all_consistent_stats_dict[player_name][stat_name] = {}
+                                if condition not in all_consistent_stats_dict[player_name][stat_name].keys():
+                                    all_consistent_stats_dict[player_name][stat_name][condition] = {}
+                                if year not in all_consistent_stats_dict[player_name][stat_name][condition].keys():
+                                    all_consistent_stats_dict[player_name][stat_name][condition][year] = {}
+
+                                all_consistent_stats_dict[player_name][stat_name][condition][year][season_part] = consistent_stat_dict
                             
-                            # fields of interest
-                            prob_stat_key = 'prob val' #defined in loop
-                            prob_key = 'prob'
-                            min_margin_key = 'min margin'
-                            mean_margin_key = 'mean margin'
+                            print('part_consistent_stat_dict: ' + str(part_consistent_stat_dict))
 
-                            second_prob_stat_key = 'second ' + prob_stat_key
-                            second_prob_key = 'second ' + prob_key
-                            second_min_margin_key = 'second ' + min_margin_key
-                            second_mean_margin_key = 'second ' + mean_margin_key
+                            # consistent_stat_dict will have for 1 stat but all parts of season
+                            # so change to dict
+                            # or arrange input in another var
 
-                            #player_consistent_stat_data = [player_name, stat_name]
+                            #all_consistent_stat_dicts.append(consistent_stat_dict)
 
-                            # player name, stat name, consistent stat, consistent stat prob
-                            #consistent_stat_dict['team'] = player_team already defined when init dict
-
-                            player_consistent_stat_data = [player_name, stat_name]#, full_consistent_stat, full_consistent_stat_prob, full_second_consistent_stat, full_second_consistent_stat_prob, post_consistent_stat, post_consistent_stat_prob, post_second_consistent_stat, post_second_consistent_stat_prob, player_team]
-
-                            # simply flatten bottom level of dict
-                            # by adding its key to header of level above
-                            # eg in this case blank for full season and post for postseason
-                            season_parts = ['full','regular','postseason']
-
-                            for season_part in season_parts:
-                                print('season_part: ' + season_part)
-                                if season_part in year_consistent_stats.keys():
-                                    season_part_key = re.sub('ular|season','',season_part) # full, reg, or post
-                                    # make full blank to save space and differentiate from reg and post?
-                                    # make sure to strip blank space at start of string
-                                    # or add space in other part of string for season parts
-                                    # if season_part == 'full':
-                                    #     season_part_key = ''
-                                    # elif season_part == 'regular':
-                                    #     season_part_key = 'reg'
-                                    
-
-                                    #if season_part == 'full':
-
-                                    prob_stat_dict = year_consistent_stats[season_part][stat_name]
-                                    print('prob_stat_dict: ' + str(prob_stat_dict))
-
-                                    prob_val = prob_stat_dict[prob_stat_key]
-                                    consistent_stat = prob_val
-                                    
-                                    prob = prob_stat_dict[prob_key]
-                                    print('prob: ' + str(prob))
-                                    consistent_stat_prob = round(prob * 100)
-                                    print('consistent_stat_prob: ' + str(consistent_stat_prob))
-
-                                    second_consistent_stat = prob_stat_dict[second_prob_stat_key]
-                                    second_consistent_stat_prob = round(prob_stat_dict[second_prob_key] * 100)
-
-                                    min_margin = prob_stat_dict[min_margin_key]
-                                    second_min_margin = prob_stat_dict[second_min_margin_key]
-                                    mean_margin = round(prob_stat_dict[mean_margin_key])
-                                    second_mean_margin = round(prob_stat_dict[second_mean_margin_key])
-
-                                    part_prob_stat_key = season_part_key + ' ' + prob_stat_key
-                                    part_prob_key = season_part_key + ' ' + prob_key
-                                    part_second_prob_stat_key = season_part_key + ' ' + second_prob_stat_key
-                                    part_second_prob_key = season_part_key + ' ' + second_prob_key
-
-                                    part_min_margin_key = season_part_key + ' ' + min_margin_key
-                                    part_second_min_margin_key = season_part_key + ' ' + second_min_margin_key
-                                    part_mean_margin_key = season_part_key + ' ' + mean_margin_key
-                                    part_second_mean_margin_key = season_part_key + ' ' + second_mean_margin_key
-                                    consistent_stat_dict[part_prob_stat_key] = consistent_stat
-                                    consistent_stat_dict[part_prob_key] = consistent_stat_prob
-                                    consistent_stat_dict[part_second_prob_stat_key] = second_consistent_stat
-                                    consistent_stat_dict[part_second_prob_key] = second_consistent_stat_prob
-
-                                    consistent_stat_dict[part_min_margin_key] = min_margin
-                                    consistent_stat_dict[part_second_min_margin_key] = second_min_margin
-                                    consistent_stat_dict[part_mean_margin_key] = mean_margin
-                                    consistent_stat_dict[part_second_mean_margin_key] = second_mean_margin
-
-                                    season_part_prob_data = [consistent_stat, consistent_stat_prob, second_consistent_stat, second_consistent_stat_prob]
-                                    player_consistent_stat_data.extend(season_part_prob_data)
-
-                                    # add postseason stat probs separately
-                                    # elif season_part == 'postseason':
-
-                                        
-
-                                    #     post_consistent_stat = 0
-                                    #     post_consistent_stat_prob = 0
-
-                                    #     post_second_consistent_stat = 0
-                                    #     post_second_consistent_stat_prob = 0
-
-                                    #     if season_part in year_consistent_stats.keys():
-                                    #         prob_stat_dict = year_consistent_stats[season_part][stat_name]
-                                    #         print('prob_stat_dict: ' + str(prob_stat_dict))
-
-                                    #         post_consistent_stat = prob_stat_dict[prob_stat_key]
-                                            
-                                    #         post_consistent_stat_prob = round(prob_stat_dict[prob_key] * 100)
-
-                                            
-                                    #         post_second_consistent_stat = prob_stat_dict[second_prob_stat_key]
-                                            
-                                    #         post_second_consistent_stat_prob = round(prob_stat_dict[second_prob_key] * 100)
-
-                                    #         post_min_margin = prob_stat_dict[min_margin_key]
-                                    #         post_second_min_margin = prob_stat_dict['second min margin']
-                                    #         post_mean_margin = round(prob_stat_dict[mean_margin_key])
-                                    #         post_second_mean_margin = round(prob_stat_dict['second mean margin'])
-
-                                            
-                                    #         # prob_stat_key = 'prob val' defined above
-                                    #         prob_val_key = season_part_key + ' ' + prob_stat_key + ' ' + str(season_year) # eg post prob val
-                                    #         consistent_stat_dict[prob_val_key] = post_consistent_stat
-                                            
-                                    #         consistent_stat_dict['post prob'] = post_consistent_stat_prob
-                                    #         consistent_stat_dict['post second prob val'] = post_second_consistent_stat
-                                    #         consistent_stat_dict['post second prob'] = post_second_consistent_stat_prob
-
-                                    #         consistent_stat_dict['post min margin'] = post_min_margin
-                                    #         consistent_stat_dict['post second min margin'] = post_second_min_margin
-                                    #         consistent_stat_dict['post mean margin'] = post_mean_margin
-                                    #         consistent_stat_dict['post second mean margin'] = post_second_mean_margin
-
+                            #all_consistent_stats_dict
                             
-                            
-
-                            # add another column to classify if postseason stat < regseason stat so we can group those together
-
-                            # player name, stat name, consistent stat, consistent stat prob
-                            #player_consistent_stat_data = [player_name, stat_name, full_consistent_stat, full_consistent_stat_prob, full_second_consistent_stat, full_second_consistent_stat_prob, post_consistent_stat, post_consistent_stat_prob, post_second_consistent_stat, post_second_consistent_stat_prob, player_team]
-                            #consistent_stat_dict = {'player name':player_name, 'stat name':stat_name, 'prob val': full_consistent_stat, 'prob': full_consistent_stat_prob, 'second prob val':full_second_consistent_stat, 'second prob':full_second_consistent_stat_prob}
-
-                            #player_season_consistent_stat_data = player_season_consistent_stat_data + player_consistent_stat_data
-
-                            final_consistent_stats.append(player_consistent_stat_data)
-
-                            all_consistent_stat_dicts.append(consistent_stat_dict)
-                            
-
+    # all_consistent_stat_dicts: [{'player name': 'cole anthony', 'stat name': 'pts', 'team': 'orl', 'full prob val': 6,
+    # all_consistent_stat_dicts: [{'player name': 'skylar mays', 'stat name': 'pts', 'team': 'por', 'reg prob val': 9,
     # all_consistent_stat_dicts: [{'player name': 'lamelo ball', 'stat name': 'pts', 'prob val': 15, 'prob': 94, ...}, {'player name': 'lamelo ball', 'stat name': 'reb', 'prob val': 2...}]
+    #print('all_consistent_stat_dicts: ' + str(all_consistent_stat_dicts))
+
+    print('all_consistent_stats_dict: ' + str(all_consistent_stats_dict))
+
+    # form all_consistent_stat_dicts
+
+    for player_name, player_consistent_stat_dict in all_consistent_stats_dict.items():
+        player_team = ''
+        if player_name in player_teams.keys():
+            player_team = player_teams[player_name]
+        for stat_name, stat_consistent_stat_dict in player_consistent_stat_dict.items():
+            consistent_stat_dict = {'player': player_name, 'stat': stat_name, 'team': player_name}
+            for condition, condition_consistent_stat_dict in stat_consistent_stat_dict.items():
+                for year, year_consistent_stat_dict in condition_consistent_stat_dict.items():
+                    for part, part_consistent_stat_dict in year_consistent_stat_dict.items():
+                        for key, val in part_consistent_stat_dict.items():
+                            consistent_stat_dict[key] = val
+
+            all_consistent_stat_dicts.append(consistent_stat_dict) # for each stat
+
     print('all_consistent_stat_dicts: ' + str(all_consistent_stat_dicts))
 
     # determine which keys in dict to sort dicts by
@@ -2714,7 +2359,11 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
     # the point of sorting these keys is to see most important columns together for comparison
     # for the actual stat value available, which is not always the same as the first consistent val
     ok_val_key = 'ok val'
+    # formula for cumulative weighted avg probability
     ok_val_true_prob_key = ok_val_key + ' prob' # account for all conditions to get true prob
+    # true seasons prob accounts for all seasons and sample sizes
+    # each season is like a different condition given a different weight based on recency and sample size
+    ok_val_true_season_prob_key = ok_val_key + ' true season prob' # account for all seasons to get true season prob
     # we already have measured prob of stat in part of season
     # so now we want true prob in part of season, with all other conditions equal
     # for each season, we want to see ok val prob, margin, dev, and other stat measures
@@ -2722,6 +2371,18 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
     # we do not need true prob for part of season separate 
     # bc true prob already accounts for season part condition
     # we want runnning prob and measures for each part of each season
+    # first and foremost show this year and then compare to prev seasons and true count
+    # this table will show vector of weighted features that equate true prob
+    # other data about each part of each season will go in separate tables unless they are directly used to calc true prob
+    # so first this season, last season, and prev seasons. then conditions for each part of each season
+    # we need to determine the number of seasons to display ok val
+    # based on seasons in all_player_consistent_stats
+    # but if we are already looping through all_player_consistent_stats earlier why not perform this fcn then?
+    # bc it requires fully populated all_consistent_stat_dicts bc it compares different numbers to get ok val?
+    #for season_year in 
+    # ok_val_prob_key becomes ok_val_season_prob_key to specify season
+    ok_val_season_prob_key = ok_val_key + ' prob ' + str(season_year)
+
     ok_val_part_prob_key = ok_val_key + ' post prob' # depends which part of season we are in, to choose which should be secondary prob condition
     ok_val_min_margin_key = ok_val_key + ' min margin'
     ok_val_part_min_margin_key = ok_val_key + ' post min margin'
@@ -2740,7 +2401,9 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
     ok_stat_vals = [2,5,8,10,12,15,18,20] #standard for dk
     #year_of_interest = 2023
     #regseason_stats = consistent_stat_vals['all'][year_of_interest]['regular']
+    # all_consistent_stat_dicts: [{'player name': 'lamelo ball', 'stat name': 'pts', 'prob val 2023': 15, 'prob 2023': 94, ...}, {'player name': 'lamelo ball', 'stat name': 'reb', 'prob val': 2...}]
     for stat_dict in all_consistent_stat_dicts:
+        print('stat_dict: ' + str(stat_dict))
 
         # consider changing back to reg season stat
         # prefer full season bc more samples
@@ -2757,6 +2420,9 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
         part_second_mean_margin_key = season_part_key + ' ' + second_mean_margin_key
 
         reg_season_stat_val = stat_dict[part_prob_stat_key] #'full prob val'
+        if reg_season_stat_val in ok_stat_vals: #is available (ie in ok stat vals list)
+            ok_stat_val = reg_season_stat_val
+            ok_stat_prob = stat_dict[part_prob_key]
         reg_season_second_stat_val = stat_dict[part_second_prob_stat_key]
         reg_season_stat_prob = stat_dict[part_prob_key]
         reg_season_second_stat_prob = stat_dict[part_second_prob_key]
@@ -3060,6 +2726,7 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
     all_player_consistent_stats = {} # we want to display all player consistent stats together for viewing convenience and analysis comparison
     all_player_stat_records = {}
     all_player_stat_dicts = {}
+    all_player_stat_probs = {} # for all stat vals so gets messy if same dict as other measures
     for player_name in player_names:
         player_name = player_name.lower()
 
@@ -3096,11 +2763,20 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
         all_player_stat_records[player_name] = player_stat_records
         all_player_stat_dicts[player_name] = player_stat_dict
 
+        # prob for each stat over and under
+        player_stat_probs = generate_player_stat_probs(player_name, player_stat_records)
+        all_player_stat_probs[player_name] = player_stat_probs
     
+
+    # each player gets a table separate sheet 
+    # showing over and under probs for each stat val
+    # val, prob over, prob under
+    # 0, P_o0, P_u0
+    writer.write_all_player_stat_probs(all_player_stat_probs)
     
     all_consistent_stat_dicts = generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_stat_records, all_player_stat_dicts, player_teams, season_year=season_year)
     #writer.display_consistent_stats(all_player_consistent_stats, all_player_stat_records)
-    
+
     # now that we have all consistent stats,
     # see if each stat is available at a given value
     # also include given value in stat dict

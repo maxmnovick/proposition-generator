@@ -744,3 +744,44 @@ def list_dicts(dicts, desired_order=[], separator=','):
 
 
 
+# each player gets a table separate sheet 
+# showing over and under probs for each stat val
+# val, prob over, prob under
+# 0, P_o0, P_u0
+# all_player_stat_probs = {'all': {2023: {'regular': {'pts': {'0': { 'prob over': po, 'prob under': pu },...
+def write_all_player_stat_probs(all_player_stat_probs):
+    print('\n===Write All Player Stat Probs===\n')
+
+    headers = ['val', 'pts prob over', 'pts prob under', 'reb prob over', 'reb prob under', 'ast prob over', 'ast prob under']
+
+    # first arrange with all different stats in same sheet for each set of conditions
+    # then arrange with same stat under all different conditions for each stat
+    # this is a common method of rearranging dictionary levels for the purposes of
+    # displaying in different forms and perspectives
+    # see also generate_all_consistent_stat_dicts()
+    # so make a fcn called rearrange dict, which takes desired output levels
+    # and rearranges available keys in that order
+    # so here it would be param=desired output order=[condition,year,part,val,stat]
+    # where we only swap val and stat bc 1 val per row used as index which has multiple different stats in the same row
+    # but those headers arent actually in the dict so we need to know the level nums of the init dict, 
+    # and also input the desired output indexes
+    # until we make that fcn for now we will make a temp dict with altered levels
+    # and loop thru that to create rows after populating
+    # so first loop makes temp dict rearranged in desired order
+    # and second loop displays rows in desired order and format (however temp dict is arranged)
+    book_name = 'data/all players stat probs.xlsx'
+    for condition, condition_stat_probs in all_player_stat_probs.items():
+        for year, year_stat_probs in condition_stat_probs.items():
+            for part, part_stat_probs in year_stat_probs.items():
+                sheet_name = condition + ' ' + str(year) + ' ' + part
+                stat_probs_row = []
+                for stat, stat_probs in part_stat_probs.items():
+                    for val, probs_dict in stat_probs.items():
+                        # only put val for first stat pts bc all stats share a row
+                        # if stat == 'pts':
+                        #     stat_probs_row = [val]
+                        # p_o = probs_dict['prob over']
+                        # p_u = probs_dict['prob under']
+                        # stat_probs_row.extend([p_o, p_u])
+
+                        player_stat_probs_dict[val][stat] = 
