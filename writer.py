@@ -14,6 +14,8 @@ import determiner # determine matching key
 
 import json # for team players
 
+import pandas as pd # write spreadsheets from lists to dataframes
+
 def display_game_data(all_valid_streaks_list):
     print("\n===Game Data===\n")
     # all_player_pre_dicts = [{'prediction':val,'overall record':[],..},{},..]
@@ -769,12 +771,17 @@ def write_all_player_stat_probs(all_player_stat_probs):
     # and loop thru that to create rows after populating
     # so first loop makes temp dict rearranged in desired order
     # and second loop displays rows in desired order and format (however temp dict is arranged)
+    # this is like creating a vector by aligning data points/features
     book_name = 'data/all players stat probs.xlsx'
+    writer = pd.ExcelWriter(book_name)
+    #stat_probs_table = []
     for condition, condition_stat_probs in all_player_stat_probs.items():
         for year, year_stat_probs in condition_stat_probs.items():
             for part, part_stat_probs in year_stat_probs.items():
                 sheet_name = condition + ' ' + str(year) + ' ' + part
-                stat_probs_row = []
+
+                stat_probs_table = []
+                player_stat_probs_dict = {}
                 for stat, stat_probs in part_stat_probs.items():
                     for val, probs_dict in stat_probs.items():
                         # only put val for first stat pts bc all stats share a row
@@ -784,4 +791,22 @@ def write_all_player_stat_probs(all_player_stat_probs):
                         # p_u = probs_dict['prob under']
                         # stat_probs_row.extend([p_o, p_u])
 
-                        player_stat_probs_dict[val][stat] = 
+                        if val not in player_stat_probs_dict.keys():
+                            player_stat_probs_dict[val] = {}
+                        player_stat_probs_dict[val][stat] = probs_dict
+
+
+                for val, val_probs_dict in player_stat_probs_dict.items():
+                    stat_probs_row = [val]
+                    for stat, stat_probs_dict in val_probs_dict.items():
+                        p_o = stat_probs_dict['prob over']
+                        p_u = stat_probs_dict['prob under']
+                        stat_probs_row.extend([p_o, p_u])
+
+                    stat_probs_table.append(stat_probs_row)
+
+                stat_probs_df = pd.DataFrame(stat_probs_table, columns=headers)
+                stat_probs_df.to_excel(writer,sheet_name)
+
+                
+    writer.close()

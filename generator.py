@@ -1947,12 +1947,56 @@ def generate_prob_stat_reached(record):
 # stat_val_probs = {}
 #player_stat_records: {'all': {2023: {'regular': {'pts': 
 # generate_stat_val_probs
-def generate_player_stat_probs(player_name, player_stat_records):
-    print('\n===Generate Stat Val Probs===\n')
+# player_stat_probs = {'all': {2023: {'regular': {'pts': {'0': { 'prob over': po, 'prob under': pu },...
+def generate_player_stat_probs(player_stat_records, player_name=''):
+    print('\n===Generate Stat Val Probs: ' + player_name.title() + '===\n')
 
-    stat_val_probs = {}
+    player_stat_probs = {}
 
-    return stat_val_probs
+    for condition, condition_stat_records in player_stat_records.items():
+        print("\n===Condition " + str(condition) + "===\n")
+
+        player_stat_probs[condition] = {}
+
+        for season_year, full_season_stat_dicts in condition_stat_records.items():
+            print("\n===Year " + str(season_year) + "===\n")
+
+            player_stat_probs[condition][season_year] = {}
+
+            for season_part, season_stat_dicts in full_season_stat_dicts.items():
+                print("\n===Season Part " + str(season_part) + "===\n")
+
+                player_stat_probs[condition][season_year][season_part] = {}
+
+                for stat_name, stat_records in season_stat_dicts.items():
+                    print("\n===Stat Name " + str(stat_name) + "===\n")
+                    #print('stat_records: ' + str(stat_records))
+
+                    #player_stat_probs[condition][season_year][season_part][stat_name] = {}
+                    #stat_probs = player_stat_probs[condition][season_year][season_part][stat_name]
+                    stat_probs = {}
+
+                    # get prob from 0 to 1 to compare to desired consistency
+                    #stat_val = 0
+                    prob_over = 1.0
+                    prob_under = 1.0
+                    
+                    for stat_val in range(len(stat_records)):
+                        #print("\n===Stat Val " + str(stat_val) + "===")
+                        # gen prob reached from string record
+                        record = stat_records[stat_val] # eg x/y=1/1
+                        #print('record: ' + str(record))
+                        prob_over = generate_prob_stat_reached(record)
+
+                        prob_under = 1 - prob_over
+
+
+                        stat_probs[stat_val] = { 'prob over': prob_over, 'prob under': prob_under }
+
+                    player_stat_probs[condition][season_year][season_part][stat_name] = stat_probs
+
+    print('player_stat_probs: ' + str(player_stat_probs))
+    return player_stat_probs
 
 
 # consistency=0.9 is desired probability of player reaching stat val
