@@ -1988,10 +1988,14 @@ def generate_player_stat_probs(player_stat_records, player_name=''):
                         #print('record: ' + str(record))
                         prob_over = generate_prob_stat_reached(record)
 
-                        prob_under = 1 - prob_over
+                        prob_under = round(1 - prob_over,2)
 
 
                         stat_probs[stat_val] = { 'prob over': prob_over, 'prob under': prob_under }
+                        #print('stat_probs: ' + str(stat_probs))
+
+                    # when we want to see all stats on same page aligned by value we will have to add 0s and 100s to blank cells
+                    # but that would require knowing the stat keys which you can get from the first val bc everyone has at least 0
 
                     player_stat_probs[condition][season_year][season_part][stat_name] = stat_probs
 
@@ -2476,9 +2480,9 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
         reg_season_mean_margin = stat_dict[part_mean_margin_key]
         reg_season_second_mean_margin = stat_dict[part_second_mean_margin_key]
 
-        player_stat_records = all_player_stat_records[stat_dict['player name']]
+        player_stat_records = all_player_stat_records[stat_dict['player']]
 
-        stat_name = stat_dict['stat name']
+        stat_name = stat_dict['stat']
         #year = 2023
         # change to get season part by current date if after playoff schedule start?
         # no bc here we are processing postseason separately
@@ -2486,7 +2490,7 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
         season_part = 'postseason' # if we are in posteason, do we also want to see postseason prob of regseason stat???
         condition = 'all'
         # player_stat_dict: {2023: {'postseason': {'pts': {'all': {0: 18, 1: 19,...
-        player_stat_dict = all_player_stat_dicts[stat_dict['player name']][season_year][season_part][stat_name][condition]
+        player_stat_dict = all_player_stat_dicts[stat_dict['player']][season_year][season_part][stat_name][condition]
 
         
 
@@ -2808,7 +2812,7 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
         all_player_stat_dicts[player_name] = player_stat_dict
 
         # prob for each stat over and under
-        player_stat_probs = generate_player_stat_probs(player_name, player_stat_records)
+        player_stat_probs = generate_player_stat_probs(player_stat_records, player_name)
         all_player_stat_probs[player_name] = player_stat_probs
     
 
@@ -2826,9 +2830,14 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
     # also include given value in stat dict
     # so we can sort by value to get optimal return
     # need player id to read team
-    available_prop_dicts = generate_available_prop_dicts(all_consistent_stat_dicts, game_teams, player_teams)
+    available_prop_dicts = all_consistent_stat_dicts
+    read_odds = True
+    if 'read odds' in settings.keys():
+        read_odds = settings['read odds']
+    if read_odds:
+        available_prop_dicts = generate_available_prop_dicts(all_consistent_stat_dicts, game_teams, player_teams)
     
-    desired_order = ['player name', 'team', 'stat name','ok val','ok val prob','odds','ok val post prob', 'ok val min margin', 'ok val post min margin', 'ok val mean margin', 'ok val post mean margin']
+    desired_order = ['player', 'team', 'stat','ok val','ok val prob','odds','ok val post prob', 'ok val min margin', 'ok val post min margin', 'ok val mean margin', 'ok val post mean margin']
     writer.list_dicts(available_prop_dicts, desired_order)
 
 

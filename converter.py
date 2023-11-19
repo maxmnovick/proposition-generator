@@ -5,8 +5,11 @@ def convert_dict_to_list(dict, desired_order=[]):
     dict_list = []
 
     for key in desired_order:
-        val = dict[key]
-        dict_list.append(val)
+        if key in dict.keys():
+            val = dict[key]
+            dict_list.append(val)
+        else:
+            print('Warning: Desired key ' + key + ' not in dict!')
 
     # add remaining in the order they come
     for key, val in dict.items():
