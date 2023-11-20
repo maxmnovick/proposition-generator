@@ -2387,7 +2387,7 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
         if player_name in player_teams.keys():
             player_team = player_teams[player_name]
         for stat_name, stat_consistent_stat_dict in player_consistent_stat_dict.items():
-            consistent_stat_dict = {'player': player_name, 'stat': stat_name, 'team': player_name}
+            consistent_stat_dict = {'player': player_name, 'team': player_team, 'stat': stat_name}
             for condition, condition_consistent_stat_dict in stat_consistent_stat_dict.items():
                 for year, year_consistent_stat_dict in condition_consistent_stat_dict.items():
                     for part, part_consistent_stat_dict in year_consistent_stat_dict.items():
@@ -2658,6 +2658,23 @@ def generate_available_prop_dicts(stat_dicts, game_teams=[], player_teams={}):
     print('available_prop_dicts: ' + str(available_prop_dicts))
     return available_prop_dicts
 
+# all_stat_probs_dict = {player:stat:val:conditions}
+def generate_all_stat_probs_dict(all_player_stat_probs):
+    print('\n===Generate All Stat Probs Dict===\n')
+
+    all_stat_probs_dict = {}
+
+    return all_stat_probs_dict
+
+# all_stat_prob_dicts = [{player:player, stat:stat, val:val, conditions prob:prob,...},...]
+def generate_all_stat_prob_dicts(all_stat_probs_dict):
+    print('\n===Generate All Stat Prob Dicts===\n')
+
+    all_stat_prob_dicts = []
+
+    return all_stat_prob_dicts
+
+
 # one outcome per stat of interest so each player has multiple outcomes
 # we need game teams to know opponents
 # so we can get conditional stats
@@ -2666,7 +2683,7 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
 
     print('\n===Generate Players Outcomes===\n')
 
-    season_year = 2024 # change to default or current year
+    season_year = 2024 # determiner.determine_season_year() based on mth, change to default or current year
     if 'read season year' in settings.keys():
         season_year = settings['read season year']
 
@@ -2820,8 +2837,20 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
     # showing over and under probs for each stat val
     # val, prob over, prob under
     # 0, P_o0, P_u0
+    # all_player_stat_probs = {player:condition:year:part:stat:val} = {'player': {'all': {2023: {'regular': {'pts': {'0': { 'prob over': po, 'prob under': pu },...
     writer.write_all_player_stat_probs(all_player_stat_probs)
-    
+
+    # now we want all players in a single table sorted by high to low prob
+    # problem is many of the high probs wont be available so we need to iso available props
+    # once we have odds, we need to sort by expected val bc some lower prob may be higher ev
+    # all_stat_probs_dict = {player:stat:val:conditions}
+    all_stat_probs_dict = generate_all_stat_probs_dict(all_player_stat_probs)
+    # flatten nested dicts into one level and list them
+    # all_stat_prob_dicts = [{player:player, stat:stat, val:val, conditions prob:prob,...},...]
+    all_stat_prob_dicts = generate_all_stat_prob_dicts(all_stat_probs_dict)
+    desired_order = ['player', 'team', 'stat','val']
+    writer.list_dicts(all_stat_prob_dicts, desired_order)
+
     all_consistent_stat_dicts = generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_stat_records, all_player_stat_dicts, player_teams, season_year=season_year)
     #writer.display_consistent_stats(all_player_consistent_stats, all_player_stat_records)
 

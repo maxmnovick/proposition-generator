@@ -750,72 +750,77 @@ def list_dicts(dicts, desired_order=[], separator=','):
 def write_all_stat_probs_by_stat(all_player_stat_probs):
     print('\n===Write All Player Stat Probs by Stat===\n')
 
-    stat_probs_by_stat = {}
+    
 
     for player, player_stat_probs in all_player_stat_probs.items():
+        stat_probs_by_stat = {} # this must be in player loop or it will show max val for all players when we only need max for current players here bc separate sheets. this would be outside loop for all players when we want all players in same sheet
         print('player: ' + str(player))
-        data_key = 'stat probs' # folder and data type
-        organized_by = 'stat' # input key desired by user
-        book_name = 'data/' + data_key + '/' + player + ' ' + data_key + ' - ' + organized_by + '.xlsx'
-        print('book_name: ' + str(book_name))
-        writer = pd.ExcelWriter(book_name)
+        if len(player_stat_probs.keys()) > 0:
+            data_key = 'stat probs' # folder and data type
+            organized_by = 'stat' # input key desired by user
+            book_name = 'data/' + data_key + '/' + player + ' ' + data_key + ' - ' + organized_by + '.xlsx'
+            print('book_name: ' + str(book_name))
+            writer = pd.ExcelWriter(book_name)
 
-        headers = ['val']
-        all_conditions = []
-        for condition, condition_stat_probs in player_stat_probs.items():
-            print('condition: ' + str(condition))
-            for year, year_stat_probs in condition_stat_probs.items():
-                print('year: ' + str(year))
-                for part, part_stat_probs in year_stat_probs.items():
-                    print('part: ' + str(part))
-                    conditions = condition + ' ' + str(year) + ' ' + part + ' prob'
-                    all_conditions.append(conditions)
-                    headers.extend([conditions + ' over', conditions + ' under'])
-                    for stat, stat_probs in part_stat_probs.items():
-                        
-                        for val, probs_dict in stat_probs.items():
+            headers = ['val']
+            all_conditions = []
+            for condition, condition_stat_probs in player_stat_probs.items():
+                print('condition: ' + str(condition))
+                for year, year_stat_probs in condition_stat_probs.items():
+                    print('year: ' + str(year))
+                    for part, part_stat_probs in year_stat_probs.items():
+                        print('part: ' + str(part))
+                        conditions = condition + ' ' + str(year) + ' ' + part + ' prob'
+                        all_conditions.append(conditions)
+                        headers.extend([conditions + ' over', conditions + ' under'])
+                        for stat, stat_probs in part_stat_probs.items():
                             
-                            if stat not in stat_probs_by_stat.keys():
-                                stat_probs_by_stat[stat] = {}
-                                stat_probs_by_stat[stat][val] = {}
-                            elif val not in stat_probs_by_stat[stat].keys():
-                                stat_probs_by_stat[stat][val] = {}
+                            for val, probs_dict in stat_probs.items():
+                                
+                                if stat not in stat_probs_by_stat.keys():
+                                    stat_probs_by_stat[stat] = {}
+                                    stat_probs_by_stat[stat][val] = {}
+                                elif val not in stat_probs_by_stat[stat].keys():
+                                    stat_probs_by_stat[stat][val] = {}
 
-                            stat_probs_by_stat[stat][val][conditions] = probs_dict
+                                stat_probs_by_stat[stat][val][conditions] = probs_dict
 
 
-        # player_stat_probs_dict: {0: {'pts': {'prob over': 1.0, 'prob under': 0.0}, 'reb': {
-        # stat_probs_by_stat = {stat:val:condition:year:part} = {'pts':{'0'{'all':{2023:{'regular':{po,pu}}
-        print('stat_probs_by_stat: ' + str(stat_probs_by_stat))
-        print('headers: ' + str(headers))
-        for stat, stat_prob_dict in stat_probs_by_stat.items():
-            stat_probs_table = []
-            sheet_name = stat
-            print('sheet_name: ' + str(sheet_name))
+            # player_stat_probs_dict: {0: {'pts': {'prob over': 1.0, 'prob under': 0.0}, 'reb': {
+            # stat_probs_by_stat = {stat:val:conditions} = {'pts':{'0'{'all':{2023:{'regular':{po,pu}}
+            #print('stat_probs_by_stat: ' + str(stat_probs_by_stat))
+            #print('headers: ' + str(headers))
+            for stat, stat_prob_dict in stat_probs_by_stat.items():
+                stat_probs_table = []
+                sheet_name = stat
+                #print('\nsheet_name: ' + str(sheet_name))
+                #print('stat_prob_dict: ' + str(stat_prob_dict))
+                for val, val_probs_dict in stat_prob_dict.items():
+                    #print('val: ' + str(val))
+                    #print('val_probs_dict: ' + str(val_probs_dict)) # conditions: {po:po, pu:pu}
+                    stat_probs_row = [val]
 
-            for val, val_probs_dict in stat_prob_dict.items():
-                stat_probs_row = [val]
+                    #for conditions, conditions_probs_dict in val_probs_dict.items():  
 
-                #for conditions, conditions_probs_dict in val_probs_dict.items():  
+                    for conditions in all_conditions:
+                        #print('conditions: ' + str(conditions))
+                        p_o = 0
+                        p_u = 100
+                        if conditions in val_probs_dict.keys():
+                            stat_probs_dict = val_probs_dict[conditions]
+                            p_o = round(stat_probs_dict['prob over']*100)
+                            p_u = round(stat_probs_dict['prob under']*100)
+                        stat_probs_row.extend([p_o, p_u])
 
-                for conditions in all_conditions:
+                    #print('stat_probs_row: ' + str(stat_probs_row))
+                    stat_probs_table.append(stat_probs_row)
 
-                    p_o = 0
-                    p_u = 100
-                    if conditions in val_probs_dict.keys():
-                        stat_probs_dict = val_probs_dict[conditions]
-                        p_o = round(stat_probs_dict['prob over']*100)
-                        p_u = round(stat_probs_dict['prob under']*100)
-                    stat_probs_row.extend([p_o, p_u])
+                #print('stat_probs_table: ' + str(stat_probs_table))
+                stat_probs_df = pd.DataFrame(stat_probs_table, columns=headers)
+                #print('stat_probs_df: ' + str(stat_probs_df))
+                stat_probs_df.to_excel(writer,sheet_name)
 
-                print('stat_probs_row: ' + str(stat_probs_row))
-                stat_probs_table.append(stat_probs_row)
-
-            print('stat_probs_table: ' + str(stat_probs_table))
-            stat_probs_df = pd.DataFrame(stat_probs_table, columns=headers)
-            stat_probs_df.to_excel(writer,sheet_name)
-
-    writer.close()
+            writer.close()
 
 # each player gets a table separate sheet 
 # showing over and under probs for each stat val
@@ -849,77 +854,81 @@ def write_all_player_stat_probs(all_player_stat_probs):
     
     for player, player_stat_probs in all_player_stat_probs.items():
         print('player: ' + str(player))
-        data_key = 'stat probs' # folder and data type
+        #print('player_stat_probs: ' + str(player_stat_probs))
+        if len(player_stat_probs.keys()) > 0:
+            data_key = 'stat probs' # folder and data type
 
-        organized_by = 'condition' # input key desired by user
-        book_name = 'data/' + data_key + '/' + player + ' ' + data_key + ' - ' + organized_by + '.xlsx'
-        print('book_name: ' + str(book_name))
-        writer = pd.ExcelWriter(book_name)
-        #stat_probs_table = []
-        for condition, condition_stat_probs in player_stat_probs.items():
-            print('condition: ' + str(condition))
-            for year, year_stat_probs in condition_stat_probs.items():
-                print('year: ' + str(year))
-                for part, part_stat_probs in year_stat_probs.items():
-                    print('part: ' + str(part))
-                    sheet_name = condition + ' ' + str(year) + ' ' + part
-                    print('sheet_name: ' + str(sheet_name))
+            organized_by = 'condition' # input key desired by user
+            book_name = 'data/' + data_key + '/' + player + ' ' + data_key + ' - ' + organized_by + '.xlsx'
+            print('book_name: ' + str(book_name))
+            writer = pd.ExcelWriter(book_name)
+            #stat_probs_table = []
+            for condition, condition_stat_probs in player_stat_probs.items():
+                print('condition: ' + str(condition))
+                for year, year_stat_probs in condition_stat_probs.items():
+                    print('year: ' + str(year))
+                    for part, part_stat_probs in year_stat_probs.items():
+                        print('part: ' + str(part))
+                        sheet_name = condition + ' ' + str(year) + ' ' + part
+                        print('sheet_name: ' + str(sheet_name))
 
-                    # rearrange all_player_stat_probs in desired order of columns (x,y)
-                    # here we have x,y=stat,val
-                    # output in player_stat_probs_dict
-                    
-                    player_stat_probs_dict = {}
-                    for stat, stat_probs in part_stat_probs.items():
-                        for val, probs_dict in stat_probs.items():
-                            # only put val for first stat pts bc all stats share a row
-                            # if stat == 'pts':
-                            #     stat_probs_row = [val]
-                            # p_o = probs_dict['prob over']
-                            # p_u = probs_dict['prob under']
-                            # stat_probs_row.extend([p_o, p_u])
+                        # rearrange all_player_stat_probs in desired order of columns (x,y)
+                        # here we have x,y=stat,val
+                        # output in player_stat_probs_dict
+                        
+                        player_stat_probs_dict = {}
+                        for stat, stat_probs in part_stat_probs.items():
+                            for val, probs_dict in stat_probs.items():
+                                # only put val for first stat pts bc all stats share a row
+                                # if stat == 'pts':
+                                #     stat_probs_row = [val]
+                                # p_o = probs_dict['prob over']
+                                # p_u = probs_dict['prob under']
+                                # stat_probs_row.extend([p_o, p_u])
 
-                            if val not in player_stat_probs_dict.keys():
-                                player_stat_probs_dict[val] = {}
-                            player_stat_probs_dict[val][stat] = probs_dict
-                    # player_stat_probs_dict: {0: {'pts': {'prob over': 1.0, 'prob under': 0.0}, 'reb': {
-                    print('player_stat_probs_dict: ' + str(player_stat_probs_dict))
-                    # need to fill blank cells with 0s or 100s to keep order alignment
-                    # max_val = list(player_stat_probs_dict.keys())[-1] # last key is always max bc placed in order
-                    # max_val = 0
-                    # for val, val_probs_dict in player_stat_probs_dict.items():
-                    #     max_stat_val = list(player_stat_probs_dict.keys())[-1] # last key is always max bc placed in order
-                    #     print('max_stat_val: ' + str(max_stat_val))
-                    #     if max_stat_val > max_val:
-                    #         max_val = max_stat_val
-                    # print('max_val: ' + str(max_val))
+                                if val not in player_stat_probs_dict.keys():
+                                    player_stat_probs_dict[val] = {}
+                                player_stat_probs_dict[val][stat] = probs_dict
+                        # player_stat_probs_dict: {0: {'pts': {'prob over': 1.0, 'prob under': 0.0}, 'reb': {
+                        #print('player_stat_probs_dict: ' + str(player_stat_probs_dict))
+                        # need to fill blank cells with 0s or 100s to keep order alignment
+                        # max_val = list(player_stat_probs_dict.keys())[-1] # last key is always max bc placed in order
+                        # max_val = 0
+                        # for val, val_probs_dict in player_stat_probs_dict.items():
+                        #     max_stat_val = list(player_stat_probs_dict.keys())[-1] # last key is always max bc placed in order
+                        #     print('max_stat_val: ' + str(max_stat_val))
+                        #     if max_stat_val > max_val:
+                        #         max_val = max_stat_val
+                        # print('max_val: ' + str(max_val))
 
-                    # stat probs by condition bc each condition gets a page showing all stats for that condition
-                    stat_probs_table = []
-                    all_stat_keys = list(player_stat_probs_dict[0].keys()) # we need to get all stat keys from first dict so we know if player missed val for that stat
-                    
-                    for val, val_probs_dict in player_stat_probs_dict.items():
-                        #val_idx = 0
-                        stat_probs_row = [val]
-                        for stat in all_stat_keys:
-                            p_o = 0
-                            p_u = 100
-                            if stat in val_probs_dict.keys():
-                                stat_probs_dict = val_probs_dict[stat]
-                        #for stat, stat_probs_dict in val_probs_dict.items():
-                                p_o = round(stat_probs_dict['prob over']*100)
-                                p_u = round(stat_probs_dict['prob under']*100)
-                            stat_probs_row.extend([p_o, p_u])
+                        # stat probs by condition bc each condition gets a page showing all stats for that condition
+                        stat_probs_table = []
+                        #all_stat_keys = []
+                        if 0 in player_stat_probs_dict.keys():
+                            all_stat_keys = list(player_stat_probs_dict[0].keys()) # we need to get all stat keys from first dict so we know if player missed val for that stat
+                        
+                            for val, val_probs_dict in player_stat_probs_dict.items():
+                                #val_idx = 0
+                                stat_probs_row = [val]
+                                for stat in all_stat_keys:
+                                    p_o = 0
+                                    p_u = 100
+                                    if stat in val_probs_dict.keys():
+                                        stat_probs_dict = val_probs_dict[stat]
+                                #for stat, stat_probs_dict in val_probs_dict.items():
+                                        p_o = round(stat_probs_dict['prob over']*100)
+                                        p_u = round(stat_probs_dict['prob under']*100)
+                                    stat_probs_row.extend([p_o, p_u])
 
-                        stat_probs_table.append(stat_probs_row)
+                                stat_probs_table.append(stat_probs_row)
 
-                        #val_idx += 1
+                                #val_idx += 1
 
-                    stat_probs_df = pd.DataFrame(stat_probs_table, columns=headers)
-                    stat_probs_df.to_excel(writer,sheet_name)
+                            stat_probs_df = pd.DataFrame(stat_probs_table, columns=headers)
+                            stat_probs_df.to_excel(writer,sheet_name)
 
-                    
-        writer.close()
+                        
+            writer.close()
 
     #write_all_stat_probs_by_condition(all_player_stat_probs)
     write_all_stat_probs_by_stat(all_player_stat_probs)
