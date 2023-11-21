@@ -19,6 +19,8 @@ import sorter
 
 import pandas as pd # read html results from webpage. need here to convert game log dict to df
 
+from sympy import *
+
 # sort alphabetical and lower for comparison to other games
 def generate_players_string(players_list):
 
@@ -2733,17 +2735,34 @@ def generate_all_stat_probs_dict(all_player_stat_probs):
                 num_probs = 2 # all probs must add up to 1
                 init_weight = 0.0
                 prev_weight = 0.0
-                for prob in probs:
-                    recency = 0.5
-                    sample_size = 10
-                    weight = 
-                    weighted_prob = weight * prob
-                    true_prob += weighted_prob
+                # could loop thru N times to build eq str
+                # then convert str to eq and solve for w_1
+                # probs = [p1,p2,...]
+                str_eqn = 'w' # = 0
+                # for prob in probs:
+                #     recency = 0.5
+                #     sample_size = 10
+                #     weight = 
+                #     weighted_prob = weight * prob
+                #     true_prob += weighted_prob
 
-                    prev_weight = weight
+                #     prev_weight = weight
 
                     # final weight is 1 - other weights to get remainder to ensure adds up to 1 but should not be needed if rounded properly
-                true_prob = val_probs_dict[current_conditions]
+                
+                str_eqn += ' - 1'
+                eqn = sympify(str_eqn)
+                w_1 = solve(eqn)
+                weights = [w_1]
+
+                # solve for other ws in relation to w_1 already used to sub above
+                true_prob = 0#w_1 * p_1
+                for p_idx in range(len(probs)):
+                    prob = probs(p_idx)
+                    w = weights(p_idx)
+                    true_prob += w * prob
+                
+                #true_prob = val_probs_dict[current_conditions]
                 val_probs_dict['true prob'] = true_prob
 
     
