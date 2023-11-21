@@ -1109,3 +1109,18 @@ def determine_stat_available(stat_dict):
     # get webpage from player name to get team page
 
     return stat_available
+
+# we need to get all conditions for all players
+# so table lines up if players did not all play in same conditions
+#all_stat_probs_dict: {'luka doncic': {'pts': {0: {'all 2023 regular prob': 0.02, 'all 2023 full prob': 0.02...
+def determine_all_conditions(all_stat_probs_dict):
+    all_conditions = []
+
+    for player_stat_probs_dict in all_stat_probs_dict.values():
+        for stat_probs_dict in player_stat_probs_dict.values():
+            for val_probs_dict in stat_probs_dict.values():
+                for conditions in val_probs_dict.keys():
+                    if conditions not in all_conditions:
+                        all_conditions.append(conditions)
+
+    return all_conditions

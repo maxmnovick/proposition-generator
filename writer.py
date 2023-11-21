@@ -708,7 +708,7 @@ def convert_list_to_string(init_list):
 #         print(export_row)
 
 #desired_order=list  headers
-def list_dicts(dicts, desired_order=[], separator=','):
+def list_dicts(dicts, desired_order=[], separator=',', output=''):
     print('\n===List Dicts===\n')
 
     # desired_order = ['player name','stat name','ok val','ok pp','ok p']
@@ -743,6 +743,17 @@ def list_dicts(dicts, desired_order=[], separator=','):
             export_row += str(cell) + separator
 
         print(export_row)
+
+    if output == 'excel':
+        data_key = 'stat probs' # folder and data type
+        book_name = 'data/' + data_key + '/' + 'all ' + data_key + '.xlsx'
+        print('book_name: ' + str(book_name))
+        writer = pd.ExcelWriter(book_name)
+
+        stat_probs_df = pd.DataFrame(dict_list)
+        #print('stat_probs_df: ' + str(stat_probs_df))
+        stat_probs_df.to_excel(writer)
+        writer.close()
 
 # one page for each stat showing all conditions
 # all_player_stat_probs = {condition:year:part:stat:val} = {'all': {2023: {'regular': {'pts': {'0': { 'prob over': po, 'prob under': pu },...
@@ -807,9 +818,9 @@ def write_all_stat_probs_by_stat(all_player_stat_probs):
                         p_o = 0
                         p_u = 100
                         if conditions in val_probs_dict.keys():
-                            stat_probs_dict = val_probs_dict[conditions]
-                            p_o = round(stat_probs_dict['prob over']*100)
-                            p_u = round(stat_probs_dict['prob under']*100)
+                            stat_prob = val_probs_dict[conditions]
+                            p_o = round(stat_prob*100)
+                            p_u = 100 - p_o #round(stat_probs_dict['prob under']*100)
                         stat_probs_row.extend([p_o, p_u])
 
                     #print('stat_probs_row: ' + str(stat_probs_row))
@@ -914,10 +925,10 @@ def write_all_player_stat_probs(all_player_stat_probs):
                                     p_o = 0
                                     p_u = 100
                                     if stat in val_probs_dict.keys():
-                                        stat_probs_dict = val_probs_dict[stat]
+                                        stat_prob = val_probs_dict[stat]
                                 #for stat, stat_probs_dict in val_probs_dict.items():
-                                        p_o = round(stat_probs_dict['prob over']*100)
-                                        p_u = round(stat_probs_dict['prob under']*100)
+                                        p_o = round(stat_prob*100)
+                                        p_u = 100 - p_o #round(stat_probs_dict['prob under']*100)
                                     stat_probs_row.extend([p_o, p_u])
 
                                 stat_probs_table.append(stat_probs_row)

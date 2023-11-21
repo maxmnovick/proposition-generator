@@ -2278,6 +2278,7 @@ def read_react_web_data(url):
 # finding element by class name will return 1st instance of class
 # but unusual error may occur
 # .ElementClickInterceptedException: Message: element click intercepted: Element <button role="tab" class="rj-market__group" aria-selected="false" data-testid="button-market-group">...</button> is not clickable at point (763, 135). Other element would receive the click: 
+# return {'pts': {'bam adebayo': {'18+': '-650','17-': 'x',...
 def read_react_website(url):
 	print('\n===Read React Web Data===\n')
 	print('url: ' + url)
@@ -2296,7 +2297,7 @@ def read_react_website(url):
 		#soup = BeautifulSoup(page, features='lxml')
 	
 
-		data_table_keys = {'pts':4,'reb':7,'ast':8}
+		data_table_keys = {'pts':5,'reb':8,'ast':9}
 		#web_dict[key] = read_lazy_elements(key)
 		for key in data_table_keys.keys():
 			
@@ -2305,7 +2306,7 @@ def read_react_website(url):
 			# click pts btn
 			epath = 'button[' + str(data_table_keys[key]) + ']'
 
-			if key == 'ast':
+			if key == 'reb':
 				# first need to click right arrow to move so ast btn visible
 				side_btn = driver.find_element('class name','side-arrow--right')
 				print("side_btn: " + side_btn.get_attribute('innerHTML'))
@@ -2315,14 +2316,14 @@ def read_react_website(url):
 				except:
 					#web_dict['ast'] = {}
 					# click ast btn
-					ast_btn = driver.find_element('class name','rj-market__groups').find_element('xpath',epath)
-					print("ast_btn: " + ast_btn.get_attribute('innerHTML'))
-					ast_btn.click()
+					stat_btn = driver.find_element('class name','rj-market__groups').find_element('xpath',epath)
+					print("stat_btn: " + stat_btn.get_attribute('innerHTML'))
+					stat_btn.click()
 
 			else:
-				pts_btn = driver.find_element('class name','rj-market__groups').find_element('xpath',epath)
-				print("pts_btn: " + pts_btn.get_attribute('innerHTML'))
-				pts_btn.click()
+				stat_btn = driver.find_element('class name','rj-market__groups').find_element('xpath',epath)
+				print("stat_btn: " + stat_btn.get_attribute('innerHTML'))
+				stat_btn.click()
 
 			# not all dropdowns are open so program must click each one
 			# click player dropdown btn
@@ -2348,6 +2349,9 @@ def read_react_website(url):
 
 				# multiple (3 always?) players in each lazy element
 				player_btns = e.find_elements('class name','rj-market-collapsible__trigger')
+				# print('player_btns: ')
+				# for player_btn in player_btns:
+				# 	print("player_btn: " + player_btn.get_attribute('innerHTML'))
 
 				for player_btn in player_btns:
 					#player_btn = collapsible_element.find_element('xpath','button') #driver.find_element('class name','rj-markerboard-markets').find_element('xpath','sb-lazy-render/div[2]/button')
@@ -2358,68 +2362,105 @@ def read_react_website(url):
 					player_btn_header = player_btn.find_element('xpath','h2').get_attribute('innerHTML')
 					print('player_btn_header: ' + player_btn_header)
 
-					# as long as we can click all markets we need to open then we dont need to click o/u btns
-					# but we may we need to close o/u btns to see the oo btns
+					# ignore quarter stats for now
+					if re.search('Quarter',player_btn_header):
+						break # can break bc list ends with quarter stats
+
+					# old version: as long as we can click all markets we need to open then we dont need to click o/u btns but we may we need to close o/u btns to see the oo btns
+					# new version we need to click all btns
 					player_btn_arrow = player_btn.find_element('class name','rj-market-collapsible-arrow').get_attribute('innerHTML')
 					print('player_btn_arrow: ' + player_btn_arrow)
-					# if o/u and open then close dropdown permanently
-					if re.search('O/U',player_btn_header) and re.search('up',player_btn_arrow):
-						player_btn.click() # close dropdown
-						print('closed unused market')
-						time.sleep(0.1)
-						
-
-					elif not re.search('O/U',player_btn_header):
-						
+					# old version: if o/u and open then close dropdown permanently
+					# new version: get odds from all sections so get data 
+					# and then close if already open, or open and then close
+					# if re.search('O/U',player_btn_header) and re.search('up',player_btn_arrow):
+					# 	player_btn.click() # close dropdown
+					# 	print('closed unused market')
+					# 	time.sleep(0.1)
+					# elif not re.search('O/U',player_btn_header):
+					# first section already open so arrow up and no need to open but close after reading data
+					# arrow down means section closed
+					if re.search('down',player_btn_arrow):
 						player_btn.click() # open dropdown
 
 						print('clicked player btn')
 
-						# opened data so now collect it and then close it so other data visible
+					# opened data so now collect it and then close it so other data visible
 
-						player_element = player_btn.find_element('xpath','..') 
-						print("player_element: " + player_element.get_attribute('innerHTML'))
+					player_element = player_btn.find_element('xpath','..') 
+					print("player_element: " + player_element.get_attribute('innerHTML'))
 
-						player_name = re.sub('Points|Rebounds|Assists','',player_btn_header).strip().lower()
-						player_name = re.sub('−|-','',player_name)
-						print('player_name: ' + player_name)
+					player_name = re.sub('\sAlt\s|Points|Rebounds|Assists|O/U','',player_btn_header).strip().lower()
+					player_name = re.sub('−|-','',player_name)
+					print('player_name: ' + player_name)
 
+					if player_name not in web_dict[key].keys():
 						web_dict[key][player_name] = {}
 
-						stat_val_elements = player_element.find_elements('class name','rj-market__button-yourbet-title')
-						odds_val_elements = player_element.find_elements('class name','rj-market__button-yourbet-odds')
+					stat_val_elements = player_element.find_elements('class name','rj-market__button-yourbet-title')
+					odds_val_elements = player_element.find_elements('class name','rj-market__button-yourbet-odds')
 
-						# stat_vals = []
-						# odds_vals = []
-						for idx in range(len(stat_val_elements)):
-							stat_element = stat_val_elements[idx]
-							odds_element = odds_val_elements[idx]
+					print('stat_val_elements')
+					for e in stat_val_elements:
+						print("stat_val_element: " + e.get_attribute('innerHTML'))
+					# for e in odds_val_elements:
+					# 	print("odds_val_elements: " + e.get_attribute('innerHTML'))
 
-							stat = stat_element.get_attribute('innerHTML')
-							stat = re.sub('\+','',stat)
-							odds = odds_element.get_attribute('innerHTML')
-							odds = re.sub('−','-',odds)
+					# stat_vals = []
+					# odds_vals = []
+					for idx in range(len(stat_val_elements)):
+						stat_element = stat_val_elements[idx]
+						print("stat_element: " + stat_element.get_attribute('innerHTML'))
+						odds_element = odds_val_elements[idx]
+						print("odds_element: " + odds_element.get_attribute('innerHTML'))
 
-							#stat_vals.append(e.get_attribute('innerHTML'))
+						stat = stat_element.get_attribute('innerHTML')
+						odds = odds_element.get_attribute('innerHTML')
 
-							web_dict[key][player_name][stat] = odds # { stat : odds, ... }
+						# if header is just <stat> without 'alt' and 'o/u'
+						# then format is 'Over 24.5 -120'
+						# Over <stat> <odds>
+						if not re.search('\sAlt\s',player_btn_header):
+							# old: stat = re.sub('\+','',stat)
+							if re.search('Over',stat):
+								stat = re.sub('[a-zA-Z]','',stat).strip()
+								stat = str(round(float(stat) + 0.5)) + '+' #or str(int(stat))#str(round(float(stat) + 0.5)) # 0.5 to 1
+							else: #under
+								stat = re.sub('[a-zA-Z]','',stat).strip()
+								stat = str(round(float(stat) - 0.5)) + '-'
+						elif re.search('O/U',player_btn_header):
+							# start with over and then take every other value as over
+							if idx % 2 == 0:
+								stat = str(round(float(stat) + 0.5)) + '+' #or str(int(stat))#str(round(float(stat) + 0.5)) # 0.5 to 1
+							else: #under
+								stat = str(round(float(stat) - 0.5)) + '-'
 
-						# for e in odds_val_elements:
-						# 	odds_vals.append(e.get_attribute('innerHTML'))
+						odds = re.sub('−','-',odds) # change abnormal '-' char
+						#odds = re.sub('\+','',odds) # prefer symbol to differentiate odds from probs, prefer no + symbol for +odds bc implied so not to confuse with val over under
 
-						# print('stat_vals: ' + str(stat_vals))
-						# print('odds_vals: ' + str(odds_vals))
+						#stat_vals.append(e.get_attribute('innerHTML'))
 
-						print('collected player data')
-						time.sleep(0.5)
-						player_btn.click() # close dropdown
+						print('stat: ' + str(stat))
+						print('odds: ' + str(odds))
+						print('player web dict ' + player_name + ': ' + str(web_dict[key][player_name]))
+						web_dict[key][player_name][stat] = odds # { stat : odds, ... }
+						print('player web dict ' + player_name + ': ' + str(web_dict[key][player_name]))
+					# for e in odds_val_elements:
+					# 	odds_vals.append(e.get_attribute('innerHTML'))
+
+					# print('stat_vals: ' + str(stat_vals))
+					# print('odds_vals: ' + str(odds_vals))
+
+					print('collected player data')
+					time.sleep(0.5)
+					player_btn.click() # close dropdown
 
 				#time.sleep(5)
 
 		print("Request successful.")
 
-	except:
-		print('Warning: No SGP element!')
+	except Exception as e:
+		print('Warning: No SGP element! ', e)
 
 	# pts_data = driver.find_element('class name', "rj-markerboard-markets").get_attribute('outerHTML')
 	# print('pts_data:\n' + str(pts_data))
@@ -2448,8 +2489,8 @@ def read_react_website(url):
 	# 	ast_btn.click()
 
 	
-
-	print('web_dict:\n' + str(web_dict))
+	# {'pts': {'bam adebayo': {'18+': '-650','17-': 'x',...
+	print('final web_dict:\n' + str(web_dict))
 	return web_dict
 
 #all_players_odds: {'mia': {'pts': {'Bam Adebayo': {'18+': '−650',...
@@ -2473,13 +2514,13 @@ def read_all_players_odds(game_teams, player_teams={}, players=[]):
 	#game_teams = read_opponent()
 	for game in game_teams:
 		print('game: ' + str(game))
-		game_team = game[0]
+		game_team = game[0] # only read 1 page bc bth teams same page
 		print('game_team: ' + str(game_team))
 
 	# for team in teams:
 	# 	print('team: ' + team)
 
-		all_players_odds[game_team] = {}
+		all_players_odds[game_team] = {} # loops for both teams in game?
 
 		team_name = re.sub(' ','-', determiner.determine_team_name(game_team))
 		#print("team_name: " + str(team_name))
@@ -2489,7 +2530,7 @@ def read_all_players_odds(game_teams, player_teams={}, players=[]):
 		print('game_odds_url: ' + game_odds_url)
 
 		# return dictionary results for a url
-		# {'pts': {'bam adebayo': {'18': '-650',...
+		# {'pts': {'bam adebayo': {'18+': '-650','17-': 'x',...
 		game_players_odds_dict = read_react_website(game_odds_url)
 
 		if game_players_odds_dict is not None:
@@ -2545,6 +2586,7 @@ def read_all_players_odds(game_teams, player_teams={}, players=[]):
 
 	#writer.write_json_to_file(all_players_odds, filepath, write_param)
 
+	#all_players_odds: {'mia': {'pts': {'Bam Adebayo': {'18+': '−650','17-': 'x',...
 	print('all_players_odds: ' + str(all_players_odds))
 	return all_players_odds
 

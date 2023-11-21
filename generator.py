@@ -608,13 +608,20 @@ def generate_player_stat_records(player_name, player_stat_dict):
                         #print('num games played ' + condition + ': ' + str(num_games_played))
                         if num_games_played > 0:
                             # max(stat_vals)+1 bc we want to include 0 and max stat val
+                            # for 0 we need to compute prob of exactly 0 not over under
                             for stat_val in range(0,max(stat_vals)+1):
-                                num_games_reached = 0 # stat count, reset for each check stat val bc new count
+                                # if stat_val == 0:
+                                #     num_games_hit
+                                num_games_reached = 0 # num games >= stat val, stat count, reset for each check stat val bc new count
                                 # loop through games to get count stat val >= game stat val
                                 for game_idx in range(num_games_played):
                                     game_stat_val = stat_vals[game_idx]
-                                    if game_stat_val >= int(stat_val):
-                                        num_games_reached += 1
+                                    if int(stat_val) == 0:
+                                        if game_stat_val == int(stat_val):
+                                            num_games_reached += 1
+                                    else:
+                                        if game_stat_val >= int(stat_val):
+                                            num_games_reached += 1
 
                                     all_games_reached.append(num_games_reached) # one count for each game
 
@@ -1988,10 +1995,10 @@ def generate_player_stat_probs(player_stat_records, player_name=''):
                         #print('record: ' + str(record))
                         prob_over = generate_prob_stat_reached(record)
 
-                        prob_under = round(1 - prob_over,2)
+                        #prob_under = round(1 - prob_over,2)
 
-
-                        stat_probs[stat_val] = { 'prob over': prob_over, 'prob under': prob_under }
+                        # prob under for a stat val is over 1-prob ober so only need to save prob over
+                        stat_probs[stat_val] = prob_over #{ 'prob over': prob_over, 'prob under': prob_under }
                         #print('stat_probs: ' + str(stat_probs))
 
                     # when we want to see all stats on same page aligned by value we will have to add 0s and 100s to blank cells
@@ -2604,14 +2611,14 @@ def generate_available_prop_dicts(stat_dicts, game_teams=[], player_teams={}):
         odds = 'NA'
         team = stat_dict['team']
         if team in all_players_odds.keys():
-            stat_name = stat_dict['stat name']
+            stat_name = stat_dict['stat']
             print('stat_name: ' + stat_name)
             if stat_name in all_players_odds[team].keys():
-                player = stat_dict['player name'].lower()
+                player = stat_dict['player'].lower()
                 print('player: ' + player)
                 #print('player_dict: ' + str(all_players_odds[team][stat_name]))
                 if player in all_players_odds[team][stat_name].keys():
-                    ok_val = str(stat_dict['ok val'])
+                    ok_val = str(stat_dict['val'])
                     print('ok_val: ' + str(ok_val))
                     if str(ok_val) in all_players_odds[team][stat_name][player].keys():
                     
@@ -2659,19 +2666,161 @@ def generate_available_prop_dicts(stat_dicts, game_teams=[], player_teams={}):
     return available_prop_dicts
 
 # all_stat_probs_dict = {player:stat:val:conditions}
+# like gen stat probs by stat used in writer
 def generate_all_stat_probs_dict(all_player_stat_probs):
     print('\n===Generate All Stat Probs Dict===\n')
 
     all_stat_probs_dict = {}
 
+    for player, player_stat_probs in all_player_stat_probs.items():
+        stat_probs_by_stat = {} # this must be in player loop or it will show max val for all players when we only need max for current players here bc separate sheets. this would be outside loop for all players when we want all players in same sheet
+        print('player: ' + str(player))
+
+        all_conditions = []
+        for condition, condition_stat_probs in player_stat_probs.items():
+            print('condition: ' + str(condition))
+            for year, year_stat_probs in condition_stat_probs.items():
+                print('year: ' + str(year))
+                for part, part_stat_probs in year_stat_probs.items():
+                    print('part: ' + str(part))
+                    
+                    conditions = condition + ' ' + str(year) + ' ' + part + ' prob'
+                    all_conditions.append(conditions)
+                    
+                    for stat, stat_probs in part_stat_probs.items():
+                        
+                        for val, prob in stat_probs.items():
+                            
+                            if stat not in stat_probs_by_stat.keys():
+                                stat_probs_by_stat[stat] = {}
+                                stat_probs_by_stat[stat][val] = {}
+                            elif val not in stat_probs_by_stat[stat].keys():
+                                stat_probs_by_stat[stat][val] = {}
+
+                            stat_probs_by_stat[stat][val][conditions] = prob
+
+                            # add true prob for each val based on conditional probs
+                            # need to know all players conditions first
+                            # and could even include all players and similar players especially in consideration of projection
+        
+        all_stat_probs_dict[player] = stat_probs_by_stat
+
+    # gen true probs for all stat probs dict
+    # we get true prob for combos of conditions by weighting avg prob
+    # start with overall true prob combining 2 seasons weighted by recency and sample size
+    # relevance for a time period is shown in recency factor
+    # need to know current conditions to get true prob
+    # see how current conds were used for streak tables
+    print('all_stat_probs_dict: ' + str(all_stat_probs_dict))
+    for player, player_probs_dict in all_stat_probs_dict.items():
+        for stat, stat_probs_dict in player_probs_dict.items():
+            for val, val_probs_dict in stat_probs_dict.items():
+                print('val_probs_dict: ' + str(val_probs_dict))
+                current_conditions = 'all 2024 regular prob'
+                if current_conditions not in val_probs_dict.keys():
+                    current_conditions = 'all 2024 full prob'
+
+
+                #p_true = w1p1 + w2p2
+                # where w1+w2=1
+                # and w_t=w1/t so w2=w1/2
+                probs = [val_probs_dict[current_conditions]]
+                current_conditions = 'all 2023 regular prob'
+                if current_conditions not in val_probs_dict.keys():
+                    current_conditions = 'all 2023 full prob'
+                probs.append(val_probs_dict[current_conditions])
+                # determine weights of each measured prob based on recency, relevance, and sample size
+                num_probs = 2 # all probs must add up to 1
+                init_weight = 0.0
+                prev_weight = 0.0
+                for prob in probs:
+                    recency = 0.5
+                    sample_size = 10
+                    weight = 
+                    weighted_prob = weight * prob
+                    true_prob += weighted_prob
+
+                    prev_weight = weight
+
+                    # final weight is 1 - other weights to get remainder to ensure adds up to 1 but should not be needed if rounded properly
+                true_prob = val_probs_dict[current_conditions]
+                val_probs_dict['true prob'] = true_prob
+
+    
+
+    print('all_stat_probs_dict: ' + str(all_stat_probs_dict))
     return all_stat_probs_dict
 
+# from all_stat_probs_dict: {'luka doncic': {'pts': {1: {'all 2023 regular prob': 1.0, 'all 2023 full prob': 1.0,...
 # all_stat_prob_dicts = [{player:player, stat:stat, val:val, conditions prob:prob,...},...]
-def generate_all_stat_prob_dicts(all_stat_probs_dict):
+def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}):
     print('\n===Generate All Stat Prob Dicts===\n')
 
     all_stat_prob_dicts = []
 
+    # we need to get all conditions for all players
+    # so table lines up if players did not all play in same conditions
+    all_conditions = determiner.determine_all_conditions(all_stat_probs_dict)
+
+   
+
+    for player, player_stat_probs_dict in all_stat_probs_dict.items():
+        #stat_val_probs_dict = {'player': player}
+        player_team = ''
+        if player in player_teams.keys():
+            player_team = player_teams[player]
+        #stat_val_probs_dict['team'] = player_team
+        for stat_name, stat_probs_dict in player_stat_probs_dict.items():
+            #stat_val_probs_dict['stat'] = stat_name
+            #consistent_stat_dict = {'player': player_name, 'team': player_team, 'stat': stat_name}
+            # for condition, condition_consistent_stat_dict in stat_probs_dict.items():
+            #     for year, year_consistent_stat_dict in condition_consistent_stat_dict.items():
+            #         for part, part_consistent_stat_dict in year_consistent_stat_dict.items():
+            #             for key, val in part_consistent_stat_dict.items():
+            #                 consistent_stat_dict[key] = val
+            for val, val_probs_dict in stat_probs_dict.items():
+                #stat_val_probs_dict['val'] = str(val) + '+'
+                val_str = str(val) + '+'
+                if val == 0: # for zero we only want exactly 0 prob not over under bc 1+/- includes 1 and cannot go below 0
+                    val_str = str(val)
+                stat_val_probs_dict = {'player': player, 'team': player_team, 'stat': stat_name, 'val': val_str }
+                #for conditions, prob in val_probs_dict.items():
+                for conditions in all_conditions:
+                    prob = 0
+                    if conditions in val_probs_dict.keys():
+                        prob = val_probs_dict[conditions]
+                    stat_val_probs_dict[conditions] = round(prob * 100)
+
+                # one row for each val which has all conditions
+                print('stat_val_probs_dict: ' + str(stat_val_probs_dict))
+                all_stat_prob_dicts.append(stat_val_probs_dict)
+
+            print('all_stat_prob_dicts: ' + str(all_stat_prob_dicts))
+
+            # repeat for unders
+            for val, val_probs_dict in stat_probs_dict.items():
+                #stat_val_probs_dict['val'] = str(val) + '-'
+                if val > 1: # for zero we only want exactly 0 prob not over under bc 1+/- includes 1 and cannot go below 0
+                    under_val = val - 1
+                    val_str = str(under_val) + '-'
+                    stat_val_probs_dict = {'player': player, 'team': player_team, 'stat': stat_name, 'val': val_str }
+                    #for conditions, prob in val_probs_dict.items():
+                    for conditions in all_conditions:
+                        prob = 0
+                        if conditions in val_probs_dict.keys():
+                            prob = val_probs_dict[conditions]
+                        stat_val_probs_dict[conditions] = 100 - round(prob * 100)
+
+                    # one row for each val which has all conditions
+                    print('stat_val_probs_dict: ' + str(stat_val_probs_dict))
+                    all_stat_prob_dicts.append(stat_val_probs_dict)
+
+            print('all_stat_prob_dicts: ' + str(all_stat_prob_dicts))
+
+    sort_keys = ['true prob']
+    all_stat_prob_dicts = sorter.sort_dicts_by_keys(all_stat_prob_dicts, sort_keys)
+
+    print('all_stat_prob_dicts: ' + str(all_stat_prob_dicts))
     return all_stat_prob_dicts
 
 
@@ -2847,11 +2996,11 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
     all_stat_probs_dict = generate_all_stat_probs_dict(all_player_stat_probs)
     # flatten nested dicts into one level and list them
     # all_stat_prob_dicts = [{player:player, stat:stat, val:val, conditions prob:prob,...},...]
-    all_stat_prob_dicts = generate_all_stat_prob_dicts(all_stat_probs_dict)
+    all_stat_prob_dicts = generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams)
     desired_order = ['player', 'team', 'stat','val']
     writer.list_dicts(all_stat_prob_dicts, desired_order)
 
-    all_consistent_stat_dicts = generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_stat_records, all_player_stat_dicts, player_teams, season_year=season_year)
+    #all_consistent_stat_dicts = generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_stat_records, all_player_stat_dicts, player_teams, season_year=season_year)
     #writer.display_consistent_stats(all_player_consistent_stats, all_player_stat_records)
 
     # now that we have all consistent stats,
@@ -2859,15 +3008,19 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
     # also include given value in stat dict
     # so we can sort by value to get optimal return
     # need player id to read team
-    available_prop_dicts = all_consistent_stat_dicts
+    desired_order = ['player', 'team', 'stat','val','true prob']
+    available_prop_dicts = all_stat_prob_dicts#all_consistent_stat_dicts
     read_odds = True
     if 'read odds' in settings.keys():
         read_odds = settings['read odds']
     if read_odds:
-        available_prop_dicts = generate_available_prop_dicts(all_consistent_stat_dicts, game_teams, player_teams)
+        available_prop_dicts = generate_available_prop_dicts(all_stat_prob_dicts, game_teams, player_teams)
+        desired_order.append('odds') # is there another way to ensure odds comes after true prob
+
+    #desired_order = ['player', 'team', 'stat','ok val','ok val prob','odds','ok val post prob', 'ok val min margin', 'ok val post min margin', 'ok val mean margin', 'ok val post mean margin']
     
-    desired_order = ['player', 'team', 'stat','ok val','ok val prob','odds','ok val post prob', 'ok val min margin', 'ok val post min margin', 'ok val mean margin', 'ok val post mean margin']
-    writer.list_dicts(available_prop_dicts, desired_order)
+    writer.list_dicts(available_prop_dicts, desired_order, output='excel')
+    #writer.list_dicts(available_prop_dicts, desired_order)
 
 
     # todo: make fcn to classify recently broken streaks bc that recent game may be anomaly and they may revert back to streak

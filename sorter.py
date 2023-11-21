@@ -17,8 +17,8 @@ def sort_dicts_by_key(dicts, key):
 # given a list of dicts with corresponding keys, 
 # we want to see which dict has the highest value at a given key they all share
 def sort_dicts_by_keys(dicts, keys):
-    key1 = keys[0]
-    key2 = keys[1]
+    # key1 = keys[0]
+    # key2 = keys[1]
 
     #for k in keys: d[k]
 
