@@ -2913,6 +2913,7 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}):
             #print('all_stat_prob_dicts: ' + str(all_stat_prob_dicts))
 
             # repeat for unders
+            print('repeat probs for unders')
             for val, val_probs_dict in stat_probs_dict.items():
                 #stat_val_probs_dict['val'] = str(val) + '-'
                 if val > 1: # for zero we only want exactly 0 prob not over under bc 1+/- includes 1 and cannot go below 0
@@ -2926,11 +2927,16 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}):
                             prob = val_probs_dict[conditions]
                         stat_val_probs_dict[conditions] = 100 - round(prob * 100)
 
+                    prob = val_probs_dict['true prob']
+                    print('over prob: ' + str(prob))
+                    stat_val_probs_dict['true prob'] = 100 - round(prob * 100)
+                    print('under prob: ' + str(stat_val_probs_dict['true prob']))
+
                     # one row for each val which has all conditions
-                    #print('stat_val_probs_dict: ' + str(stat_val_probs_dict))
+                    print('stat_val_probs_dict: ' + str(stat_val_probs_dict))
                     all_stat_prob_dicts.append(stat_val_probs_dict)
 
-            #print('all_stat_prob_dicts: ' + str(all_stat_prob_dicts))
+            print('all_stat_prob_dicts: ' + str(all_stat_prob_dicts))
 
     sort_keys = ['true prob']
     all_stat_prob_dicts = sorter.sort_dicts_by_keys(all_stat_prob_dicts, sort_keys)
