@@ -2610,7 +2610,7 @@ def generate_available_prop_dicts(stat_dicts, game_teams=[], player_teams={}):
     #teams_stat_dicts = sorter.sort_dicts_by_key(stat_dicts, 'team')
     # and we need to isolate into separate loops
     # so we can read page once and use for all teammates
-    #all_players_odds: {'mia': {'pts': {'Bam Adebayo': {'18': '−650',...
+    #all_players_odds: {'mia': {'pts': {'Bam Adebayo': {'18': '−650','20': '+500',...
     all_players_odds = reader.read_all_players_odds(game_teams, player_teams) # {team: stat: { player: odds,... }}
 
     #for team in teams:
@@ -2651,9 +2651,33 @@ def generate_available_prop_dicts(stat_dicts, game_teams=[], player_teams={}):
 
         print('odds: ' + odds)
 
-        stat_dict['odds'] = odds
+        # +100 means 1 unit in to profit 1 unit
+        stat_dict['odds'] = odds # format +100 = 1 spent/1 earned
+
+        # now we have odds return profit/loss
+        # so get ev = e(x) = xp
+        #+200=200/100=2, -200=100/200=1/2
+        ev = 0 # if no odds
+        if odds != 'NA' and odds != '?':
+            conv_factor = 100 # american odds system shows how much to put in to profit 100
+            profit_multipier = int(odds) / conv_factor
+            if re.search('-',odds):
+                profit_multipier = conv_factor / int(odds)
+            print('profit_multipier: ' + str(profit_multipier))
+            true_prob = stat_dict['true prob']
+            print('true_prob: ' + str(true_prob))
+            prob_over = true_prob / 100
+            print('prob_over: ' + str(prob_over))
+            prob_under = 1 - prob_over
+            print('prob_under: ' + str(prob_under))
+            spent = 1 # unit
+            ev = "%.2f" % (profit_multipier * prob_over - spent * prob_under)
+            print('ev: ' + str(ev))
+
+        stat_dict['ev'] = ev
         
-        # # if team odds saved locally then no need to read again from internet same day bc unchanged
+        # if team odds saved locally then no need to read again from internet same day bc unchanged?
+        # no bc they change frequently, especially near game time bc more ppl active
 
         # if team not in all_players_odds.keys():
         #     all_players_odds[team] = {}
@@ -2938,8 +2962,8 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}):
 
             print('all_stat_prob_dicts: ' + str(all_stat_prob_dicts))
 
-    sort_keys = ['true prob']
-    all_stat_prob_dicts = sorter.sort_dicts_by_keys(all_stat_prob_dicts, sort_keys)
+    # sort_keys = ['true prob']
+    # all_stat_prob_dicts = sorter.sort_dicts_by_keys(all_stat_prob_dicts, sort_keys)
 
     print('all_stat_prob_dicts: ' + str(all_stat_prob_dicts))
     return all_stat_prob_dicts
@@ -3136,10 +3160,17 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
         read_odds = settings['read odds']
     if read_odds:
         available_prop_dicts = generate_available_prop_dicts(all_stat_prob_dicts, game_teams, player_teams)
-        desired_order.append('odds') # is there another way to ensure odds comes after true prob
+        desired_order.extend(['odds','ev']) # is there another way to ensure odds comes after true prob
 
     #desired_order = ['player', 'team', 'stat','ok val','ok val prob','odds','ok val post prob', 'ok val min margin', 'ok val post min margin', 'ok val mean margin', 'ok val post mean margin']
     
+    # add ev to dicts
+    # could also add ev same time as odds bc that is last needed var
+    #available_prop_dicts = generate_ev_dicts(available_prop_dicts)
+
+    sort_keys = ['true prob']
+    available_prop_dicts = sorter.sort_dicts_by_keys(available_prop_dicts, sort_keys)
+
     writer.list_dicts(available_prop_dicts, desired_order, output='excel')
     #writer.list_dicts(available_prop_dicts, desired_order)
 

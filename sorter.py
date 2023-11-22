@@ -10,20 +10,20 @@ def sort_predictions_by_deg_of_bel(predictions):
 
 # given a list of dicts with corresponding keys, 
 # we want to see which dict has the highest value at a given key they all share
-def sort_dicts_by_key(dicts, key):
+def sort_dicts_by_key(dicts, key, reverse=True):
 
-    return sorted(dicts, key=lambda d: d[key], reverse=True) # reverse so we see highest first
+    return sorted(dicts, key=lambda d: d[key], reverse=reverse) # reverse so we see highest first
 
 # given a list of dicts with corresponding keys, 
 # we want to see which dict has the highest value at a given key they all share
-def sort_dicts_by_keys(dicts, keys):
+def sort_dicts_by_keys(dicts, keys, reverse=True):
     # key1 = keys[0]
     # key2 = keys[1]
 
     #for k in keys: d[k]
 
     #dicts = sorted(dicts, key=lambda d: (d[key1],d[key2]), reverse=True) # reverse so we see highest first
-    dicts = sorted(dicts, key=lambda d: ([d[k] for k in keys]), reverse=True)
+    dicts = sorted(dicts, key=lambda d: ([float(d[k]) for k in keys]), reverse=reverse)
     #dicts = sorted(dicts, key=lambda d: lambda k: d[k] for k in keys, reverse=True)
 
     return dicts
@@ -33,9 +33,9 @@ def sort_dicts_by_keys(dicts, keys):
 #>>> d = {'Bill': 4, 'Alex' : 4, 'Bob' : 3, "Charles": 7}    
 #>>> sorted(d, key=lambda k: (d[k], k))
 #['Bob', 'Alex', 'Bill', 'Charles']
-def sort_dict_by_key_val(d):
+def sort_dict_by_key_val(d, reverse=True):
 
-    return sorted(d, key=lambda k: (d[k], k), reverse=True) # reverse so we see highest first
+    return sorted(d, key=lambda k: (d[k], k), reverse=reverse) # reverse so we see highest first
 
 
 # sort so we see all condition types grouped together for separate analysis and viewing
