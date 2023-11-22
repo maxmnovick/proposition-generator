@@ -2012,6 +2012,20 @@ def generate_player_stat_probs(player_stat_records, player_name=''):
     print('player_stat_probs: ' + str(player_stat_probs))
     return player_stat_probs
 
+# generate dict of sample sizes for each condition
+# so we know weight of sample based on size
+# although we also want a way to get sample size for conditions decided later
+# such as like combined conditions when multiple conditions line up
+# could also use determine sample size 
+# by passing player stat records with matching conditions
+def generate_sample_size_dict(player_stat_records, player_name=''):
+
+    print('\n===Generate Sample Size Dict ' + player_name.title() + '===\n')
+
+    ss_dict = {}
+
+    return ss_dict
+
 
 # consistency=0.9 is desired probability of player reaching stat val
 #consistent_stat_vals: {'all': {2023: {'regular': {'pts': {'prob val':
@@ -2670,7 +2684,9 @@ def generate_available_prop_dicts(stat_dicts, game_teams=[], player_teams={}):
 
 # all_stat_probs_dict = {player:stat:val:conditions}
 # like gen stat probs by stat used in writer
-def generate_all_stat_probs_dict(all_player_stat_probs):
+# need player_stat_dict to get sample size
+# player_stat_dict: {2023: {'regular': {'pts': {'all': {0: 18, 1: 19...
+def generate_all_stat_probs_dict(all_player_stat_probs, all_player_stat_dicts={}):
     print('\n===Generate All Stat Probs Dict===\n')
 
     all_stat_probs_dict = {}
@@ -2722,12 +2738,13 @@ def generate_all_stat_probs_dict(all_player_stat_probs):
     # see how current conds were used for streak tables
     
     for player, player_probs_dict in all_stat_probs_dict.items():
-        print('player: ' + str(player))
+        print('\nplayer: ' + str(player))
+        player_stat_dict = all_player_stat_dicts[player]
         for stat, stat_probs_dict in player_probs_dict.items():
-            print('stat: ' + str(stat))
+            print('\nstat: ' + str(stat))
             for val, val_probs_dict in stat_probs_dict.items():
-                print('val: ' + str(val))
-                #print('val_probs_dict: ' + str(val_probs_dict))
+                print('\nval: ' + str(val))
+                print('val_probs_dict: ' + str(val_probs_dict))
                 # p_true = w1p1 + w2p2
                 # where w1+w2=1
                 # and w_t=w1/t so w2=w1/2
@@ -2740,13 +2757,22 @@ def generate_all_stat_probs_dict(all_player_stat_probs):
                 # always include overall season probs
                 # if a val not reached in a condition then it will not be included here
                 probs = []
-                all_current_conditions = []
+                all_current_conditions = [] 
+                all_cur_cond_dicts = []
+                # first get overall probs for all reg seasons
+                condition = 'all' # all conds match all
+                part = 'regular' # get current part from time of year mth
                 for year in years:
-                    current_conditions = 'all ' + str(year) + ' regular prob'
+                    cur_cond_dict = {'condition':condition, 'year':year, 'part':part}
+                    current_conditions = condition + ' ' + str(year) + ' ' + part + ' prob'
+                    print('current_conditions: ' + str(current_conditions))
                     if current_conditions in val_probs_dict.keys():
                         probs.append(val_probs_dict[current_conditions])
                         all_current_conditions.append(current_conditions)
+                        all_cur_cond_dicts.append(cur_cond_dict)
+                # then get probs matching current conds
                 print('probs: ' + str(probs))
+                print('all_cur_cond_dicts: ' + str(all_cur_cond_dicts))
                 # current_conditions = 'all 2024 regular prob'
                 # if current_conditions not in val_probs_dict.keys():
                 #     current_conditions = 'all 2024 full prob'
@@ -2764,14 +2790,37 @@ def generate_all_stat_probs_dict(all_player_stat_probs):
                 # probs = [p1,p2,...]
                 str_eqn = 'w' # = 0
                 t_1 = 1 # set bc current year is origin so multiply by 1. each year adds 1 as weight decreases. that weight should be determined by ml algo
-                s_1 = 15 # current year
-                for p_idx in range(1,len(probs)):
-                    # w_n = w_1 ( t_1 / t_n ) ( s_n / s_1 ) # bc years inverse and sample size prportional
-                    # read year in condition and see how many years away?
-                    t_n = p_idx + 1 # years away
-                    s_n = 65 #previous years
-                    w_n = ' + w * ' + str(t_1) + ' / ' + str(t_n) + ' * ( ' + str(s_n) + ' / ' + str(s_1) + ' )'
-                    str_eqn += w_n
+                
+                # to get sample size for current conds
+                # list current conds
+                # s1 is always all <current yr> <current part>
+                # or just first year given
+                # cur_conds = {year:year, part:part, cond:cond}
+                # some vals will only be reached in one part of the season
+                if len(all_cur_cond_dicts) > 0:
+                    #cur_conds = all_cur_cond_dicts[0]
+                    #s_1 = determiner.determine_sample_size(player_stat_dict, cur_conds) #15 # current year
+                    # get sample sizes for probs
+                    sample_sizes = []
+                    for p_idx in range(len(probs)):
+                        cur_conds = all_cur_cond_dicts[p_idx]
+                        s_n = determiner.determine_sample_size(player_stat_dict, cur_conds)
+                        sample_sizes.append(s_n)
+                    print('sample_sizes: ' + str(sample_sizes))
+
+                    s_1 = sample_sizes[0]
+                    
+                    # probs must be aligned with cur conds
+                    for p_idx in range(1,len(probs)):
+                        # if prob=0 then w will cancel
+
+                        # w_n = w_1 ( t_1 / t_n ) ( s_n / s_1 ) # bc years inverse and sample size prportional
+                        # read year in condition and see how many years away?
+                        t_n = p_idx + 1 # years away
+                        cur_conds = all_cur_cond_dicts[p_idx]
+                        s_n = sample_sizes[p_idx] #determiner.determine_sample_size(player_stat_dict, cur_conds) #65 #previous years
+                        w_n = ' + w * ' + str(t_1) + ' / ' + str(t_n) + ' * ( ' + str(s_n) + ' / ' + str(s_1) + ' )'
+                        str_eqn += w_n
                 #     recency = 0.5
                 #     sample_size = 10
                 #     weight = 
@@ -2789,7 +2838,7 @@ def generate_all_stat_probs_dict(all_player_stat_probs):
                 weights = [round(w_1,2)]
                 for p_idx in range(1,len(probs)):
                     t_n = p_idx + 1 # years away
-                    s_n = 65 #previous years
+                    s_n = sample_sizes[p_idx] #65 #previous years
                     w_n = round(w_1 * round(t_1 / t_n, 6) * round(s_n / s_1, 6), 2)
                     weights.append(w_n)
                 print('weights: ' + str(weights))
@@ -2819,6 +2868,7 @@ def generate_all_stat_probs_dict(all_player_stat_probs):
 # from all_stat_probs_dict: {'luka doncic': {'pts': {1: {'all 2023 regular prob': 1.0, 'all 2023 full prob': 1.0,...
 # all_stat_prob_dicts = [{player:player, stat:stat, val:val, conditions prob:prob,...},...]
 def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}):
+
     print('\n===Generate All Stat Prob Dicts===\n')
 
     all_stat_prob_dicts = []
@@ -3058,7 +3108,7 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
     # problem is many of the high probs wont be available so we need to iso available props
     # once we have odds, we need to sort by expected val bc some lower prob may be higher ev
     # all_stat_probs_dict = {player:stat:val:conditions}
-    all_stat_probs_dict = generate_all_stat_probs_dict(all_player_stat_probs)
+    all_stat_probs_dict = generate_all_stat_probs_dict(all_player_stat_probs, all_player_stat_dicts)
     # flatten nested dicts into one level and list them
     # all_stat_prob_dicts = [{player:player, stat:stat, val:val, conditions prob:prob,...},...]
     all_stat_prob_dicts = generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams)

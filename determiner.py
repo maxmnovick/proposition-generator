@@ -1124,3 +1124,27 @@ def determine_all_conditions(all_stat_probs_dict):
                         all_conditions.append(conditions)
 
     return all_conditions
+
+
+# determine sample size for the player stat dict
+# so we can assign weight and
+# so we can compute true prob weighted avg
+# player_stat_dict: {2023: {'regular': {'pts': {'all': {0: 18, 1: 19...
+# cur_conds = {year:year, part:part, cond:cond}
+def determine_sample_size(player_stat_dict, cur_conds):
+    print('\n===Determine Sample Size===\n')
+    print('cur_conds: ' + str(cur_conds))
+    print('player_stat_dict: ' + str(player_stat_dict))
+    sample_size = 0
+
+    condition = cur_conds['condition']
+    year = cur_conds['year']
+    part = cur_conds['part']
+    #stat = 'pts' first val in part_stats dict
+
+    if year in player_stat_dict.keys() and part in player_stat_dict[year].keys() and condition in list(player_stat_dict[year][part].values())[0].keys():
+        stat_dict = list(player_stat_dict[year][part].values())[0][condition]
+        sample_size = len(stat_dict.keys())
+
+    print('sample_size: ' + str(sample_size))
+    return sample_size
