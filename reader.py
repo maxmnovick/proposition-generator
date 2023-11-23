@@ -694,13 +694,17 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 			#print("html_results: " + str(html_results))
 
 			if html_results is not None:
+				print('found html results while reading season log')
 
 				parts_of_season = [] # pre season, regular season, post season
 
 				len_html_results = len(html_results) # each element is a dataframe/table so we loop thru each table
-				#print('len_html_results: ' + str(len_html_results))
+				print('len_html_results: ' + str(len_html_results))
 				for order in range(len_html_results):
 					#print("order: " + str(order))
+
+					# see if we can find header to differntiate preseason and regseason
+					#print('html_results[order]: ' + str(html_results[order]))
 
 					if len(html_results[order].columns.tolist()) == 17:
 
@@ -708,7 +712,7 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 						#print('part_of_season:\n' + str(part_of_season))
 
 						# look at the formatting to figure out how to separate table and elements in table
-						if len_html_results - 2 == order:
+						if len_html_results - 2 == order and len_html_results > 4: # 3 or more should work but check if invalid for any players bc 4 or more means they did not play preseason but does not account for if they played postseason
 							part_of_season['Type'] = 'Preseason'
 
 						else:
@@ -794,8 +798,8 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 	# print("\n===" + player_name + "===\n")
 	# print(tabulate(table))
 	#print(player_name + " player_game_log returned")# + str(player_game_log_df))
-	#print('player_game_log_df:\n' + str(player_game_log_df))
-	#print('player_game_log_dict: ' + str(player_game_log_dict))
+	print('player_game_log_df:\n' + str(player_game_log_df))
+	print('player_game_log_dict: ' + str(player_game_log_dict))
 	return player_game_log_dict#player_game_log_df # can return this df directly or first arrange into list but seems simpler and more intuitive to keep df so we can access elements by keyword
 
 # here we decide default season year, so make input variable parameter
@@ -2380,80 +2384,83 @@ def read_react_website(url):
 					# elif not re.search('O/U',player_btn_header):
 					# first section already open so arrow up and no need to open but close after reading data
 					# arrow down means section closed
-					if re.search('down',player_btn_arrow):
-						player_btn.click() # open dropdown
+					try: # button might be out of window bottom bc long list and we cannot scroll
+						if re.search('down',player_btn_arrow):
+							player_btn.click() # open dropdown
 
-						#print('clicked player btn')
+							#print('clicked player btn')
 
-					# opened data so now collect it and then close it so other data visible
+						# opened data so now collect it and then close it so other data visible
 
-					player_element = player_btn.find_element('xpath','..') 
-					#print("player_element: " + player_element.get_attribute('innerHTML'))
+						player_element = player_btn.find_element('xpath','..') 
+						#print("player_element: " + player_element.get_attribute('innerHTML'))
 
-					player_name = re.sub('\sAlt\s|Points|Rebounds|Assists|O/U','',player_btn_header).strip().lower()
-					player_name = re.sub('−|-','',player_name)
-					#print('player_name: ' + player_name)
+						player_name = re.sub('\sAlt\s|Points|Rebounds|Assists|O/U','',player_btn_header).strip().lower()
+						player_name = re.sub('−|-','',player_name)
+						#print('player_name: ' + player_name)
 
-					if player_name not in web_dict[key].keys():
-						web_dict[key][player_name] = {}
+						if player_name not in web_dict[key].keys():
+							web_dict[key][player_name] = {}
 
-					stat_val_elements = player_element.find_elements('class name','rj-market__button-yourbet-title')
-					odds_val_elements = player_element.find_elements('class name','rj-market__button-yourbet-odds')
+						stat_val_elements = player_element.find_elements('class name','rj-market__button-yourbet-title')
+						odds_val_elements = player_element.find_elements('class name','rj-market__button-yourbet-odds')
 
-					# print('stat_val_elements')
-					# for e in stat_val_elements:
-					# 	print("stat_val_element: " + e.get_attribute('innerHTML'))
-					# for e in odds_val_elements:
-					# 	print("odds_val_elements: " + e.get_attribute('innerHTML'))
+						# print('stat_val_elements')
+						# for e in stat_val_elements:
+						# 	print("stat_val_element: " + e.get_attribute('innerHTML'))
+						# for e in odds_val_elements:
+						# 	print("odds_val_elements: " + e.get_attribute('innerHTML'))
 
-					# stat_vals = []
-					# odds_vals = []
-					for idx in range(len(stat_val_elements)):
-						stat_element = stat_val_elements[idx]
-						#print("stat_element: " + stat_element.get_attribute('innerHTML'))
-						odds_element = odds_val_elements[idx]
-						#print("odds_element: " + odds_element.get_attribute('innerHTML'))
+						# stat_vals = []
+						# odds_vals = []
+						for idx in range(len(stat_val_elements)):
+							stat_element = stat_val_elements[idx]
+							#print("stat_element: " + stat_element.get_attribute('innerHTML'))
+							odds_element = odds_val_elements[idx]
+							#print("odds_element: " + odds_element.get_attribute('innerHTML'))
 
-						stat = stat_element.get_attribute('innerHTML')
-						odds = odds_element.get_attribute('innerHTML')
+							stat = stat_element.get_attribute('innerHTML')
+							odds = odds_element.get_attribute('innerHTML')
 
-						# if header is just <stat> without 'alt' and 'o/u'
-						# then format is 'Over 24.5 -120'
-						# Over <stat> <odds>
-						if not re.search('\sAlt\s',player_btn_header):
-							# old: stat = re.sub('\+','',stat)
-							if re.search('Over',stat):
-								stat = re.sub('[a-zA-Z]','',stat).strip()
-								stat = str(round(float(stat) + 0.5)) + '+' #or str(int(stat))#str(round(float(stat) + 0.5)) # 0.5 to 1
-							else: #under
-								stat = re.sub('[a-zA-Z]','',stat).strip()
-								stat = str(round(float(stat) - 0.5)) + '-'
-						elif re.search('O/U',player_btn_header):
-							# start with over and then take every other value as over
-							if idx % 2 == 0:
-								stat = str(round(float(stat) + 0.5)) + '+' #or str(int(stat))#str(round(float(stat) + 0.5)) # 0.5 to 1
-							else: #under
-								stat = str(round(float(stat) - 0.5)) + '-'
+							# if header is just <stat> without 'alt' and 'o/u'
+							# then format is 'Over 24.5 -120'
+							# Over <stat> <odds>
+							if not re.search('\sAlt\s',player_btn_header):
+								# old: stat = re.sub('\+','',stat)
+								if re.search('Over',stat):
+									stat = re.sub('[a-zA-Z]','',stat).strip()
+									stat = str(round(float(stat) + 0.5)) + '+' #or str(int(stat))#str(round(float(stat) + 0.5)) # 0.5 to 1
+								else: #under
+									stat = re.sub('[a-zA-Z]','',stat).strip()
+									stat = str(round(float(stat) - 0.5)) + '-'
+							elif re.search('O/U',player_btn_header):
+								# start with over and then take every other value as over
+								if idx % 2 == 0:
+									stat = str(round(float(stat) + 0.5)) + '+' #or str(int(stat))#str(round(float(stat) + 0.5)) # 0.5 to 1
+								else: #under
+									stat = str(round(float(stat) - 0.5)) + '-'
 
-						odds = re.sub('−','-',odds) # change abnormal '-' char
-						#odds = re.sub('\+','',odds) # prefer symbol to differentiate odds from probs, prefer no + symbol for +odds bc implied so not to confuse with val over under
+							odds = re.sub('−','-',odds) # change abnormal '-' char
+							#odds = re.sub('\+','',odds) # prefer symbol to differentiate odds from probs, prefer no + symbol for +odds bc implied so not to confuse with val over under
 
-						#stat_vals.append(e.get_attribute('innerHTML'))
+							#stat_vals.append(e.get_attribute('innerHTML'))
 
-						#print('stat: ' + str(stat))
-						#print('odds: ' + str(odds))
-						#print('player web dict ' + player_name + ': ' + str(web_dict[key][player_name]))
-						web_dict[key][player_name][stat] = odds # { stat : odds, ... }
-						#print('player web dict ' + player_name + ': ' + str(web_dict[key][player_name]))
-					# for e in odds_val_elements:
-					# 	odds_vals.append(e.get_attribute('innerHTML'))
+							#print('stat: ' + str(stat))
+							#print('odds: ' + str(odds))
+							#print('player web dict ' + player_name + ': ' + str(web_dict[key][player_name]))
+							web_dict[key][player_name][stat] = odds # { stat : odds, ... }
+							#print('player web dict ' + player_name + ': ' + str(web_dict[key][player_name]))
+						# for e in odds_val_elements:
+						# 	odds_vals.append(e.get_attribute('innerHTML'))
 
-					# print('stat_vals: ' + str(stat_vals))
-					# print('odds_vals: ' + str(odds_vals))
+						# print('stat_vals: ' + str(stat_vals))
+						# print('odds_vals: ' + str(odds_vals))
 
-					#print('collected player data')
-					time.sleep(0.2)
-					player_btn.click() # close dropdown
+						#print('collected player data')
+						time.sleep(0.2)
+						player_btn.click() # close dropdown
+					except:
+						print('Warning: player btn unclickable!')
 
 				#time.sleep(5)
 

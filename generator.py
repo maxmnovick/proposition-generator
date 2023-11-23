@@ -51,7 +51,8 @@ def generate_players_string(players_list):
 def generate_player_all_stats_dicts(player_name, player_game_log, opponent, player_team, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part):
 
     print('\n===Generate Player All Stats Dicts===\n')
-    #print('player_game_log:\n' + str(player_game_log))
+    print('season_year: ' + str(season_year))
+    print('player_game_log:\n' + str(player_game_log))
 
     # get no. games played this season
     # so we can compare game with the same idx bt seasons
@@ -497,11 +498,13 @@ def generate_player_stat_dict(player_name, player_season_logs, projected_lines_d
 
     for player_game_log in player_season_logs.values():
 
+        print("\n===Year " + str(season_year) + "===\n")
+
         player_game_log_df = pd.DataFrame(player_game_log)#.from_dict(player_game_log) #pd.DataFrame(player_game_log)
         player_game_log_df.index = player_game_log_df.index.map(str)
-        print('converted_player_game_log_df:\n' + str(player_game_log_df))
+        #print('converted_player_game_log_df:\n' + str(player_game_log_df))
 
-        print("\n===Year " + str(season_year) + "===\n")
+        
         #player_game_log = player_season_logs[0] #start with current season. all_player_game_logs[player_idx]
         #player_name = player_names[player_idx] # player names must be aligned with player game logs
 
@@ -526,6 +529,8 @@ def generate_player_stat_dict(player_name, player_season_logs, projected_lines_d
         player_stat_dict[season_year][season_part] = generate_player_all_stats_dicts(player_name, player_game_log_df, opponent, player_team, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part) #generate_full_season_stat_dict(player_stat_dict)
 
         season_year -= 1
+
+        #print('player_stat_dict: ' + str(player_stat_dict))
 
     # player_stat_dict: {2023: {'regular': {'pts': {'all': {0: 18, 1: 19...
     #print('player_stat_dict: ' + str(player_stat_dict))
@@ -688,9 +693,13 @@ def generate_player_records_dict(player_name, player_stat_dict, projected_lines_
 
     player_records_dicts = {}
 
+    # we only want to compare stats to current year avg if no lines given
+    # bc that is closer to actual lines
+    current_year = season_year
+
     print('projected_lines_dict: ' + str(projected_lines_dict))
     season_part_of_interest = 'regular' # reg or post season
-    # if we do not have projected lines then we can use player means as lines
+    # if we do not have projected lines then we can use player means/medians as lines
     # we pass in projected lines as param so at this point we already have actual projected lines or averages to determine record above and below line
     # we could get avgs from stats but we already compute avgs so we can get it from that source before running this fcn
     player_projected_lines = {}
@@ -710,28 +719,32 @@ def generate_player_records_dict(player_name, player_stat_dict, projected_lines_
         else:
             print('Warning: Player did not play in either part of season!')
             
-    else:
+    else: # no lines given, so use avgs
         print('Warning: Player ' + player_name + ' not in projected lines!')
+        print('player_medians_dicts: ' + str(player_medians_dicts))
         if len(player_medians_dicts.keys()) > 0:
-            projected_lines_dict[player_name] = player_medians_dicts['all'][season_year]
+            if season_year in player_medians_dicts['all'].keys():
+                season_median_dicts = player_medians_dicts['all'][season_year]
+                print('season_median_dicts: ' + str(season_median_dicts))
+                projected_lines_dict[player_name] = season_median_dicts
 
-            player_avg_lines = player_medians_dicts['all'][season_year]
-            print('player_avg_lines: ' + str(player_avg_lines))
+                player_avg_lines = season_median_dicts
+                print('player_avg_lines: ' + str(player_avg_lines))
 
-            stats_of_interest = ['pts','reb','ast','3pm','blk','stl','to'] # we decided to focus on these stats to begin
-            #season_part_of_interest = 'regular' # reg or post season
-            for stat in stats_of_interest:
-                if season_part_of_interest in player_avg_lines.keys():
-                    player_projected_lines[stat] = player_avg_lines[season_part_of_interest][stat]
-                else:
-                    print('Warning: Player did not play in one part of the season (either reg or post?)!' + season_part_of_interest)
-                    # did not play in one part of season but played in other so use for both
-                    if season_part_of_interest == 'regular':
-                        season_part_of_interest = 'postseason'
-                    else: # = post so change to reg
-                        season_part_of_interest = 'regular'
+                stats_of_interest = ['pts','reb','ast','3pm','blk','stl','to'] # we decided to focus on these stats to begin
+                #season_part_of_interest = 'regular' # reg or post season
+                for stat in stats_of_interest:
+                    if season_part_of_interest in player_avg_lines.keys():
+                        player_projected_lines[stat] = player_avg_lines[season_part_of_interest][stat]
+                    else:
+                        print('Warning: Player did not play in one part of the season (either reg or post?)!' + season_part_of_interest)
+                        # did not play in one part of season but played in other so use for both
+                        if season_part_of_interest == 'regular':
+                            season_part_of_interest = 'postseason'
+                        else: # = post so change to reg
+                            season_part_of_interest = 'regular'
 
-                    player_projected_lines[stat] = player_avg_lines[season_part_of_interest][stat]
+                        player_projected_lines[stat] = player_avg_lines[season_part_of_interest][stat]
             
             #print('player_projected_lines: ' + str(player_projected_lines))
         else: # player has not played before
@@ -748,6 +761,7 @@ def generate_player_records_dict(player_name, player_stat_dict, projected_lines_
         #player_game_log = player_season_logs[0] #start with current season. all_player_game_logs[player_idx]
         #player_name = player_names[player_idx] # player names must be aligned with player game logs
 
+        #if season_year in player_medians_dicts['all'].keys():
         for season_part, player_season_stat_dict in player_full_season_stat_dict.items():
 
             # all_pts_dicts = {'all':{idx:val,..},..}
@@ -823,22 +837,22 @@ def generate_player_records_dict(player_name, player_stat_dict, projected_lines_
                         stls = list(all_ss_dicts[conditions].values())[game_idx]
                         tos = list(all_tos_dicts[conditions].values())[game_idx]
 
-                        
-                        if pts >= int(player_projected_lines['pts']):
-                            pts_count += 1
-                        if rebs >= int(player_projected_lines['reb']):
-                            r_count += 1
-                        if asts >= int(player_projected_lines['ast']):
-                            a_count += 1
+                        if 'pts' in player_projected_lines.keys():
+                            if pts >= int(player_projected_lines['pts']):
+                                pts_count += 1
+                            if rebs >= int(player_projected_lines['reb']):
+                                r_count += 1
+                            if asts >= int(player_projected_lines['ast']):
+                                a_count += 1
 
-                        if threes >= int(player_projected_lines['3pm']):
-                            threes_count += 1
-                        if blks >= int(player_projected_lines['blk']):
-                            b_count += 1
-                        if stls >= int(player_projected_lines['stl']):
-                            s_count += 1
-                        if tos >= int(player_projected_lines['to']):
-                            to_count += 1
+                            if threes >= int(player_projected_lines['3pm']):
+                                threes_count += 1
+                            if blks >= int(player_projected_lines['blk']):
+                                b_count += 1
+                            if stls >= int(player_projected_lines['stl']):
+                                s_count += 1
+                            if tos >= int(player_projected_lines['to']):
+                                to_count += 1
 
                         all_pts_counts.append(pts_count)
                         all_rebs_counts.append(r_count)
@@ -855,150 +869,151 @@ def generate_player_records_dict(player_name, player_stat_dict, projected_lines_
                     stats_counts = [ all_pts_counts, all_rebs_counts, all_asts_counts, all_threes_counts, all_blks_counts, all_stls_counts, all_tos_counts ]
 
                     header_row = ['Games']
-                    over_pts_line = 'PTS ' + str(player_projected_lines['pts']) + "+"
-                    over_rebs_line = 'REB ' + str(player_projected_lines['reb']) + "+"
-                    over_asts_line = 'AST ' + str(player_projected_lines['ast']) + "+"
-                    
-                    over_threes_line = '3PM ' + str(player_projected_lines['3pm']) + "+"
-                    over_blks_line = 'BLK ' + str(player_projected_lines['blk']) + "+"
-                    over_stls_line = 'STL ' + str(player_projected_lines['stl']) + "+"
-                    over_tos_line = 'TO ' + str(player_projected_lines['to']) + "+"
-                    
-                    prob_pts_row = [over_pts_line]
-                    prob_rebs_row = [over_rebs_line]
-                    prob_asts_row = [over_asts_line]
-
-                    prob_threes_row = [over_threes_line]
-                    prob_blks_row = [over_blks_line]
-                    prob_stls_row = [over_stls_line]
-                    prob_tos_row = [over_tos_line]
-
-                    
-
-                    for game_idx in range(len(all_pts_dicts[conditions].values())):
-                        p_count = all_pts_counts[game_idx]
-                        r_count = all_rebs_counts[game_idx]
-                        a_count = all_asts_counts[game_idx]
-
-                        threes_count = all_threes_counts[game_idx]
-                        b_count = all_blks_counts[game_idx]
-                        s_count = all_stls_counts[game_idx]
-                        to_count = all_tos_counts[game_idx]
-
-                        current_total = str(game_idx + 1)
-                        current_total_games = current_total# + ' Games'
-                        header_row.append(current_total_games)
-
-                        prob_over_pts_line = str(p_count) + "/" + current_total
-                        # v2 add game idx for ref and deconstruct later
-                        # or could get game idx from player stat dict
-                        #prob_over_pts_line = str(game_idx) + ": " + str(p_count) + "/" + current_total
-                        prob_pts_row.append(prob_over_pts_line)
+                    if 'pts' in player_projected_lines.keys():
+                        over_pts_line = 'PTS ' + str(player_projected_lines['pts']) + "+"
+                        over_rebs_line = 'REB ' + str(player_projected_lines['reb']) + "+"
+                        over_asts_line = 'AST ' + str(player_projected_lines['ast']) + "+"
                         
-                        prob_over_rebs_line = str(r_count) + "/" + current_total
-                        prob_rebs_row.append(prob_over_rebs_line)
-                        prob_over_asts_line = str(a_count) + "/" + current_total
-                        prob_asts_row.append(prob_over_asts_line)
+                        over_threes_line = '3PM ' + str(player_projected_lines['3pm']) + "+"
+                        over_blks_line = 'BLK ' + str(player_projected_lines['blk']) + "+"
+                        over_stls_line = 'STL ' + str(player_projected_lines['stl']) + "+"
+                        over_tos_line = 'TO ' + str(player_projected_lines['to']) + "+"
+                        
+                        prob_pts_row = [over_pts_line]
+                        prob_rebs_row = [over_rebs_line]
+                        prob_asts_row = [over_asts_line]
 
-                        prob_over_threes_line = str(threes_count) + "/" + current_total
-                        prob_threes_row.append(prob_over_threes_line)
-                        prob_over_blks_line = str(b_count) + "/" + current_total
-                        prob_blks_row.append(prob_over_blks_line)
-                        prob_over_stls_line = str(s_count) + "/" + current_total
-                        prob_stls_row.append(prob_over_stls_line)
-                        prob_over_tos_line = str(to_count) + "/" + current_total
-                        prob_tos_row.append(prob_over_tos_line)
+                        prob_threes_row = [over_threes_line]
+                        prob_blks_row = [over_blks_line]
+                        prob_stls_row = [over_stls_line]
+                        prob_tos_row = [over_tos_line]
 
+                        
 
-                    prob_pts_table = [prob_pts_row]
-                    prob_rebs_table = [prob_rebs_row]
-                    prob_asts_table = [prob_asts_row]
-                    prob_threes_table = [prob_threes_row]
-                    prob_blks_table = [prob_blks_row]
-                    prob_stls_table = [prob_stls_row]
-                    prob_tos_table = [prob_tos_row]
-                    
-                    all_prob_stat_tables = [prob_pts_table, prob_rebs_table, prob_asts_table, prob_threes_table, prob_blks_table, prob_stls_table, prob_tos_table]
+                        for game_idx in range(len(all_pts_dicts[conditions].values())):
+                            p_count = all_pts_counts[game_idx]
+                            r_count = all_rebs_counts[game_idx]
+                            a_count = all_asts_counts[game_idx]
 
-                    all_prob_stat_rows = [prob_pts_row,prob_rebs_row,prob_asts_row,prob_threes_row,prob_blks_row,prob_stls_row,prob_tos_row]
+                            threes_count = all_threes_counts[game_idx]
+                            b_count = all_blks_counts[game_idx]
+                            s_count = all_stls_counts[game_idx]
+                            to_count = all_tos_counts[game_idx]
 
-                    # stats counts should include all stats
-                    # so we save in dict for reference
-                    for stat_idx in range(len(stats_counts)):
-                        #stat_counts = stats_counts[stat_idx]
-                        prob_row = all_prob_stat_rows[stat_idx] #[0] # only needed first element bc previously formatted for table display
-                        #print('prob_row: ' + str(prob_row))
-                        # if blk, stl, or to look for 2+
-                        # for all, check to see if 1+ or not worth predicting bc too risky
-                        #stat_line = prob_table[0].split
-                        #stat_line = int(prob_row[0].split()[1][:-1]) # [pts 16+, 1/1, 2/2, ..] -> 16
-                        #print('stat_line: ' + str(stat_line))
-                        stats_of_interest = ['pts','reb','ast','3pm']
-                        # if stat_line < 2: # may need to change for 3 pointers if really strong likelihood to get 1
-                        #     continue
-                        stat_name = prob_row[0].split()[0].lower() # [pts 16+, 1/1, 2/2, ..] -> pts
-                        if stat_name not in stats_of_interest:
-                            continue
+                            current_total = str(game_idx + 1)
+                            current_total_games = current_total# + ' Games'
+                            header_row.append(current_total_games)
 
-
-
-                        # save player stats in dict for reference
-                        # save for all stats, not just streaks
-                        # at first there will not be this player name in the dict so we add it
-                        streak = prob_row[1:] # [pts 16+, 1/1, 2/2, ..] -> [1/1,2/2,...] or v2 [0:1/1,1:2/2,...]
-                        streak_dict = {} # {game idx:streak}
-
-                        # if not player_name in all_records_dicts.keys():
-                        #     all_records_dicts[player_name] = {} # init bc player name key not in dict so if we attempt to set its val it is error
-
-                        #     player_records_dicts = all_records_dicts[player_name] # {player name: { condition: { year: { stat: [1/1,2/2,...],.. },.. },.. },.. }
-
-                        #     player_records_dicts[conditions] = {}
-                        #     player_all_records_dicts = player_records_dicts[conditions]
+                            prob_over_pts_line = str(p_count) + "/" + current_total
+                            # v2 add game idx for ref and deconstruct later
+                            # or could get game idx from player stat dict
+                            #prob_over_pts_line = str(game_idx) + ": " + str(p_count) + "/" + current_total
+                            prob_pts_row.append(prob_over_pts_line)
                             
-                        #     player_all_records_dicts[season_year] = { stat_name: streak }
+                            prob_over_rebs_line = str(r_count) + "/" + current_total
+                            prob_rebs_row.append(prob_over_rebs_line)
+                            prob_over_asts_line = str(a_count) + "/" + current_total
+                            prob_asts_row.append(prob_over_asts_line)
 
-                        # else: # player already in list
+                            prob_over_threes_line = str(threes_count) + "/" + current_total
+                            prob_threes_row.append(prob_over_threes_line)
+                            prob_over_blks_line = str(b_count) + "/" + current_total
+                            prob_blks_row.append(prob_over_blks_line)
+                            prob_over_stls_line = str(s_count) + "/" + current_total
+                            prob_stls_row.append(prob_over_stls_line)
+                            prob_over_tos_line = str(to_count) + "/" + current_total
+                            prob_tos_row.append(prob_over_tos_line)
 
-                        #player_records_dicts = all_records_dicts[player_name]
-                        if conditions in player_records_dicts.keys():
-                            #print("conditions " + conditions + " in streak tables")
-                            player_all_records_dicts = player_records_dicts[conditions]
-                            if season_year in player_all_records_dicts.keys():
-                                #player_all_records_dicts[season_year][stat_name] = streak
 
-                                player_season_records_dicts = player_all_records_dicts[season_year]
-                                if season_part in player_season_records_dicts.keys():
-                                    player_season_records_dicts[season_part][stat_name] = streak
+                        prob_pts_table = [prob_pts_row]
+                        prob_rebs_table = [prob_rebs_row]
+                        prob_asts_table = [prob_asts_row]
+                        prob_threes_table = [prob_threes_row]
+                        prob_blks_table = [prob_blks_row]
+                        prob_stls_table = [prob_stls_row]
+                        prob_tos_table = [prob_tos_row]
+                        
+                        all_prob_stat_tables = [prob_pts_table, prob_rebs_table, prob_asts_table, prob_threes_table, prob_blks_table, prob_stls_table, prob_tos_table]
+
+                        all_prob_stat_rows = [prob_pts_row,prob_rebs_row,prob_asts_row,prob_threes_row,prob_blks_row,prob_stls_row,prob_tos_row]
+
+                        # stats counts should include all stats
+                        # so we save in dict for reference
+                        for stat_idx in range(len(stats_counts)):
+                            #stat_counts = stats_counts[stat_idx]
+                            prob_row = all_prob_stat_rows[stat_idx] #[0] # only needed first element bc previously formatted for table display
+                            #print('prob_row: ' + str(prob_row))
+                            # if blk, stl, or to look for 2+
+                            # for all, check to see if 1+ or not worth predicting bc too risky
+                            #stat_line = prob_table[0].split
+                            #stat_line = int(prob_row[0].split()[1][:-1]) # [pts 16+, 1/1, 2/2, ..] -> 16
+                            #print('stat_line: ' + str(stat_line))
+                            stats_of_interest = ['pts','reb','ast','3pm']
+                            # if stat_line < 2: # may need to change for 3 pointers if really strong likelihood to get 1
+                            #     continue
+                            stat_name = prob_row[0].split()[0].lower() # [pts 16+, 1/1, 2/2, ..] -> pts
+                            if stat_name not in stats_of_interest:
+                                continue
+
+
+
+                            # save player stats in dict for reference
+                            # save for all stats, not just streaks
+                            # at first there will not be this player name in the dict so we add it
+                            streak = prob_row[1:] # [pts 16+, 1/1, 2/2, ..] -> [1/1,2/2,...] or v2 [0:1/1,1:2/2,...]
+                            streak_dict = {} # {game idx:streak}
+
+                            # if not player_name in all_records_dicts.keys():
+                            #     all_records_dicts[player_name] = {} # init bc player name key not in dict so if we attempt to set its val it is error
+
+                            #     player_records_dicts = all_records_dicts[player_name] # {player name: { condition: { year: { stat: [1/1,2/2,...],.. },.. },.. },.. }
+
+                            #     player_records_dicts[conditions] = {}
+                            #     player_all_records_dicts = player_records_dicts[conditions]
+                                
+                            #     player_all_records_dicts[season_year] = { stat_name: streak }
+
+                            # else: # player already in list
+
+                            #player_records_dicts = all_records_dicts[player_name]
+                            if conditions in player_records_dicts.keys():
+                                #print("conditions " + conditions + " in streak tables")
+                                player_all_records_dicts = player_records_dicts[conditions]
+                                if season_year in player_all_records_dicts.keys():
+                                    #player_all_records_dicts[season_year][stat_name] = streak
+
+                                    player_season_records_dicts = player_all_records_dicts[season_year]
+                                    if season_part in player_season_records_dicts.keys():
+                                        player_season_records_dicts[season_part][stat_name] = streak
+                                    else:
+                                        player_season_records_dicts[season_part] = { stat_name: streak }
+                                
                                 else:
+                                    #player_all_records_dicts[season_year] = { stat_name: streak }
+
+                                    player_all_records_dicts[season_year] = {}
+                                    player_season_records_dicts = player_all_records_dicts[season_year]
                                     player_season_records_dicts[season_part] = { stat_name: streak }
-                            
+
+                                #player_streak_tables[conditions].append(prob_table) # append all stats for given key
                             else:
+                                #print("conditions " + conditions + " not in streak tables")
+                                player_records_dicts[conditions] = {}
+                                player_all_records_dicts = player_records_dicts[conditions]
+
                                 #player_all_records_dicts[season_year] = { stat_name: streak }
 
                                 player_all_records_dicts[season_year] = {}
                                 player_season_records_dicts = player_all_records_dicts[season_year]
                                 player_season_records_dicts[season_part] = { stat_name: streak }
 
-                            #player_streak_tables[conditions].append(prob_table) # append all stats for given key
-                        else:
-                            #print("conditions " + conditions + " not in streak tables")
-                            player_records_dicts[conditions] = {}
-                            player_all_records_dicts = player_records_dicts[conditions]
-
-                            #player_all_records_dicts[season_year] = { stat_name: streak }
-
-                            player_all_records_dicts[season_year] = {}
-                            player_season_records_dicts = player_all_records_dicts[season_year]
-                            player_season_records_dicts[season_part] = { stat_name: streak }
-
-                    # given how many of recent games we care about
-                    # later we will take subsection of games with certain settings like home/away
-                    # first we get all stats and then we can analyze subsections of stats
-                    # eg last 10 games
+                        # given how many of recent games we care about
+                        # later we will take subsection of games with certain settings like home/away
+                        # first we get all stats and then we can analyze subsections of stats
+                        # eg last 10 games
 
     # player_records_dicts: {'all': {2023: {'regular': {'pts': ['0/1',...
-    #print('player_records_dicts: ' + str(player_records_dicts))
+    print('player_records_dicts: ' + str(player_records_dicts))
     return player_records_dicts
 
 # all players stats dicts = { player: year: stat name: condition: game idx: stat val }
@@ -1028,6 +1043,7 @@ def generate_player_avg_range_dict(player_name, player_stat_dict, key):
 
     #season_year = 2023
 
+    print('player_stat_dict: ' + str(player_stat_dict))
     for season_year, player_full_season_stat_dict in player_stat_dict.items():
 
         print("\n===Year " + str(season_year) + "===\n")
@@ -1188,7 +1204,7 @@ def generate_player_avg_range_dict(player_name, player_stat_dict, key):
                     # print(tabulate(output_table))
 
     # player_avg_range_dict: {'all': {2023: {'regular': {'pts': 33, 'reb': 1...
-    #print('player_avg_range_dict: ' + str(player_avg_range_dict))
+    print('player_avg_range_dict: ' + str(player_avg_range_dict))
     return player_avg_range_dict
 
 
@@ -1567,7 +1583,8 @@ def generate_player_all_outcomes_dict(player_name, player_season_logs, projected
             player_outcome_dict['time after record'] = ''
             if time_after in player_records_dict.keys():
                 time_after_record = ''
-                if season_part in player_records_dict[time_after][season_year].keys():
+
+                if season_year in player_records_dict[time_after].keys() and season_part in player_records_dict[time_after][season_year].keys():
                     time_after_record = player_records_dict[time_after][season_year][season_part][stat_name]
                     time_after_record = determiner.determine_record_outline(time_after_record)
                     player_outcome_dict['time after record'] = time_after + ': ' + str(time_after_record)
@@ -1607,7 +1624,7 @@ def generate_player_all_outcomes_dict(player_name, player_season_logs, projected
             if current_dow in player_records_dict.keys():
                 #print("current_dow " + current_dow + " in all records dicts")
                 dow_record = ''
-                if season_part in player_records_dict[current_dow][season_year].keys():
+                if season_year in player_records_dict[current_dow].keys() and season_part in player_records_dict[current_dow][season_year].keys():
                     dow_record = player_records_dict[current_dow][season_year][season_part][stat_name]
                     player_outcome_dict['day record'] = current_dow + ': ' + str(dow_record)
             else:
@@ -2662,7 +2679,7 @@ def generate_available_prop_dicts(stat_dicts, game_teams=[], player_teams={}):
             conv_factor = 100 # american odds system shows how much to put in to profit 100
             profit_multipier = int(odds) / conv_factor
             if re.search('-',odds):
-                profit_multipier = conv_factor / int(odds)
+                profit_multipier = conv_factor / -int(odds)
             print('profit_multipier: ' + str(profit_multipier))
             true_prob = stat_dict['true prob']
             print('true_prob: ' + str(true_prob))
@@ -2768,7 +2785,7 @@ def generate_all_stat_probs_dict(all_player_stat_probs, all_player_stat_dicts={}
             print('\nstat: ' + str(stat))
             for val, val_probs_dict in stat_probs_dict.items():
                 print('\nval: ' + str(val))
-                print('val_probs_dict: ' + str(val_probs_dict))
+                #print('val_probs_dict: ' + str(val_probs_dict))
                 # p_true = w1p1 + w2p2
                 # where w1+w2=1
                 # and w_t=w1/t so w2=w1/2
@@ -2789,7 +2806,7 @@ def generate_all_stat_probs_dict(all_player_stat_probs, all_player_stat_dicts={}
                 for year in years:
                     cur_cond_dict = {'condition':condition, 'year':year, 'part':part}
                     current_conditions = condition + ' ' + str(year) + ' ' + part + ' prob'
-                    print('current_conditions: ' + str(current_conditions))
+                    #print('current_conditions: ' + str(current_conditions))
                     if current_conditions in val_probs_dict.keys():
                         probs.append(val_probs_dict[current_conditions])
                         all_current_conditions.append(current_conditions)
@@ -2952,15 +2969,15 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}):
                         stat_val_probs_dict[conditions] = 100 - round(prob * 100)
 
                     prob = val_probs_dict['true prob']
-                    print('over prob: ' + str(prob))
+                    #print('over prob: ' + str(prob))
                     stat_val_probs_dict['true prob'] = 100 - round(prob * 100)
-                    print('under prob: ' + str(stat_val_probs_dict['true prob']))
+                    #print('under prob: ' + str(stat_val_probs_dict['true prob']))
 
                     # one row for each val which has all conditions
-                    print('stat_val_probs_dict: ' + str(stat_val_probs_dict))
+                    #print('stat_val_probs_dict: ' + str(stat_val_probs_dict))
                     all_stat_prob_dicts.append(stat_val_probs_dict)
 
-            print('all_stat_prob_dicts: ' + str(all_stat_prob_dicts))
+            #print('all_stat_prob_dicts: ' + str(all_stat_prob_dicts))
 
     # sort_keys = ['true prob']
     # all_stat_prob_dicts = sorter.sort_dicts_by_keys(all_stat_prob_dicts, sort_keys)
