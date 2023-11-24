@@ -2770,6 +2770,7 @@ def generate_all_stat_probs_dict(all_player_stat_probs, all_player_stat_dicts={}
     # get years from all_player_stat_probs so we know how many seasons of interest
     years = list(list(list(all_player_stat_probs.values())[0].values())[0].keys())
     print('years: ' + str(years))
+    cur_yr = years[0]
 
     # gen true probs for all stat probs dict
     # we get true prob for combos of conditions by weighting avg prob
@@ -2781,11 +2782,28 @@ def generate_all_stat_probs_dict(all_player_stat_probs, all_player_stat_dicts={}
     for player, player_probs_dict in all_stat_probs_dict.items():
         print('\nplayer: ' + str(player))
         player_stat_dict = all_player_stat_dicts[player]
+        print('player_stat_dict: ' + str(player_stat_dict))
         for stat, stat_probs_dict in player_probs_dict.items():
             print('\nstat: ' + str(stat))
+            # first get overall probs for all reg seasons
+            condition = 'all' # all conds match all
+            part = 'regular' # get current part from time of year mth
+            # player_stat_dict: {2023: {'regular': {'pts': {'all': {0: 18, 1: 19...
+            prev_val = player_stat_dict[cur_yr][part][stat][condition]['0']
+            print('prev_val: ' + str(prev_val))
+            
             for val, val_probs_dict in stat_probs_dict.items():
                 print('\nval: ' + str(val))
                 #print('val_probs_dict: ' + str(val_probs_dict))
+
+                # get prev game stat vals from most recent game log in stat dict
+                # and add keys to all_stat_prob_dicts
+                # technically prev game stat vals affects stat prob so include in all stat probs dict
+                #all_stat_prob_dicts = generate_all_prev_game_stat_vals
+                
+                val_probs_dict['prev val'] = prev_val
+
+
                 # p_true = w1p1 + w2p2
                 # where w1+w2=1
                 # and w_t=w1/t so w2=w1/2
@@ -2800,9 +2818,7 @@ def generate_all_stat_probs_dict(all_player_stat_probs, all_player_stat_dicts={}
                 probs = []
                 all_current_conditions = [] 
                 all_cur_cond_dicts = []
-                # first get overall probs for all reg seasons
-                condition = 'all' # all conds match all
-                part = 'regular' # get current part from time of year mth
+                
                 for year in years:
                     cur_cond_dict = {'condition':condition, 'year':year, 'part':part}
                     current_conditions = condition + ' ' + str(year) + ' ' + part + ' prob'
@@ -2842,6 +2858,7 @@ def generate_all_stat_probs_dict(all_player_stat_probs, all_player_stat_dicts={}
                     #cur_conds = all_cur_cond_dicts[0]
                     #s_1 = determiner.determine_sample_size(player_stat_dict, cur_conds) #15 # current year
                     # get sample sizes for probs
+                    # instead of sample size use variance and confidence bc more accurate scaling for relevance of dataset
                     sample_sizes = []
                     for p_idx in range(len(probs)):
                         cur_conds = all_cur_cond_dicts[p_idx]
@@ -2947,6 +2964,8 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}):
                         prob = val_probs_dict[conditions]
                     stat_val_probs_dict[conditions] = round(prob * 100)
 
+                stat_val_probs_dict['prev val'] = val_probs_dict['prev val']
+
                 # one row for each val which has all conditions
                 #print('stat_val_probs_dict: ' + str(stat_val_probs_dict))
                 all_stat_prob_dicts.append(stat_val_probs_dict)
@@ -2972,6 +2991,8 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}):
                     #print('over prob: ' + str(prob))
                     stat_val_probs_dict['true prob'] = 100 - round(prob * 100)
                     #print('under prob: ' + str(stat_val_probs_dict['true prob']))
+
+                    stat_val_probs_dict['prev val'] = val_probs_dict['prev val']
 
                     # one row for each val which has all conditions
                     #print('stat_val_probs_dict: ' + str(stat_val_probs_dict))
@@ -3162,6 +3183,11 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
     desired_order = ['player', 'team', 'stat','val']
     writer.list_dicts(all_stat_prob_dicts, desired_order)
 
+    
+
+    # gen all stat prob dicts adjusted to current minutes
+    # bc abs vol prob of a sample with different minutes is not useful unless normalized minutes
+
     #all_consistent_stat_dicts = generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_stat_records, all_player_stat_dicts, player_teams, season_year=season_year)
     #writer.display_consistent_stats(all_player_consistent_stats, all_player_stat_records)
 
@@ -3188,6 +3214,8 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
     sort_keys = ['true prob']
     available_prop_dicts = sorter.sort_dicts_by_keys(available_prop_dicts, sort_keys)
 
+    # after odds and ev columns if included
+    desired_order.append('prev val')
     writer.list_dicts(available_prop_dicts, desired_order, output='excel')
     #writer.list_dicts(available_prop_dicts, desired_order)
 
