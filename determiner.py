@@ -1134,7 +1134,7 @@ def determine_all_conditions(all_stat_probs_dict):
 def determine_sample_size(player_stat_dict, cur_conds):
     print('\n===Determine Sample Size===\n')
     print('cur_conds: ' + str(cur_conds))
-    print('player_stat_dict: ' + str(player_stat_dict))
+    #print('player_stat_dict: ' + str(player_stat_dict))
     sample_size = 0
 
     condition = cur_conds['condition']

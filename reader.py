@@ -699,7 +699,7 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 				parts_of_season = [] # pre season, regular season, post season
 
 				len_html_results = len(html_results) # each element is a dataframe/table so we loop thru each table
-				print('len_html_results: ' + str(len_html_results))
+				#print('len_html_results: ' + str(len_html_results))
 				for order in range(len_html_results):
 					#print("order: " + str(order))
 
@@ -798,8 +798,8 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 	# print("\n===" + player_name + "===\n")
 	# print(tabulate(table))
 	#print(player_name + " player_game_log returned")# + str(player_game_log_df))
-	print('player_game_log_df:\n' + str(player_game_log_df))
-	print('player_game_log_dict: ' + str(player_game_log_dict))
+	#print('player_game_log_df:\n' + str(player_game_log_df))
+	#print('player_game_log_dict: ' + str(player_game_log_dict))
 	return player_game_log_dict#player_game_log_df # can return this df directly or first arrange into list but seems simpler and more intuitive to keep df so we can access elements by keyword
 
 # here we decide default season year, so make input variable parameter
@@ -2396,7 +2396,8 @@ def read_react_website(url):
 						#print("player_element: " + player_element.get_attribute('innerHTML'))
 
 						player_name = re.sub('\sAlt\s|Points|Rebounds|Assists|O/U','',player_btn_header).strip().lower()
-						player_name = re.sub('−|-','',player_name)
+						player_name = re.sub('−|-',' ',player_name)
+						player_name = re.sub('\.','',player_name)
 						#print('player_name: ' + player_name)
 
 						if player_name not in web_dict[key].keys():
