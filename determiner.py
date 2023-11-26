@@ -13,7 +13,7 @@ import httplib2
 
 import pandas as pd # read html results from webpage to determine if player played season
 
-import numpy # mean, median
+import numpy as np # mean, median
 
 import generator # gen prob stat reached to determine prob from records
 
@@ -591,7 +591,7 @@ def determine_rank_avgs(pos, matchup_dict):
 
     pos_matchup_ranks = [matchup_dict[pos]['s1'],matchup_dict[pos]['s2'],matchup_dict[pos]['s3']]
 
-    rank_avgs['mean'] = round(numpy.mean(pos_matchup_ranks))
+    rank_avgs['mean'] = round(np.mean(np.array(pos_matchup_ranks)))
 
     alt_pos = 'c' # if listed pos=pg then combine with guard bc sometimes play both
     if pos == 'pg':
@@ -603,7 +603,7 @@ def determine_rank_avgs(pos, matchup_dict):
     elif pos == 'pf':
         alt_pos = 'sf'
     alt_pos_matchup_ranks = [matchup_dict[alt_pos]['s1'],matchup_dict[alt_pos]['s2'],matchup_dict[alt_pos]['s3']]
-    rank_avgs['combined mean'] = round(numpy.mean(pos_matchup_ranks+alt_pos_matchup_ranks))
+    rank_avgs['combined mean'] = round(np.mean(np.array(pos_matchup_ranks+alt_pos_matchup_ranks)))
 
 
     return rank_avgs
@@ -1119,6 +1119,7 @@ def determine_all_conditions(all_stat_probs_dict):
     for player_stat_probs_dict in all_stat_probs_dict.values():
         for stat_probs_dict in player_stat_probs_dict.values():
             for val_probs_dict in stat_probs_dict.values():
+
                 for conditions in val_probs_dict.keys():
                     if conditions not in all_conditions:
                         all_conditions.append(conditions)
@@ -1148,3 +1149,19 @@ def determine_sample_size(player_stat_dict, cur_conds):
 
     print('sample_size: ' + str(sample_size))
     return sample_size
+
+def determine_unit_time_period(all_player_stat_probs, all_player_stat_dicts={}, season_years=[], irreg_play_time={}):
+    # determine unit time period by observing if drastic change indicates change in team or role
+    # default to avg current season but enable manual entry of minutes if irregular such as for teammate injured
+    irreg_play_time = {'craig porter': 25}
+    # get years from all_player_stat_probs so we know how many seasons of interest
+    # years = list(list(list(all_player_stat_probs.values())[0].values())[0].keys())
+    # print('years: ' + str(years))
+    unit_time_period = 0
+    if len(season_years) > 0:
+        unit_time_period = season_years[0]
+    else:
+        unit_time_period = list(list(list(all_player_stat_probs.values())[0].values())[0].keys())[0]
+
+    print('unit_time_period: ' + str(unit_time_period))
+    return unit_time_period

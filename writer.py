@@ -2,7 +2,7 @@
 # display data
 
 import re # see if string contains stat and player of interest to display
-import numpy # mean, median to display over time
+import numpy as np # mean, median to display over time
 import csv # save player and game espn ID's so we do not have to request each run
 import sorter # sort players outcomes so we see conditions grouped by type and other useful visuals
 
@@ -132,11 +132,11 @@ def display_stat_plot(all_valid_streaks_list, all_players_stats_dicts, stat_of_i
                     past_three_mean_stat_val = stat_val
 
                 else:
-                    mean_stat_val = round(numpy.mean(prev_stat_vals), 1)
+                    mean_stat_val = round(np.mean(np.array(prev_stat_vals)), 1)
                     #print('mean_stat_val: ' + str(mean_stat_val))
-                    past_ten_mean_stat_val = round(numpy.mean(past_ten_stat_vals), 1)
+                    past_ten_mean_stat_val = round(np.mean(np.array(past_ten_stat_vals)), 1)
                     #print('past_ten_mean_stat_val: ' + str(past_ten_mean_stat_val))
-                    past_three_mean_stat_val = round(numpy.mean(past_three_stat_vals), 1)
+                    past_three_mean_stat_val = round(np.mean(np.array(past_three_stat_vals)), 1)
                     #print('past_three_mean_stat_val: ' + str(past_three_mean_stat_val))
 
                 mean_stat_vals.append(mean_stat_val)
