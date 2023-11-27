@@ -1134,7 +1134,7 @@ def determine_all_conditions(all_stat_probs_dict):
 # cur_conds = {year:year, part:part, cond:cond}
 def determine_sample_size(player_stat_dict, cur_conds):
     print('\n===Determine Sample Size===\n')
-    print('cur_conds: ' + str(cur_conds))
+    #print('cur_conds: ' + str(cur_conds))
     #print('player_stat_dict: ' + str(player_stat_dict))
     sample_size = 0
 
@@ -1147,7 +1147,7 @@ def determine_sample_size(player_stat_dict, cur_conds):
         stat_dict = list(player_stat_dict[year][part].values())[0][condition]
         sample_size = len(stat_dict.keys())
 
-    print('sample_size: ' + str(sample_size))
+    #print('sample_size: ' + str(sample_size))
     return sample_size
 
 def determine_unit_time_period(all_player_stat_probs, all_player_stat_dicts={}, season_years=[], irreg_play_time={}):
@@ -1163,5 +1163,5 @@ def determine_unit_time_period(all_player_stat_probs, all_player_stat_dicts={}, 
     else:
         unit_time_period = list(list(list(all_player_stat_probs.values())[0].values())[0].keys())[0]
 
-    print('unit_time_period: ' + str(unit_time_period))
+    #print('unit_time_period: ' + str(unit_time_period))
     return unit_time_period

@@ -1037,25 +1037,25 @@ def generate_all_players_records_dicts(all_players_stats_dicts, projected_lines_
 
 def generate_player_avg_range_dict(player_name, player_stat_dict, key):
 
-    print('\n===Generate Player Average Range Dict: ' + key.title() + '===\n')
+    print('\n===Generate Player ' + player_name.title() + ' Average Range Dict: ' + key.title() + '===\n')
 
     player_avg_range_dict = {}
 
-    print('\n===' + player_name.title() + '===\n')
+    #print('\n===' + player_name.title() + '===\n')
 
     #season_year = 2023
 
     #print('player_stat_dict: ' + str(player_stat_dict))
     for season_year, player_full_season_stat_dict in player_stat_dict.items():
 
-        print("\n===Year " + str(season_year) + "===\n")
+        #print("\n===Year " + str(season_year) + "===\n")
         #print('player_full_season_stat_dict: ' + str(player_full_season_stat_dict))
         #player_game_log = player_season_logs[0] #start with current season. all_player_game_logs[player_idx]
         #player_name = player_names[player_idx] # player names must be aligned with player game logs
 
         for season_part, player_season_stat_dict in player_full_season_stat_dict.items():
 
-            print("\n===Season Part " + str(season_part) + "===\n")
+            #print("\n===Season Part " + str(season_part) + "===\n")
             #print('player_season_stat_dict: ' + str(player_season_stat_dict))
 
             all_pts_dicts = player_season_stat_dict['pts']
@@ -2347,9 +2347,9 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
                                 consistent_stat = prob_val
                                 
                                 prob = prob_stat_dict[prob_key]
-                                print('prob: ' + str(prob))
+                                #print('prob: ' + str(prob))
                                 consistent_stat_prob = round(prob * 100)
-                                print('consistent_stat_prob: ' + str(consistent_stat_prob))
+                                #print('consistent_stat_prob: ' + str(consistent_stat_prob))
 
                                 second_consistent_stat = prob_stat_dict[second_prob_stat_key]
                                 second_consistent_stat_prob = round(prob_stat_dict[second_prob_key] * 100)
@@ -2504,7 +2504,7 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
     #regseason_stats = consistent_stat_vals['all'][year_of_interest]['regular']
     # all_consistent_stat_dicts: [{'player name': 'lamelo ball', 'stat name': 'pts', 'prob val 2023': 15, 'prob 2023': 94, ...}, {'player name': 'lamelo ball', 'stat name': 'reb', 'prob val': 2...}]
     for stat_dict in all_consistent_stat_dicts:
-        print('stat_dict: ' + str(stat_dict))
+        #print('stat_dict: ' + str(stat_dict))
 
         # consider changing back to reg season stat
         # prefer full season bc more samples
@@ -2648,7 +2648,7 @@ def generate_available_prop_dicts(stat_dicts, game_teams=[], player_teams={}):
     # for each proposition dict, add odds val
     # if no odds val, then do not add to available dict
     for stat_dict in stat_dicts:
-        print('stat_dict: ' + str(stat_dict))
+        #print('stat_dict: ' + str(stat_dict))
         # see if stat available
         # could do same check for all and put 0 if na 
         # and then sort by val/odds or elim 0s
@@ -2979,14 +2979,14 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}):
    
 
     for player, player_stat_probs_dict in all_stat_probs_dict.items():
-        print('\n===Player: ' + str(player) + '===\n')
+        #print('\n===Player: ' + str(player) + '===\n')
         #stat_val_probs_dict = {'player': player}
         player_team = ''
         if player in player_teams.keys():
             player_team = player_teams[player]
         #stat_val_probs_dict['team'] = player_team
         for stat_name, stat_probs_dict in player_stat_probs_dict.items():
-            print('\n===Stat: ' + str(stat_name) + '===\n')
+            #print('\n===Stat: ' + str(stat_name) + '===\n')
             #stat_val_probs_dict['stat'] = stat_name
             #consistent_stat_dict = {'player': player_name, 'team': player_team, 'stat': stat_name}
             # for condition, condition_consistent_stat_dict in stat_probs_dict.items():
@@ -2995,7 +2995,7 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}):
             #             for key, val in part_consistent_stat_dict.items():
             #                 consistent_stat_dict[key] = val
             for val, val_probs_dict in stat_probs_dict.items():
-                print('\n===Val: ' + str(val) + '===\n')
+                #print('\n===Val: ' + str(val) + '===\n')
                 #stat_val_probs_dict['val'] = str(val) + '+'
                 val_str = str(val) + '+'
                 if val == 0: # for zero we only want exactly 0 prob not over under bc 1+/- includes 1 and cannot go below 0
@@ -3003,7 +3003,7 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}):
                 stat_val_probs_dict = {'player': player, 'team': player_team, 'stat': stat_name, 'val': val_str }
                 #for conditions, prob in val_probs_dict.items():
                 for conditions in all_conditions:
-                    print('\n===Conditions: ' + str(conditions) + '===\n')
+                    #print('\n===Conditions: ' + str(conditions) + '===\n')
                     prob = 0
                     #per_unit_prob = 0
                     if conditions in val_probs_dict.keys():
@@ -3012,7 +3012,7 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}):
                         #per_unit_conditions = conditions + ' per unit'
                         #per_unit_prob = val_probs_dict[per_unit_conditions]
                         #per_unit_prob = per_unit_probs_dict[player][stat_name][val][conditions] #val_probs_dict[per_unit_conditions]
-                    print('prob: ' + str(prob))
+                    #print('prob: ' + str(prob))
                     stat_val_probs_dict[conditions] = round(prob * 100)
                     #stat_val_probs_dict[per_unit_conditions] = round(per_unit_prob * 100)
 
@@ -3044,6 +3044,7 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}):
                             prob = val_probs_dict[conditions]
                             #per_unit_conditions = conditions + ' per unit'
                             #per_unit_prob = val_probs_dict[per_unit_conditions]
+                        #print('over prob: ' + str(prob))
                         stat_val_probs_dict[conditions] = 100 - round(prob * 100)
                         #stat_val_probs_dict[per_unit_conditions] = 100 - round(per_unit_prob * 100)
 
@@ -3069,7 +3070,7 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}):
 # part of season we only care about current bc it doesnt help to compare when we already have full stats which includes both parts
 def generate_true_prob(val_probs_dict, season_years, conditions, part, player_stat_dict):
     print('\n===Generate True Prob===\n')
-    print('season_years: ' + str(season_years))
+    #print('season_years: ' + str(season_years))
 
     # p_true = w1p1 + w2p2
     # where w1+w2=1
@@ -3086,10 +3087,16 @@ def generate_true_prob(val_probs_dict, season_years, conditions, part, player_st
     all_current_conditions = [] 
     all_cur_cond_dicts = []
     
-    for year in season_years:
+    # determine current conds we want to get the probs from
+    # for example per unit or original unscaled?
+    # for current season unscaled but other seasons use per unit
+    for year_idx in range(len(season_years)):
+        year = season_years[year_idx]
         for condition in conditions:
             cur_cond_dict = {'condition':condition, 'year':year, 'part':part}
             current_conditions = condition + ' ' + str(year) + ' ' + part + ' prob'
+            if year_idx > 0:
+                current_conditions += ' per unit'
             #print('current_conditions: ' + str(current_conditions))
             if current_conditions in val_probs_dict.keys():
                 probs.append(val_probs_dict[current_conditions])
@@ -3251,16 +3258,16 @@ def generate_reg_season_logs(player_season_logs):
     #                 reg_season_logs[year][field][idx] = val
 
     for year, year_season_log in player_season_logs.items():
-        print('year: ' + year)
+        #print('year: ' + year)
         player_season_log_df = pd.DataFrame(year_season_log)
         player_season_log_df.index = player_season_log_df.index.map(str)
-        print('player_season_log_df: ' + str(player_season_log_df))
+        #print('player_season_log_df: ' + str(player_season_log_df))
 
         reg_season_log_df = determiner.determine_regular_season_games(player_season_log_df)
         reg_season_log = reg_season_log_df.to_dict()
         reg_season_logs[year] = reg_season_log
 
-    print('reg_season_logs: ' + str(reg_season_logs))
+    #print('reg_season_logs: ' + str(reg_season_logs))
     return reg_season_logs
 
 def generate_part_season_logs(player_season_logs, part):
@@ -3270,16 +3277,16 @@ def generate_part_season_logs(player_season_logs, part):
         part_season_logs = player_season_logs
     else:
         for year, year_season_log in player_season_logs.items():
-            print('year: ' + year)
+            #print('year: ' + year)
             player_season_log_df = pd.DataFrame(year_season_log)
             player_season_log_df.index = player_season_log_df.index.map(str)
-            print('player_season_log_df: ' + str(player_season_log_df))
+            #print('player_season_log_df: ' + str(player_season_log_df))
 
             part_season_log_df = determiner.determine_season_part_games(player_season_log_df, part)
             part_season_log = part_season_log_df.to_dict()
             part_season_logs[year] = part_season_log
 
-    print('part_season_logs: ' + str(part_season_logs))
+    #print('part_season_logs: ' + str(part_season_logs))
     return part_season_logs
 
 # need season logs for minutes played to scale stat vals
@@ -3289,93 +3296,96 @@ def generate_player_unit_stat_records(player_name, player_stat_dict, player_seas
     print('\n===Generate Player Unit Stat Records: ' + player_name.title() + '===\n')
     player_unit_stat_records = {}
 
-    print('player_season_logs: ' + str(player_season_logs))
+    #print('player_season_logs: ' + str(player_season_logs))
 
+    if len(player_season_logs.keys()) > 0:
     # gen list of reg season logs from full season logs
     # similar to iso fcn
-    reg_season_logs = generate_reg_season_logs(player_season_logs)
+        reg_season_logs = generate_reg_season_logs(player_season_logs)
 
-    cur_yr = list(player_season_logs.keys())[0]
-    print('cur_yr: ' + cur_yr)
-    cur_season_log = reg_season_logs[cur_yr]#list(player_season_logs.values())[0]
-    print('cur_season_log: ' + str(cur_season_log))
-    cur_minutes_log = list(cur_season_log['MIN'].values())
-    print('cur_minutes_log: ' + str(cur_minutes_log))
-    cur_mean_minutes = round(np.mean(np.array(cur_minutes_log)))
-    print('cur_mean_minutes: ' + str(cur_mean_minutes))
+        
+        cur_yr = list(player_season_logs.keys())[0]
+        #print('cur_yr: ' + cur_yr)
+        cur_season_log = reg_season_logs[cur_yr]#list(player_season_logs.values())[0]
+        #print('cur_season_log: ' + str(cur_season_log))
+        cur_minutes_log = list(cur_season_log['MIN'].values())
+        #print('cur_minutes_log: ' + str(cur_minutes_log))
+        cur_mean_minutes = round(np.mean(np.array(cur_minutes_log)))
+        #print('cur_mean_minutes: ' + str(cur_mean_minutes))
 
-    stats_of_interest = ['pts','reb','ast','3pm']
+        stats_of_interest = ['pts','reb','ast','3pm']
 
-    # year is a string bc it can be read from json which forces string
-    for year, year_stat_dict in player_stat_dict.items():
-        year = str(year) # to compare to json
-        print("\n===Year " + year + "===\n")
-        for part, part_stat_dict in year_stat_dict.items():
-            print("\n===Season Part " + str(part) + "===\n")
-            # need to isolate season part df to align with nested dict
-            part_season_logs = generate_part_season_logs(player_season_logs, part)
-            for stat, stat_dict in part_stat_dict.items():
-                
-                if stat in stats_of_interest:
-                    print("\n===Stat Name " + str(stat) + "===\n")
-                    for condition, condition_stat_dict in stat_dict.items():
-                        print("\n===Condition " + str(condition) + "===\n")
-                        all_probs_stat_reached = []
+        # year is a string bc it can be read from json which forces string
+        for year, year_stat_dict in player_stat_dict.items():
+            year = str(year) # to compare to json
+            #print("\n===Year " + year + "===\n")
+            for part, part_stat_dict in year_stat_dict.items():
+                #print("\n===Season Part " + str(part) + "===\n")
+                # need to isolate season part df to align with nested dict
+                part_season_logs = generate_part_season_logs(player_season_logs, part)
+                for stat, stat_dict in part_stat_dict.items():
+                    
+                    if stat in stats_of_interest:
+                        #print("\n===Stat Name " + str(stat) + "===\n")
+                        for condition, condition_stat_dict in stat_dict.items():
+                            #print("\n===Condition " + str(condition) + "===\n")
+                            all_probs_stat_reached = []
 
-                        print('condition_stat_dict: ' + str(condition_stat_dict))
-                        stat_vals = list(condition_stat_dict.values())
-                        print('stat_vals: ' + str(stat_vals))
-                        num_games_played = len(stat_vals)
-                        print('num games played ' + condition + ': ' + str(num_games_played))
-                        if num_games_played > 0:
-                            # adjust stat vals to current minutes
-                            # max(stat_vals)+1 bc we want to include 0 and max stat val
-                            # if left blank should default from 0 to n full length of range
-                            # for 0 we need to compute prob of exactly 0 not over under
-                            for stat_val in range(max(stat_vals)+1):
-                                print('stat_val: ' + str(stat_val))
-                                num_games_reached = 0 # num games >= stat val, stat count, reset for each check stat val bc new count
-                                # loop through games to get count stat val >= game stat val
-                                for game_idx in range(num_games_played):
-                                    print('\ngame_idx: ' + str(game_idx))
-                                    # if 0 consider adding x instead of multiplying 0
+                            #print('condition_stat_dict: ' + str(condition_stat_dict))
+                            stat_vals = list(condition_stat_dict.values())
+                            #print('stat_vals: ' + str(stat_vals))
+                            num_games_played = len(stat_vals)
+                            #print('num games played ' + condition + ': ' + str(num_games_played))
+                            if num_games_played > 0:
+                                # adjust stat vals to current minutes
+                                # max(stat_vals)+1 bc we want to include 0 and max stat val
+                                # if left blank should default from 0 to n full length of range
+                                # for 0 we need to compute prob of exactly 0 not over under
+                                for stat_val in range(max(stat_vals)+1):
+                                    #print('stat_val: ' + str(stat_val))
+                                    num_games_reached = 0 # num games >= stat val, stat count, reset for each check stat val bc new count
+                                    # loop through games to get count stat val >= game stat val
+                                    for game_idx in range(num_games_played):
+                                        #print('\ngame_idx: ' + str(game_idx))
+                                        # if 0 consider adding x instead of multiplying 0
 
-                                    # prev stat val meaning from a prev game so will be adjusted to current minutes
-                                    prev_stat_val = stat_vals[game_idx]
-                                    print('\nprev_stat_val: ' + str(prev_stat_val))
-                                    game_stat_val = prev_stat_val
-                                    if year != cur_yr:
-                                        #relative_game_idx = game_idx + int(list(list(season_log.values()[0].keys())[0]))
-                                        season_log = part_season_logs[year]
-                                        #print('season_log: ' + str(season_log))
-                                        prev_minutes = list(season_log['MIN'].values())[game_idx]#[str(relative_game_idx)]
-                                        print('prev_minutes: ' + str(prev_minutes))
-                                        print('prev_stat_val * cur_mean_minutes / prev_minutes')
-                                        print(str(prev_stat_val) + ' * ' + str(cur_mean_minutes) + ' / ' + str(prev_minutes))
-                                        # game stat val is what the stat val would be if playing current minutes
-                                        game_stat_val = round(prev_stat_val * cur_mean_minutes / prev_minutes)
-                                    print('game_stat_val: ' + str(game_stat_val))
+                                        # prev stat val meaning from a prev game so will be adjusted to current minutes
+                                        prev_stat_val = stat_vals[game_idx]
+                                        #print('prev_stat_val: ' + str(prev_stat_val))
+                                        game_stat_val = prev_stat_val
+                                        if year != cur_yr:
+                                            #relative_game_idx = game_idx + int(list(list(season_log.values()[0].keys())[0]))
+                                            season_log = part_season_logs[year]
+                                            #print('season_log: ' + str(season_log))
+                                            prev_minutes = list(season_log['MIN'].values())[game_idx]#[str(relative_game_idx)]
+                                            #print('prev_minutes: ' + str(prev_minutes))
+                                            #print('prev_stat_val * cur_mean_minutes / prev_minutes')
+                                            #print(str(prev_stat_val) + ' * ' + str(cur_mean_minutes) + ' / ' + str(prev_minutes))
+                                            # game stat val is what the stat val would be if playing current minutes
+                                            if prev_minutes != 0.0:
+                                                game_stat_val = round(float(prev_stat_val) * float(cur_mean_minutes) / float(prev_minutes))
+                                        #print('game_stat_val: ' + str(game_stat_val))
 
-                                    if int(stat_val) == 0:
-                                        if game_stat_val == int(stat_val):
-                                            num_games_reached += 1
-                                    else:
-                                        if game_stat_val >= int(stat_val):
-                                            num_games_reached += 1
+                                        if int(stat_val) == 0:
+                                            if game_stat_val == int(stat_val):
+                                                num_games_reached += 1
+                                        else:
+                                            if game_stat_val >= int(stat_val):
+                                                num_games_reached += 1
 
-                                prob_stat_reached = str(num_games_reached) + '/' + str(num_games_played)
-                                print('prob_stat_reached: ' + str(prob_stat_reached))
-                                all_probs_stat_reached.append(prob_stat_reached)
+                                    prob_stat_reached = str(num_games_reached) + '/' + str(num_games_played)
+                                    #print('prob_stat_reached: ' + str(prob_stat_reached))
+                                    all_probs_stat_reached.append(prob_stat_reached)
 
-                            # make parallel with player stat records
-                            if condition not in player_unit_stat_records.keys():
-                                player_unit_stat_records[condition] = {}
-                            if year not in player_unit_stat_records[condition].keys():
-                                player_unit_stat_records[condition][year] = {}
-                            if part not in player_unit_stat_records[condition][year].keys():
-                                player_unit_stat_records[condition][year][part] = {}
-                            
-                            player_unit_stat_records[condition][year][part][stat] = all_probs_stat_reached
+                                # make parallel with player stat records
+                                if condition not in player_unit_stat_records.keys():
+                                    player_unit_stat_records[condition] = {}
+                                if year not in player_unit_stat_records[condition].keys():
+                                    player_unit_stat_records[condition][year] = {}
+                                if part not in player_unit_stat_records[condition][year].keys():
+                                    player_unit_stat_records[condition][year][part] = {}
+                                
+                                player_unit_stat_records[condition][year][part][stat] = all_probs_stat_reached
 
 
 

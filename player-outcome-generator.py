@@ -17,13 +17,13 @@ import generator, reader, writer
 # gen list of player names given teams so we dont have to type all names
 # if no date given, and if past 10pm then assume getting data for next day
 # https://www.espn.com/nba/schedule
-game_teams = [('lal','cle')]#, ('nop','lac')]
+game_teams = [('chi','bkn'), ('tor','cle'), ('sas','den')]#, ('nop','lac')]
 # we can make read new teams var false at first bc the file has not been created yet so we will write for the first time
 # we make it true to read new teams after trades, which tells it to overwrite existing file or make a new file with the date in the title
-#players_names = reader.read_teams_players(game_teams, read_new_teams=False) #generator.generate_players_names(teams) # generate is wrong term bc we are not computing anything only reading players on each team
-players_names = ['lebron james']
+players_names = reader.read_teams_players(game_teams, read_new_teams=False) #generator.generate_players_names(teams) # generate is wrong term bc we are not computing anything only reading players on each team
+#players_names = ['bobby portis']
 
-irreg_play_time = {'craig porter': 25}
+irreg_play_time = {'craig porter': 18}
 
 # settings
 find_matchups = False
@@ -34,10 +34,10 @@ read_new_teams = False
 read_x_seasons = 2 # set 0 or high number to read all seasons
 read_season_year = 2024 # user can choose year. read x seasons previous
 # read new odds at least once per day if false but set true if we want to update odds more than once per day
-read_new_odds = False 
+read_new_odds = True 
 # set false to save time if observing all probs
 # make list of sources with different odds 
-read_odds = False 
+read_odds = True 
 settings = {'find matchups': find_matchups, 'find players': find_players, 'read new teams': read_new_teams, 'read x seasons': read_x_seasons, 'read season year': read_season_year, 'read new odds': read_new_odds, 'read odds': read_odds, 'irreg play time': irreg_play_time}
 
 players_outcomes = generator.generate_players_outcomes(players_names, game_teams, settings)

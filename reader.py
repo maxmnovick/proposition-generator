@@ -782,7 +782,7 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 
 				init_player_game_log_dict = player_game_log_df.to_dict()
 				# change id ints to strings to compare to json
-				print('change keys to strings')
+				#print('change keys to strings')
 				for field, field_dict in init_player_game_log_dict.items():
 					player_game_log_dict[field] = {}
 					for key, val in field_dict.items():
@@ -804,8 +804,8 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 	# print("\n===" + player_name + "===\n")
 	# print(tabulate(table))
 	#print(player_name + " player_game_log returned")# + str(player_game_log_df))
-	print('player_game_log_df:\n' + str(player_game_log_df))
-	print('player_game_log_dict: ' + str(player_game_log_dict))
+	#print('player_game_log_df:\n' + str(player_game_log_df))
+	#print('player_game_log_dict: ' + str(player_game_log_dict))
 	return player_game_log_dict#player_game_log_df # can return this df directly or first arrange into list but seems simpler and more intuitive to keep df so we can access elements by keyword
 
 # here we decide default season year, so make input variable parameter
