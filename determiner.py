@@ -463,7 +463,7 @@ def determine_played_season(player_url, player_name='', season_year=0, all_game_
 
 def determine_regular_season_games(player_game_log):
 
-    print('\n===Determine Regular Season Games for Player===\n')
+    #print('\n===Determine Regular Season Games for Player===\n')
     #print('player_game_log:\n' + str(player_game_log))
 
     # select reg season games by type
@@ -490,7 +490,7 @@ def determine_regular_season_games(player_game_log):
 
 def determine_season_part_games(player_game_log, season_part):
 
-    print('\n===Determine Season Games for Player: ' + season_part + '===\n')
+    #print('\n===Determine Season Games for Player: ' + season_part + '===\n')
     #print('player_game_log:\n' + str(player_game_log))
 
     season_part_games_df = season_part_games_df = player_game_log[~player_game_log['Type'].str.startswith('Preseason')]#pd.DataFrame()#player_game_log
@@ -1133,7 +1133,7 @@ def determine_all_conditions(all_stat_probs_dict):
 # player_stat_dict: {2023: {'regular': {'pts': {'all': {0: 18, 1: 19...
 # cur_conds = {year:year, part:part, cond:cond}
 def determine_sample_size(player_stat_dict, cur_conds):
-    print('\n===Determine Sample Size===\n')
+    #print('\n===Determine Sample Size===\n')
     #print('cur_conds: ' + str(cur_conds))
     #print('player_stat_dict: ' + str(player_stat_dict))
     sample_size = 0

@@ -110,7 +110,8 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, play
         for game_idx, row in season_part_game_log.iterrows():
 
             # get game type so we can add stat to reg or post season game
-            game_type = player_game_log.loc[game_idx, 'Type']
+            # instead loop thru each part separately
+            #game_type = player_game_log.loc[game_idx, 'Type']
             #print('game_type: ' + str(game_type))
 
             # make list to loop through so we can add all stats to dicts with 1 fcn
@@ -121,13 +122,20 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, play
 
             # now that we have game stats add them to dict by condition
 
+            # condition: all
             # values is list of dicts
             for stat_idx in range(len(all_stats_dicts.values())):
                 stat_dict = list(all_stats_dicts.values())[stat_idx]
                 stat = game_stats[stat_idx]
                 stat_dict['all'][game_idx] = stat
 
-
+            # condition: location
+            # todo: condition: city. use 'team abbrev city'? some games are not in either city like international games
+            # default can use 'team abbrev city' and then neutral games will have specific '<city>' and 'neutral' tags
+            # classify all neutral games as well as international. some neutral tournament games but are there any neutral season games that are domestic? no it seems all neutral would be international except for in season tournament
+            # could also avoid this extra condition unless neutral specific city
+            # instead if default away/home game, combine opponent and loc conditions to get city so we only need extra condition if neutral
+            
             # define away/home team so we can determine teammates/opponents in players in game
             away_abbrev = player_team
 
@@ -187,8 +195,8 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, play
                     stat_dict[game_log_team_abbrev][game_idx] = stat
 
                 
-
-
+            # condition: time before
+            # condition: time after
             # see if this game is 1st or 2nd night of back to back bc we want to see if pattern for those conditions
             init_game_date_string = player_game_log.loc[game_idx, 'Date'].lower().split()[1] # 'wed 2/15'[1]='2/15'
             game_mth = init_game_date_string.split('/')[0]
@@ -264,7 +272,7 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, play
 
             
 
-
+            # condition: day of week
             # add keys for each day of the week so we can see performance by day of week
             # only add key for current dow bc we dont need to see all dows here
             
@@ -282,7 +290,12 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, play
                 #print("stat_dict: " + str(stat_dict))
 
 
+            # todo: # condition: day of week
 
+
+            # condition: teammates out
+            # condition: teammates in
+            # condition: opponent team and players
             #====Players in Game stats
             # get game players from all game players dict
             #game_players = []
@@ -499,6 +512,7 @@ def generate_player_stat_dict(player_name, player_season_logs, projected_lines_d
 
     for player_game_log in player_season_logs.values():
 
+        # need string to compare to json
         season_yr_str = str(season_year)
         print("\n===Year " + season_yr_str + "===\n")
 
@@ -518,17 +532,22 @@ def generate_player_stat_dict(player_name, player_season_logs, projected_lines_d
         if season_year not in player_stat_dict.keys():
             player_stat_dict[season_yr_str] = {}
         
-        player_stat_dict[season_yr_str][season_part] = generate_player_all_stats_dicts(player_name, player_game_log_df, opponent, player_team, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part) 
-        # test
-        #player_stat_dict[season_year] = generate_player_all_stats_dicts(player_name, player_game_log, opponent, player_team, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part) 
+        # player_stat_dict[season_yr_str][season_part] = generate_player_all_stats_dicts(player_name, player_game_log_df, opponent, player_team, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part) 
+        # # test
+        # #player_stat_dict[season_year] = generate_player_all_stats_dicts(player_name, player_game_log, opponent, player_team, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part) 
 
-        # after adding reg season stats, add postseason stats
-        season_part = 'postseason'
-        player_stat_dict[season_yr_str][season_part] = generate_player_all_stats_dicts(player_name, player_game_log_df, opponent, player_team, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part) 
+        # # after adding reg season stats, add postseason stats
+        # season_part = 'postseason'
+        # player_stat_dict[season_yr_str][season_part] = generate_player_all_stats_dicts(player_name, player_game_log_df, opponent, player_team, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part) 
         
-        # combine reg and postseason
-        season_part = 'full'
-        player_stat_dict[season_yr_str][season_part] = generate_player_all_stats_dicts(player_name, player_game_log_df, opponent, player_team, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part) #generate_full_season_stat_dict(player_stat_dict)
+        # # combine reg and postseason
+        # season_part = 'full'
+        # player_stat_dict[season_yr_str][season_part] = generate_player_all_stats_dicts(player_name, player_game_log_df, opponent, player_team, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part) #generate_full_season_stat_dict(player_stat_dict)
+
+        season_parts = ['regular','postseason','full']
+        for season_part in season_parts:
+            player_stat_dict[season_yr_str][season_part] = generate_player_all_stats_dicts(player_name, player_game_log_df, opponent, player_team, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part) #generate_full_season_stat_dict(player_stat_dict)
+
 
         season_year -= 1
 
@@ -3389,7 +3408,7 @@ def generate_player_unit_stat_records(player_name, player_stat_dict, player_seas
 
 
 
-    print('player_unit_stat_records: ' + str(player_unit_stat_records))
+    #print('player_unit_stat_records: ' + str(player_unit_stat_records))
     return player_unit_stat_records
 
 # parallel to stat probs but scaled to per minute basis
@@ -3437,6 +3456,10 @@ def generate_player_unit_stat_probs(player_stat_dict, player_name, player_season
 
 
     return player_unit_stat_probs
+
+# make dict of all current conditions for each player so we can use to compute true prob
+def generate_all_current_conditions(game_teams, player_teams):
+    print('\n===Generate All Conditions===\n')
 
 
 # one outcome per stat of interest so each player has multiple outcomes
@@ -3573,7 +3596,8 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
         # player_position = player_positions[player_name] 
         player_position = reader.read_player_position(player_name, player_id, season_year, player_positions)
 
-        # get player team so we can determine away/home team so we can determine teammatea/opponents from players in games
+        # get player team so we can determine away/home team so we can determine teammates/opponents from players in games
+        # we dont really need to get player team from internet here bc we already got all player teams in separate batch loop
         player_team = reader.read_player_team(player_name, player_id, player_teams, read_new_teams=False) #player_teams[player_name]
 
         #print('projected_lines_dict passed to generate stat dict: ' + str(projected_lines_dict))
@@ -3627,6 +3651,10 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
     all_stat_probs_dict = generate_all_stat_probs_dict(all_player_stat_probs, all_player_stat_dicts, all_unit_stat_probs, season_years, irreg_play_time)
     
     # add true probs to stat probs dict
+    # need to know current conditions to determine true prob
+    # and also later we order spreadsheet based on current conditions used to get true prob
+    # conditions such as prev val are player specific but most conditions are team specific
+    current_conditions = generate_all_current_conditions(game_teams, player_teams) #determiner.determine_current_conditions() # [all, regular, home, ...]
     all_stat_probs_dict = generate_all_true_probs(all_stat_probs_dict, all_player_stat_dicts, season_years, all_per_unit_stat_probs_dict={})
     
     # flatten nested dicts into one level and list them
@@ -3666,9 +3694,8 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
     desired_order.append('prev val')
     # add columns in order of conditions used, by weight high to low
     # given current conditions used to determine true prob
-    #current_conditions = determiner.determine_current_conditions() # [all, regular, home, ...]
     # take current conditions for each year
-    #conditions_order = generate_conditions_order(current_conditions)
+    conditions_order = generate_conditions_order(current_conditions)
     conditions_order = ['all 2024 regular prob', 'all 2023 regular prob per unit', 'all 2023 regular prob'] # 'home 2024 regular prob', 'home 2023 regular prob'
     desired_order.extend(conditions_order)
     writer.list_dicts(available_prop_dicts, desired_order, output='excel')

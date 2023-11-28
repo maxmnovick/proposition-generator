@@ -2306,17 +2306,20 @@ def read_react_website(url):
 		#sgp_element = driver.find_element('id','dom_SameGameParlayWeb').get_attribute('outerHTML')	
 		#soup = BeautifulSoup(page, features='lxml')
 	
-
-		data_table_keys = {'pts':5,'reb':8,'ast':9}
+		# instead of needing keys input just click each btn until find stat of interest
+		pts_key = 5 # sometimes 4 if missing quick hits section
+		stat_key = pts_key
+		stats_of_interest = {'pts':0,'reb':3,'ast':4} #keys relative to pts key. data_table_keys={'pts':pts_key,'reb':pts_key+3,'ast':pts_key+4}
 		#web_dict[key] = read_lazy_elements(key)
-		for key in data_table_keys.keys():
-			
-			web_dict[key] = {}
+		#for key in data_table_keys:#.keys():
+		for stat_name, relative_key in stats_of_interest.items():
+			#print("stat_name: " + stat_name)
+			web_dict[stat_name] = {}
 
 			# click pts btn
-			epath = 'button[' + str(data_table_keys[key]) + ']'
+			epath = 'button[' + str(stat_key+relative_key) + ']'
 
-			if key == 'reb':
+			if stat_name == 'reb':
 				# first need to click right arrow to move so ast btn visible
 				side_btn = driver.find_element('class name','side-arrow--right')
 				#print("side_btn: " + side_btn.get_attribute('innerHTML'))
@@ -2332,7 +2335,15 @@ def read_react_website(url):
 
 			else:
 				stat_btn = driver.find_element('class name','rj-market__groups').find_element('xpath',epath)
-				#print("stat_btn: " + stat_btn.get_attribute('innerHTML'))
+				stat_btn_text = stat_btn.get_attribute('innerHTML')
+				#print("stat_btn: " + stat_btn_text)
+				# if title is 'threes', then subtract 1 from key and try again bc it means the list is missing a tab
+				if stat_btn_text == 'Threes': # gone too far
+					stat_key -= 1
+					epath = 'button[' + str(stat_key) + ']'
+					stat_btn = driver.find_element('class name','rj-market__groups').find_element('xpath',epath)
+					stat_btn_text = stat_btn.get_attribute('innerHTML')
+					#print("stat_btn: " + stat_btn_text)
 				stat_btn.click()
 
 			# not all dropdowns are open so program must click each one
@@ -2406,8 +2417,8 @@ def read_react_website(url):
 						player_name = re.sub('\.','',player_name)
 						#print('player_name: ' + player_name)
 
-						if player_name not in web_dict[key].keys():
-							web_dict[key][player_name] = {}
+						if player_name not in web_dict[stat_name].keys():
+							web_dict[stat_name][player_name] = {}
 
 						stat_val_elements = player_element.find_elements('class name','rj-market__button-yourbet-title')
 						odds_val_elements = player_element.find_elements('class name','rj-market__button-yourbet-odds')
@@ -2455,7 +2466,7 @@ def read_react_website(url):
 							#print('stat: ' + str(stat))
 							#print('odds: ' + str(odds))
 							#print('player web dict ' + player_name + ': ' + str(web_dict[key][player_name]))
-							web_dict[key][player_name][stat] = odds # { stat : odds, ... }
+							web_dict[stat_name][player_name][stat] = odds # { stat : odds, ... }
 							#print('player web dict ' + player_name + ': ' + str(web_dict[key][player_name]))
 						# for e in odds_val_elements:
 						# 	odds_vals.append(e.get_attribute('innerHTML'))
