@@ -440,18 +440,23 @@ def determine_played_season(player_url, player_name='', season_year=0, all_game_
             # some websites will simply not have the webpage but espn still has the webpage for all years prior to playing with blank game logs
             #if len(game_log) > 0:
 
-            html_results = pd.read_html(player_url)
-            #print("html_results: " + str(html_results))
+            try:
 
-            len_html_results = len(html_results) # each element is a dataframe/table so we loop thru each table
+                html_results = pd.read_html(player_url)
+                #print("html_results: " + str(html_results))
 
-            for order in range(len_html_results):
-                #print("order: " + str(order))
+                len_html_results = len(html_results) # each element is a dataframe/table so we loop thru each table
 
-                if len(html_results[order].columns.tolist()) == 17:
+                for order in range(len_html_results):
+                    #print("order: " + str(order))
 
-                    played_season = True
-                    break
+                    if len(html_results[order].columns.tolist()) == 17:
+
+                        played_season = True
+                        break
+
+            except:
+                print('page exists but no tables')
         else:
             print('\nstatus_code: ' + str(status_code))
 
@@ -1165,3 +1170,15 @@ def determine_unit_time_period(all_player_stat_probs, all_player_stat_dicts={}, 
 
     #print('unit_time_period: ' + str(unit_time_period))
     return unit_time_period
+
+
+def determine_all_current_conditions(all_current_conditions):
+
+    all_cur_conds = []
+
+    for player_cur_conds in all_current_conditions.values():
+        for cond_val in player_cur_conds.values():
+            if cond_val not in all_cur_conds:
+                all_cur_conds.append(cond_val)
+
+    return all_cur_conds
