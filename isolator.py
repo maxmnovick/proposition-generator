@@ -133,3 +133,7 @@ def isolate_consistent_streaks(all_stats_counts_dict):
 # see sort keys bc we may want to see all keys sorted rather than exclude potentially relevant keys
 def isolate_keys_in_dict(regex, dict):
     print('isolate keys')
+
+
+def isolate_high_prob_props():
+    isolate_high_prob_props
