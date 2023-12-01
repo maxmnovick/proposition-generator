@@ -921,7 +921,7 @@ def read_all_players_season_logs(player_names, read_x_seasons=1, player_espn_ids
 		# 	print('all game logs changed so write to file for player ' + player_name)
 		# 	writer.write_json_to_file(all_game_logs, all_logs_filename, 'w')
 	
-	print('all_players_season_logs: ' + str(all_players_season_logs))
+	#print('all_players_season_logs: ' + str(all_players_season_logs))
 	return all_players_season_logs
 
 
@@ -1132,6 +1132,7 @@ def read_all_players_positions(player_espn_ids_dict, season_year=2024):
 
 # return team abbrev lowercase bc used as key
 def read_team_from_internet(player_name, player_id, read_new_teams=False):
+	print("\n===Read Team from Internet: " + player_name.title() + "===\n")
 
 	team = ''
 
@@ -1184,6 +1185,7 @@ def read_team_from_internet(player_name, player_id, read_new_teams=False):
 	#except Exception as e:
 		#print('Error', team.upper(), player_name.title(), e)
 
+	print("team from internet: " + team)
 	return team
 
 # get player team from espn game log page bc we already have urls for each player
@@ -1194,7 +1196,7 @@ def read_team_from_internet(player_name, player_id, read_new_teams=False):
 # user will set input var after trades or aquisitions
 # later program will get news and decide off that instead of requiring user input
 def read_player_team(player_name, player_id, existing_player_teams_dict={}, read_new_teams=False):
-	#print("\n===Read Player Team: " + player_name.title() + "===\n")
+	print("\n===Read Player Team: " + player_name.title() + "===\n")
 	team = '' # team abbrev lowercase bc used as key
 
 	# read_new_teams can be determined by date bc date of trade deadline, start of season and check if any other trade deadlines
@@ -1207,11 +1209,11 @@ def read_player_team(player_name, player_id, existing_player_teams_dict={}, read
 		
 		for row in player_teams:
 			#print('row: ' + str(row))
-			player_name = row[0]
-			player_team = row[1]
+			existing_player_name = row[0]
+			existing_player_team = row[1]
 
-			existing_player_teams_dict[player_name] = player_team
-		#print('existing_player_teams_dict: ' + str(existing_player_teams_dict))
+			existing_player_teams_dict[existing_player_name] = existing_player_team
+		print('existing_player_teams_dict: ' + str(existing_player_teams_dict))
 
 
 	# if read new teams, then read from internet for all
@@ -1225,12 +1227,12 @@ def read_player_team(player_name, player_id, existing_player_teams_dict={}, read
 			team = read_team_from_internet(player_name, player_id)
 
 	
-	#print("final team: " + team)
+	print("final team: " + team)
 	return team
 
 # for all given players, read their teams
 def read_all_players_teams(player_espn_ids_dict, read_new_teams=True):
-	#print("\n===Read All Players Teams===\n")
+	print("\n===Read All Players Teams===\n")
 	players_teams_dict = {}
 
 	
@@ -1273,12 +1275,13 @@ def read_all_players_teams(player_espn_ids_dict, read_new_teams=True):
 
 			p_idx += 1
 
-	#print("players_teams_dict: " + str(players_teams_dict))
+	print("players_teams_dict: " + str(players_teams_dict))
 	return players_teams_dict
 
 # read team players from internet
 # read team roster from internet
 def read_roster_from_internet(team_abbrev, read_new_teams=False):
+	print('\n===Read Roster from Internet===\n')
 	raw_roster = []
 	roster = []
 
@@ -1298,6 +1301,7 @@ def read_roster_from_internet(team_abbrev, read_new_teams=False):
 	#try:
 
 	roster_url = 'https://www.espn.com/nba/team/roster/_/name/' + team_abbrev + '/' + team_name #den/denver-nuggets
+	print("roster_url: " + str(roster_url))
 
 	html_results = read_web_data(roster_url) #pd.read_html(roster_url)
 	#print("html_results: " + str(html_results))
@@ -1345,7 +1349,7 @@ def read_roster_from_internet(team_abbrev, read_new_teams=False):
 	#except Exception as e:
 		#print('Error', str(roster), team_abbrev.upper(), e)
 
-	#print('roster: ' + str(roster))
+	print('roster: ' + str(roster))
 	return roster
 
 # valid for json files
@@ -1408,7 +1412,7 @@ def read_team_roster(team_abbrev, existing_teams_players_dict={}, read_new_teams
 			writer.write_json_to_file(existing_teams_players_dict, filepath, write_param)
 
 	
-	#print('roster: ' + str(roster))
+	print('roster: ' + str(roster))
 	return roster
 
 

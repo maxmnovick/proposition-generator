@@ -166,7 +166,7 @@ def determine_team_name(team_abbrev, team_abbrevs_dict={}):
                     'gsw':'golden state warriors',
                     'hou':'houston rockets',
                     'ind':'indiana pacers',
-                    'lac':'los angeles clippers',
+                    'lac':'la clippers',
                     'lal':'los angeles lakers',
                     'mem':'memphis grizzlies',
                     'mia':'miami heat',
@@ -1155,6 +1155,23 @@ def determine_sample_size(player_stat_dict, cur_conds):
     #print('sample_size: ' + str(sample_size))
     return sample_size
 
+# all yrs for single condition
+# player_stat_dict: {2023: {'regular': {'pts': {'all': {0: 18, 1: 19...
+def determine_condition_sample_size(player_stat_dict, condition, part, season_years):
+    print('\n===Determine Condition Sample Size: ' + condition + '===\n')
+
+    sample_size = 0
+
+    for year_stat_dicts in player_stat_dict.values():
+        if part in year_stat_dicts.keys():
+            # we take idx 0 for first stat bc all stats sampled for all games so same no. samples for all stats
+            stat_dict = list(year_stat_dicts[part].values())[0][condition]
+            sample_size += len(stat_dict.keys())
+
+    print('sample_size: ' + str(sample_size))
+    return sample_size
+
+
 def determine_unit_time_period(all_player_stat_probs, all_player_stat_dicts={}, season_years=[], irreg_play_time={}):
     # determine unit time period by observing if drastic change indicates change in team or role
     # default to avg current season but enable manual entry of minutes if irregular such as for teammate injured
@@ -1174,7 +1191,7 @@ def determine_unit_time_period(all_player_stat_probs, all_player_stat_dicts={}, 
 
 def determine_all_current_conditions(all_current_conditions):
 
-    all_cur_conds = []
+    all_cur_conds = ['all']
 
     for player_cur_conds in all_current_conditions.values():
         for cond_val in player_cur_conds.values():
