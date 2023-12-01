@@ -3931,9 +3931,26 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
     # 2. iso +ev
     # 3. out of remaining options, sort by ev
     # 4. iso top remaining options
-    # 5. sort by team and stat
+    # 5. sort by game and team and stat
     # 6. see if any invalid single bets (only 1 good option for that game)
     # 7. replace invalid bets with next best valid ev
+    
+    # define high prob eg >=90
+    # we use isolator for strictly isolating parts of existing data when there is no processing or computation between input output
+    high_prob_props = isolator.isolate_high_prob_props(available_prop_dicts)
+    
+    plus_ev_props = isolator.isolate_plus_ev_props(high_prob_props)
+    
+    sort_keys = ['ev']
+    plus_ev_props = sorter.sort_dicts_by_keys(plus_ev_props, sort_keys)
+
+    dk_max_allowed = 20
+    fd_max_allowed = 25
+    top_options = plus_ev_props[1:dk_max_allowed]
+
+    sort_keys = ['team', 'stat']
+    top_options = sorter.sort_dicts_by_keys(top_options, sort_keys)
+
 
 
     # todo: make fcn to classify recently broken streaks bc that recent game may be anomaly and they may revert back to streak
