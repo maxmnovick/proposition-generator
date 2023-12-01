@@ -3239,7 +3239,7 @@ def generate_condition_sample_weight(player_stat_dict, cond_key, cond_val, part,
     #sample_sizes.append(s_n)
     # log(0)=-inf
     if s_n > 0:
-        sample_weight = round(math.log10(s_n),6)
+        sample_weight = round(math.log(s_n),6) # or log10? need to test both by predicting yrs that already happened so we can give supervised feedback
         print('condition_sample_weight = ' + str(cond_weights[cond_key]) + ' * ' + str(sample_weight))
         condition_sample_weight = round(float(cond_weights[cond_key]) * sample_weight, 2)
     
