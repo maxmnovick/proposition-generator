@@ -943,3 +943,28 @@ def write_all_player_stat_probs(all_player_stat_probs):
 
     #write_all_stat_probs_by_condition(all_player_stat_probs)
     write_all_stat_probs_by_stat(all_player_stat_probs)
+
+
+# write 1 sheet for all +ev props, sorted by true prob
+# AND write 1 sheet for all 0 ev props, sorted by true prob
+# AND write 1 sheet for all -ev props, sorted by true prob
+# AND write 1 sheet for each strategy
+def write_prop_tables(prop_dicts, sheet_names, desired_order):
+    print('\n===Write Prop Tables===\n')
+
+    # book name = prop tables
+    book_name = 'data/prop tables.xlsx'
+    print('book_name: ' + str(book_name))
+    writer = pd.ExcelWriter(book_name)
+
+    for table_idx in range(len(prop_dicts)):
+        dict = prop_dicts[table_idx]
+
+        sheet_name = sheet_names[table_idx]
+
+        table_df = pd.DataFrame(dict, columns=desired_order)
+
+        table_df.to_excel(writer,sheet_name)
+
+
+    writer.close()

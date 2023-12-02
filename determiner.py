@@ -1199,3 +1199,18 @@ def determine_all_current_conditions(all_current_conditions):
                 all_cur_conds.append(cond_val)
 
     return all_cur_conds
+
+# determine game num so we can sort by game
+def determine_game_num(game_teams, player_team):
+    print('\n===Determine Game Num===\n')
+    print('game_teams: ' + str(game_teams))
+    print('player_team: ' + str(player_team))
+    game_num = 0
+    for game_idx in range(len(game_teams)):
+        game = game_teams[game_idx]
+        if player_team in game:
+            game_num = game_idx + 1
+            break
+
+    print('game_num: ' + str(game_num))
+    return game_num

@@ -15,7 +15,8 @@ import writer # format record and other game data for readability
 
 from tabulate import tabulate # display output
 
-import sorter 
+# we use isolator for strictly isolating parts of existing data when there is no processing or computation between input output
+import sorter, isolator
 
 import pandas as pd # read html results from webpage. need here to convert game log dict to df
 
@@ -2991,7 +2992,7 @@ def generate_all_stat_probs_dict(all_player_stat_probs, all_player_stat_dicts={}
 # from all_stat_probs_dict: {'luka doncic': {'pts': {1: {'all 2023 regular prob': 1.0, 'all 2023 full prob': 1.0,...
 # all_stat_prob_dicts = [{player:player, stat:stat, val:val, conditions prob:prob,...},...]
 # need all_player_stat_dicts to get prev val
-def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}, all_current_conditions={}, all_player_stat_dicts={}, season_years=[]):
+def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}, all_current_conditions={}, all_player_stat_dicts={}, season_years=[], game_teams=[]):
 
     print('\n===Generate All Stat Prob Dicts===\n')
 
@@ -3004,21 +3005,26 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}, all_curre
     cur_yr = str(season_years[0])
 
     for player, player_stat_probs_dict in all_stat_probs_dict.items():
-        print('\n===Player: ' + str(player) + '===\n')
+        #print('\n===Player: ' + str(player) + '===\n')
         #stat_val_probs_dict = {'player': player}
         player_team = ''
         if player in player_teams.keys():
             player_team = player_teams[player]
         #stat_val_probs_dict['team'] = player_team
 
+        # add game num for ref so we can sort by game to ensure at least 2 picks per game 
+        # OR if only 1 allowed still need to see game teams next to each other to place picks on same page of gui
+        game_num = determiner.determine_game_num(game_teams, player_team)
+
+
         player_current_conditions = all_current_conditions[player]
-        print('player_current_conditions: ' + str(player_current_conditions))
+        #print('player_current_conditions: ' + str(player_current_conditions))
 
         player_stat_dict = all_player_stat_dicts[player]
         #print('player_stat_dict: ' + str(player_stat_dict))
         
         for stat_name, stat_probs_dict in player_stat_probs_dict.items():
-            print('\n===Stat: ' + str(stat_name) + '===\n')
+            #print('\n===Stat: ' + str(stat_name) + '===\n')
             #stat_val_probs_dict['stat'] = stat_name
             #consistent_stat_dict = {'player': player_name, 'team': player_team, 'stat': stat_name}
             # for condition, condition_consistent_stat_dict in stat_probs_dict.items():
@@ -3035,8 +3041,8 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}, all_curre
             # is it useful to get prev val under current conditions? possibly but could be misleading unless looking at larger sample
             
             for val, val_probs_dict in stat_probs_dict.items():
-                print('\n===Val: ' + str(val) + '===\n')
-                print('val_probs_dict: ' + str(val_probs_dict))
+                #print('\n===Val: ' + str(val) + '===\n')
+                #print('val_probs_dict: ' + str(val_probs_dict))
                 #stat_val_probs_dict['val'] = str(val) + '+'
                 val_str = str(val) + '+'
                 if val == 0: # for zero we only want exactly 0 prob not over under bc 1+/- includes 1 and cannot go below 0
@@ -3044,7 +3050,7 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}, all_curre
                 stat_val_probs_dict = {'player': player, 'team': player_team, 'stat': stat_name, 'val': val_str }
                 #for conditions, prob in val_probs_dict.items():
                 for conditions in all_conditions:
-                    print('\n===Conditions: ' + str(conditions) + '===\n')
+                    #print('\n===Conditions: ' + str(conditions) + '===\n')
                     prob = 0
                     #per_unit_prob = 0
                     if conditions in val_probs_dict.keys():
@@ -3053,12 +3059,12 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}, all_curre
                         #per_unit_conditions = conditions + ' per unit'
                         #per_unit_prob = val_probs_dict[per_unit_conditions]
                         #per_unit_prob = per_unit_probs_dict[player][stat_name][val][conditions] #val_probs_dict[per_unit_conditions]
-                    print('prob: ' + str(prob))
+                    #print('prob: ' + str(prob))
                     stat_val_probs_dict[conditions] = round(prob * 100)
                     #stat_val_probs_dict[per_unit_conditions] = round(per_unit_prob * 100)
 
 
-                # add keys to dict not used for ref but not yet to gen true prob
+                # add keys to dict used for ref but not yet to gen true prob
                 # otherwise it will use string value to compute prob
                 # all vals in val probs dict must be probs
                 # so we should make a separate dict and combine them before display
@@ -3068,6 +3074,13 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}, all_curre
                 # we actually want to show the player current conds so we can see which probs are being used and adjust for errors
                 for cond_key, cond_val in player_current_conditions.items():
                     stat_val_probs_dict[cond_key] = cond_val
+
+                # add game num for ref so we can sort by game to ensure at least 2 picks per game 
+                # OR if only 1 allowed still need to see game teams next to each other to place picks on same page of gui
+                # game_num = 0
+                # for game in game_teams:
+                #     if player_team
+                stat_val_probs_dict['game'] = game_num
 
 
                 # we want per unit probs next to corresponding yr for comparison in table
@@ -3105,10 +3118,12 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}, all_curre
                     stat_val_probs_dict['true prob'] = 100 - round(prob * 100)
                     #print('under prob: ' + str(stat_val_probs_dict['true prob']))
 
+                    # add more fields for ref
                     #stat_val_probs_dict['prev val'] = val_probs_dict['prev val']
                     stat_val_probs_dict['prev val'] = prev_val
                     for cond_key, cond_val in player_current_conditions.items():
                         stat_val_probs_dict[cond_key] = cond_val
+                    stat_val_probs_dict['game'] = game_num
 
                     # one row for each val which has all conditions
                     #print('stat_val_probs_dict: ' + str(stat_val_probs_dict))
@@ -3204,7 +3219,11 @@ def generate_condition_mean_prob(condition, val_probs_dict, season_years, part, 
             weighted_probs.append(wp) #+= wp
             #print('true_prob: ' + str(true_prob))
         
-        condition_mean_prob = round(sum(weighted_probs) / sum(weights), 2)
+        denom = sum(weights)
+        if denom > 0:
+            condition_mean_prob = round(sum(weighted_probs) / denom, 2)
+        else:
+            print('Warning: denom 0 bc no samples for condition!')
         
     print('condition_mean_prob: ' + str(condition_mean_prob))
     return condition_mean_prob
@@ -3283,6 +3302,8 @@ def generate_true_prob(val_probs_dict, season_years, player_current_conditions, 
     print('\n===Generate True Prob===\n')
     #print('season_years: ' + str(season_years))
 
+    true_prob = 0
+
     # p_true = w1p1 + w2p2
     # where w1+w2=1
     # and w_t=w1/t so w2=w1/2
@@ -3318,7 +3339,12 @@ def generate_true_prob(val_probs_dict, season_years, player_current_conditions, 
         #true_prob += wp
         #print('true_prob: ' + str(true_prob))
 
-    true_prob = round(sum(weighted_probs) / sum(all_conditions_weights),2)
+    denom = sum(all_conditions_weights)
+    if denom > 0:
+        true_prob = round(sum(weighted_probs) / denom,2)
+    else:
+        print('Warning: denom 0 bc no samples for condition!')
+
     print('true_prob: ' + str(true_prob))
 
     return true_prob 
@@ -3596,7 +3622,7 @@ def generate_player_unit_stat_probs(player_stat_dict, player_name, player_season
 
 # p1:{loc:l1, city:c1, dow:d1, tod:t1,...}
 def generate_player_current_conditions(player, game_teams, player_teams):
-    print('\n===Generate Player Current Conditions===\n')
+    print('\n===Generate Player Current Conditions: ' + player + '===\n')
 
     player_current_conditions = {}
 
@@ -3870,8 +3896,8 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
     
     # flatten nested dicts into one level and list them
     # all_stat_prob_dicts = [{player:player, stat:stat, val:val, conditions prob:prob,...},...]
-    all_stat_prob_dicts = generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams, all_current_conditions, all_player_stat_dicts, season_years)
-    desired_order = ['player', 'team', 'stat','val']
+    all_stat_prob_dicts = generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams, all_current_conditions, all_player_stat_dicts, season_years, game_teams)
+    desired_order = ['player', 'game', 'team', 'stat','val']
     writer.list_dicts(all_stat_prob_dicts, desired_order)
 
 
@@ -3883,7 +3909,7 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
     # also include given value in stat dict
     # so we can sort by value to get optimal return
     # need player id to read team
-    desired_order = ['player', 'team', 'stat','val','true prob']
+    desired_order.append('true prob')# = ['player', 'game', 'team', 'stat','val','true prob']
     available_prop_dicts = all_stat_prob_dicts#all_consistent_stat_dicts
     read_odds = True
     if 'read odds' in settings.keys():
@@ -3930,32 +3956,46 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
     # 1. iso tru prob >= 90
     # 2. iso +ev
     # 3. out of remaining options, sort by ev
-    # 4. iso top remaining options
+    # 4. iso top x remaining options
     # 5. sort by game and team and stat
     # 6. see if any invalid single bets (only 1 good option for that game)
     # 7. replace invalid bets with next best valid ev
     
+    # 1. iso tru prob >= 90
     # define high prob eg >=90
     # we use isolator for strictly isolating parts of existing data when there is no processing or computation between input output
     high_prob_props = isolator.isolate_high_prob_props(available_prop_dicts)
     
+    # sort all high prob props by ev so we can potentially see 0 and -ev options incorrectly calculated due to irregular circumstance
+    # sort_keys = ['ev']
+    # sorted_high_props_by_ev = sorter.sort_dicts_by_keys(plus_ev_props, sort_keys)
+
+    # 2. iso +ev
     plus_ev_props = isolator.isolate_plus_ev_props(high_prob_props)
     
+    # 3. out of remaining options, sort by ev
     sort_keys = ['ev']
     plus_ev_props = sorter.sort_dicts_by_keys(plus_ev_props, sort_keys)
 
+    # 4. iso top x remaining options
     dk_max_allowed = 20
     fd_max_allowed = 25
-    top_options = plus_ev_props[1:dk_max_allowed]
+    # ideal max depends on cumulative ev
+    top_options = plus_ev_props[0:dk_max_allowed]
+    print('top_options: ' + str(top_options))
 
-    sort_keys = ['team', 'stat']
-    top_options = sorter.sort_dicts_by_keys(top_options, sort_keys)
-
+    # 5. sort by game and team and stat
+    sort_keys = ['game', 'team', 'stat']
+    top_options = sorter.sort_dicts_by_str_keys(top_options, sort_keys)
+    writer.list_dicts(top_options, desired_order)
 
 
     # todo: make fcn to classify recently broken streaks bc that recent game may be anomaly and they may revert back to streak
     # todo: to fully predict current player stats, must predict teammate and opponent stats and prioritize and align with totals
     
+    prop_tables = [top_options, plus_ev_props, high_prob_props, available_prop_dicts]
+    sheet_names = ['Top', '+EV', 'High Prob', 'All'] #, 'Rare' # rare shows those where prev val is anomalous so unlikely to repeat anomaly (eg player falls in bottom 10% game)
+    writer.write_prop_tables(prop_tables, sheet_names, desired_order)
     
     #print('player_outcomes: ' + str(player_outcomes))
     return player_outcomes

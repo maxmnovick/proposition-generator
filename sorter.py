@@ -28,6 +28,12 @@ def sort_dicts_by_keys(dicts, keys, reverse=True):
 
     return dicts
 
+def sort_dicts_by_str_keys(dicts, keys, reverse=False):
+
+    dicts = sorted(dicts, key=lambda d: ([str(d[k]) for k in keys]), reverse=reverse)
+
+    return dicts
+
 # given a list of dicts with corresponding keys, 
 # we want to see which dict has the highest value at a given key they all share
 #>>> d = {'Bill': 4, 'Alex' : 4, 'Bob' : 3, "Charles": 7}    
