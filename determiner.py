@@ -455,8 +455,9 @@ def determine_played_season(player_url, player_name='', season_year=0, all_game_
                         played_season = True
                         break
 
-            except:
-                print('page exists but no tables')
+            except Exception as e:
+                print('page exists but no tables: ', e)
+            
         else:
             print('\nstatus_code: ' + str(status_code))
 
@@ -471,11 +472,16 @@ def determine_regular_season_games(player_game_log):
     #print('\n===Determine Regular Season Games for Player===\n')
     #print('player_game_log:\n' + str(player_game_log))
 
+    reg_season_games_df = pd.DataFrame()
+
     # select reg season games by type
-    reg_season_games_df = player_game_log[player_game_log['Type'].str.startswith('Regular')]
-    #print("partial reg_season_games_df:\n" + str(reg_season_games_df) + '\n')
-    # remove all star and exception games with *
-    reg_season_games_df = reg_season_games_df[~reg_season_games_df['OPP'].str.endswith('*')]
+    if 'Type' in player_game_log.keys():
+        reg_season_games_df = player_game_log[player_game_log['Type'].str.startswith('Regular')]
+        #print("partial reg_season_games_df:\n" + str(reg_season_games_df) + '\n')
+        # remove all star and exception games with *
+        reg_season_games_df = reg_season_games_df[~reg_season_games_df['OPP'].str.endswith('*')]
+    else:
+        print('Warning: Type key not in game log when determining season part games!')
 
     #reg_season_games_df = pd.DataFrame()
     # reg_season_games = []
@@ -498,20 +504,25 @@ def determine_season_part_games(player_game_log, season_part):
     #print('\n===Determine Season Games for Player: ' + season_part + '===\n')
     #print('player_game_log:\n' + str(player_game_log))
 
-    season_part_games_df = season_part_games_df = player_game_log[~player_game_log['Type'].str.startswith('Preseason')]#pd.DataFrame()#player_game_log
+    season_part_games_df = pd.DataFrame()
 
-    # cannot make default all game log bc we want to exclude preseason
-    # select reg season games by type
-    if season_part == 'regular' or season_part == 'postseason':
-        season_part_games_df = player_game_log[player_game_log['Type'].str.startswith(season_part.title())]
-        #print("partial reg_season_games_df:\n" + str(reg_season_games_df) + '\n')
-    #elif season_part == 'full':
-        #season_part_games_df = player_game_log[~player_game_log['Type'].str.startswith('Preseason')]
+    if 'Type' in player_game_log.keys():
+        season_part_games_df = player_game_log[~player_game_log['Type'].str.startswith('Preseason')]#pd.DataFrame()#player_game_log
+
+        # cannot make default all game log bc we want to exclude preseason
+        # select reg season games by type
+        if season_part == 'regular' or season_part == 'postseason':
+            season_part_games_df = player_game_log[player_game_log['Type'].str.startswith(season_part.title())]
+            #print("partial reg_season_games_df:\n" + str(reg_season_games_df) + '\n')
+        #elif season_part == 'full':
+            #season_part_games_df = player_game_log[~player_game_log['Type'].str.startswith('Preseason')]
         
-    # remove all star and exception games with *
-    # always separate special games
-    season_part_games_df = season_part_games_df[~season_part_games_df['OPP'].str.endswith('*')]
-
+        # remove all star and exception games with *
+        # always separate special games
+        season_part_games_df = season_part_games_df[~season_part_games_df['OPP'].str.endswith('*')]
+    
+    else:
+        print('Warning: Type key not in game log when determining season part games!')
 
 
     #print("final season_part_games_df:\n" + str(season_part_games_df) + '\n')
@@ -1214,3 +1225,42 @@ def determine_game_num(game_teams, player_team):
 
     print('game_num: ' + str(game_num))
     return game_num
+
+def determine_opponent_team(player, game_teams, player_teams):
+    opp_team = ''
+    player_team = player_teams[player]
+    for team_idx in range(len(game_teams)):
+        team = game_teams[team_idx]
+        if team != player_team:
+            opp_idx = team_idx
+            break
+
+    opp_team = game_teams[opp_idx]
+
+    return opp_team
+
+# determine condition of player current game location
+# based on input game teams
+def determine_player_game_location(player, game_teams, player_teams):
+    
+    player_current_location = ''
+
+    player_team = player_teams[player]
+    print('player_team: ' + str(player_team))
+    for teams in game_teams:
+        away_team = teams[0]
+        print('away_team: ' + str(away_team))
+        home_team = teams[1]
+        print('home_team: ' + str(home_team))
+
+        location = ''
+        if player_team == away_team:
+            location = 'away'
+        elif player_team == home_team:
+            location = 'home'
+
+        if location != '':
+            player_current_location = location
+            break # found team in list games so go to next player
+
+    return player_current_location

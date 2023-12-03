@@ -2525,8 +2525,8 @@ def read_react_website(url):
 #all_players_odds: {'mia': {'pts': {'Bam Adebayo': {'18+': '−650',...
 def read_all_players_odds(game_teams, player_teams={}, players=[]):
 	print('\n===Read All Players Odds===\n')
-	print('game_teams: ' + str(game_teams))
-	print('player_teams: ' + str(player_teams))
+	#print('game_teams: ' + str(game_teams))
+	#print('player_teams: ' + str(player_teams))
 	all_players_odds = {}
 	odds = '?' # if we dont see name then they might be added later so determine if it is worth waiting
 
@@ -2542,9 +2542,9 @@ def read_all_players_odds(game_teams, player_teams={}, players=[]):
 	# see which teams are playing together and group them
 	#game_teams = read_opponent()
 	for game in game_teams:
-		print('game: ' + str(game))
+		#print('game: ' + str(game))
 		game_team = game[0] # only read 1 page bc bth teams same page
-		print('game_team: ' + str(game_team))
+		#print('game_team: ' + str(game_team))
 
 	# for team in teams:
 	# 	print('team: ' + team)
@@ -2563,18 +2563,18 @@ def read_all_players_odds(game_teams, player_teams={}, players=[]):
 		game_players_odds_dict = read_react_website(game_odds_url)
 
 		if game_players_odds_dict is not None:
-			print('game_players_odds_dict:\n' + str(game_players_odds_dict))
+			#print('game_players_odds_dict:\n' + str(game_players_odds_dict))
 
 			for stat_name, stat_odds_dict in game_players_odds_dict.items():
-				print('stat_name: ' + str(stat_name))
+				#print('stat_name: ' + str(stat_name))
 				for player, player_odds_dict in stat_odds_dict.items():
-					print('player: ' + str(player))
+					#print('player: ' + str(player))
 					player_team = ''
 					if player in player_teams.keys():
 						player_team = player_teams[player]
 					else:
 						print('Warning: player not in teams list! ' + player)
-					print('player_team: ' + str(player_team))
+					#print('player_team: ' + str(player_team))
 					if player_team not in all_players_odds.keys():
 						all_players_odds[player_team] = {}
 
@@ -2616,7 +2616,7 @@ def read_all_players_odds(game_teams, player_teams={}, players=[]):
 	#writer.write_json_to_file(all_players_odds, filepath, write_param)
 
 	#all_players_odds: {'mia': {'pts': {'Bam Adebayo': {'18+': '−650','17-': 'x',...
-	print('all_players_odds: ' + str(all_players_odds))
+	#print('all_players_odds: ' + str(all_players_odds))
 	return all_players_odds
 
 # stat_dict: {'player name': 'Trevelin Queen', 'stat name': 'ast', 'prob val': 0, 'prob': 100

@@ -1062,7 +1062,7 @@ def generate_all_players_records_dicts(all_players_stats_dicts, projected_lines_
 
 def generate_player_avg_range_dict(player_name, player_stat_dict, key):
 
-    print('\n===Generate Player ' + player_name.title() + ' Average Range Dict: ' + key.title() + '===\n')
+    #print('\n===Generate Player ' + player_name.title() + ' Average Range Dict: ' + key.title() + '===\n')
 
     player_avg_range_dict = {}
 
@@ -1268,14 +1268,14 @@ def generate_all_players_avg_range_dicts(all_players_stats_dicts):
     # print('all_modes_dicts: ' + str(all_modes_dicts))
 
     all_avgs_dicts = { 'mean': all_means_dicts, 'median': all_medians_dicts, 'mode': all_modes_dicts, 'min': all_mins_dicts, 'max': all_maxes_dicts }
-    print('all_avgs_dicts: ' + str(all_avgs_dicts))
+    #print('all_avgs_dicts: ' + str(all_avgs_dicts))
     return all_avgs_dicts
 
 # if player names is blank, use all players found in raw projected lines
 # use player_espn_ids_dict to get teams
 def generate_projected_lines_dict(raw_projected_lines, player_espn_ids_dict={}, player_teams={}, player_names=[], read_new_teams=False):
-    print('\n===Generate Projected Lines Dict===\n')
-    print('raw_projected_lines: ' + str(raw_projected_lines))
+    #print('\n===Generate Projected Lines Dict===\n')
+    #print('raw_projected_lines: ' + str(raw_projected_lines))
     # need data type and input type to get file name
     # data_type = "Player Lines"
 
@@ -1306,7 +1306,7 @@ def generate_projected_lines_dict(raw_projected_lines, player_espn_ids_dict={}, 
         player_name = player_lines[0].lower()
         projected_lines_dict[player_name] = dict(zip(header_row[1:],player_lines[1:]))
     
-    print("projected_lines_dict: " + str(projected_lines_dict))
+    #print("projected_lines_dict: " + str(projected_lines_dict))
     return projected_lines_dict
 
 
@@ -3621,29 +3621,28 @@ def generate_player_unit_stat_probs(player_stat_dict, player_name, player_season
     return player_unit_stat_probs
 
 # p1:{loc:l1, city:c1, dow:d1, tod:t1,...}
-def generate_player_current_conditions(player, game_teams, player_teams):
+# all_lineups = {team:{starters:[],out:[],bench:[],unknown:[]},...}
+def generate_player_current_conditions(player, game_teams, player_teams, all_lineups={}):
     print('\n===Generate Player Current Conditions: ' + player + '===\n')
 
     player_current_conditions = {}
 
-    # player_current_conditions['loc'] = determiner.determine_player_location(player, game_teams, player_teams)
-    player_team = player_teams[player]
-    print('player_team: ' + str(player_team))
-    for teams in game_teams:
-        away_team = teams[0]
-        print('away_team: ' + str(away_team))
-        home_team = teams[1]
-        print('home_team: ' + str(home_team))
+    # condition: location
+    player_current_conditions['loc'] = determiner.determine_player_game_location(player, game_teams, player_teams)
+    
+    # condition: teammates and opps lineups
+    # get teammates and opps conds
+    player_team_lineup = all_lineups[player_teams[player]]
+    # determine opp team from game teams
+    opp_team = determiner.determine_opponent_team(player, game_teams, player_teams) #game_teams[opp_idx]
+    opponent_lineup = all_lineups[opp_team]
+    # dealing with the ppl we know are out is first and then figure out how to deal with uncertain players
+    player_current_conditions['starters'] = all_lineups
+    player_current_conditions['bench'] = all_lineups
+    player_current_conditions['out'] = all_lineups
+    player_current_conditions['unknown'] = all_lineups
+    player_current_conditions['opp players'] = all_lineups # different from 'opp' which is team
 
-        location = ''
-        if player_team == away_team:
-            location = 'away'
-        elif player_team == home_team:
-            location = 'home'
-
-        if location != '':
-            player_current_conditions['loc'] = location
-            break # found team in list games so go to next player
 
     print('player_current_conditions: ' + str(player_current_conditions))
     return player_current_conditions
@@ -3655,8 +3654,41 @@ def generate_all_current_conditions(players, game_teams, player_teams):
 
     all_current_conditions = {}
 
+    # read all teammates out from internet
+    # starters affect both other starters and benchers
+    # benchers mostly affect other benchers
+    # but if a bench player with mucho minutes is out then starters may play a few more minutes too. 
+    # so use mean minutes from stat dict to see how much playing time needs to be distributed to teammates
+    # if player listed as out how do we know if they would have been a starter?
+    # could get mean minutes played to see play time which might be better than knowing if starter
+    # all_teammates_out = {game:{team:{out:[],gtd:[]}
+    all_teammates_out = {}
+    all_starters = {}
+    all_benches = {}
+    # if expected lineup, show both with and without questionable teammates
+    # so when lineup confirmed, can go with correct option but really if lineup not yet confirmed then odds will not be set
+    # but sometimes odds set only for expected lineups so better to avoid if unsure
+    # if confirmed lineup, only need to show 1 lineup
+    # 'out' will never include gtd bc we must classify gtd as 'starter', 'bench' or 'unknown' based on injury report certainty
+    # if there are unknowns then starters and bench are also unknown so should we classify by mean minutes?
+    #all_lineups = {confirmed:{team:{starters:[],out:[],bench:[],unknown:[]},...}, expected:{team:{starters:[],bench:[],out:[]},...}}
+    all_lineups = reader.read_all_lineups(players, player_teams)
+    # if questionable then it is very hard to say how teammates will perform so can only go with safest options
+    # we could figure out how likely it is for player to play based on injury reports
+    # and adjust teammates true probs accordingly
+    questionable_players = [] 
+    # can we actually measure probability of player being out?
+    # if we had access to all past injury reports but i dont think we do easily although it might be worth looking up
+    # first try to use rotowire uncertainty rating on lineups page if available
+    # basically, if gtd then uncertain unless injury report says they are likely to play bc they have been playing well and usually have gtd tag just in case
+    # so once we know uncertain players, we will have to see which teammates they affect to know which players to avoid
+
+
+
     for player in players:
-        player_curr_conds = generate_player_current_conditions(player, game_teams, player_teams)
+
+        # need to pass all lineups bc opponent lineups matter too
+        player_curr_conds = generate_player_current_conditions(player, game_teams, player_teams, all_lineups)
 
         all_current_conditions[player] = player_curr_conds
 
@@ -3952,8 +3984,9 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
     #writer.list_dicts(available_prop_dicts, desired_order)
 
 
-    # strategy 1:
+    # strategy 1: high prob +ev (balance prob with ev)
     # 1. iso tru prob >= 90
+    # 1.1 show tru prob >= 90 & prev_val < stat+ or prev_val > stat-
     # 2. iso +ev
     # 3. out of remaining options, sort by ev
     # 4. iso top x remaining options
@@ -3988,6 +4021,10 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
     sort_keys = ['game', 'team', 'stat']
     top_options = sorter.sort_dicts_by_str_keys(top_options, sort_keys)
     writer.list_dicts(top_options, desired_order)
+
+    # strategy 2: highest +ev
+    # strategy 3: highest prob
+    # strategy 4: combine +ev picks into multiple ~+100 parlays
 
 
     # todo: make fcn to classify recently broken streaks bc that recent game may be anomaly and they may revert back to streak

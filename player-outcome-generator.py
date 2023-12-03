@@ -32,18 +32,18 @@ read_season_year = 2024 # user can choose year. read x seasons previous
 read_new_odds = True 
 # set false to save time if observing all probs
 # make list of sources with different odds 
-read_odds = True 
+read_odds = False 
 settings = {'find matchups': find_matchups, 'find players': find_players, 'read new teams': read_new_teams, 'read x seasons': read_x_seasons, 'read season year': read_season_year, 'read new odds': read_new_odds, 'read odds': read_odds, 'irreg play time': irreg_play_time}
 
 
 # gen list of player names given teams so we dont have to type all names
 # if no date given, and if past 10pm then assume getting data for next day
 # https://www.espn.com/nba/schedule
-game_teams = [('phi','bos'), ('nyk','tor'), ('mem','dal'), ('sas','nop'), ('den','phx')]#, ('nop','lac')]
+game_teams = [('orl','bkn')]#, ('cle','det'), ('ind','mia'), ('nop','chi'), ('atl','mil'), ('okc','dal'), ('mem','phx'), ('por','uta'), ('den','sac'), ('hou','lal')]#, ('nop','lac')]
 # we can make read new teams var false at first bc the file has not been created yet so we will write for the first time
 # we make it true to read new teams after trades, which tells it to overwrite existing file or make a new file with the date in the title
-players_names = reader.read_teams_players(game_teams, read_new_teams) #generator.generate_players_names(teams) # generate is wrong term bc we are not computing anything only reading players on each team
-#players_names = ['kyle kuzma'] # use for testing
+#players_names = reader.read_teams_players(game_teams, read_new_teams) #generator.generate_players_names(teams) # generate is wrong term bc we are not computing anything only reading players on each team
+players_names = ['cole anthony'] # use for testing
 
 
 
