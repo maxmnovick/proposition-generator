@@ -22,7 +22,7 @@ irreg_play_time = {'craig porter': 25, 'reggie jackson': 35}
 
 # settings
 find_matchups = False
-find_players = False # if true, read all players in game box scores to see prob with teammates out
+find_players = True # if true, read all players in game box scores to see prob with teammates out
 # read new teams after trades and acquisitions new players
 read_new_teams = False
 # read all seasons to compare and see trend

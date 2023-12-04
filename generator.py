@@ -3843,10 +3843,12 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
     # v1: all_players_in_games_dict = {year:{game key:{away team abbrev:[away players],home team abbrev:[home players]}}}
     # or
     # v2: all_players_in_games_dict = {player:{game:{teammates:[],opponents:[]}}}
+    # OR
+    # v3: all_players_in_games_dict = {player:{game:{starters:[],bench:[],opponents:[]}}}
     # start with v1 bc it is general for all games with no duplicates for players
     all_players_in_games_dict = {} 
     if find_players == True:
-        all_players_in_games_dict = reader.read_all_players_in_games(all_player_season_logs_dict, player_teams, season_year) # go thru players in all_player_season_logs_dict to get game ids
+        all_players_in_games_dict = reader.read_all_players_in_games(all_player_season_logs_dict, player_teams)#, season_year) # go thru players in all_player_season_logs_dict to get game ids
 
 
     irreg_play_time = settings['irreg play time']
