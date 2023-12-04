@@ -414,6 +414,7 @@ def determine_prev_game_date(player_game_log, season_year):
 # season_year=0 so hard fail if no season given but then why not make required var?
 # bc default should assume current season? no bc if we are looking them up they are probably in current season and it is more likely they did not play past season
 def determine_played_season(player_url, player_name='', season_year=0, all_game_logs={}, player_game_logs={}):
+    print('\n===Determine if player ' + player_name + ' played season ' + str(season_year) + '===\n')
     played_season = False
 
     # all game logs too big as one var so consider replacing next version with player game logs
@@ -421,6 +422,7 @@ def determine_played_season(player_url, player_name='', season_year=0, all_game_
         print('player season game log found in ALL game logs')
         played_season = True
 
+    # if using separate player logs, 1 per player for all seasons they played
     elif str(season_year) in player_game_logs.keys():
         print('player season game log found in PLAYER game logs')
         played_season = True
@@ -1264,3 +1266,16 @@ def determine_player_game_location(player, game_teams, player_teams):
             break # found team in list games so go to next player
 
     return player_current_location
+
+# use current month to tell season yr
+def determine_current_season_year():
+    cur_season_yr = 0
+    cur_month = datetime.today().month
+    cur_yr = datetime.today().year
+    if cur_month < 10:
+        cur_season_yr = cur_yr
+    else:
+        cur_season_yr = cur_yr + 1
+
+    # prefer string bc used as key in dict
+    return str(cur_season_yr)

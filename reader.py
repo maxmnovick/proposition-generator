@@ -636,6 +636,8 @@ def read_web_data(url, timeout=10, max_retries=3):
 
 
 # get game log from espn.com
+# not using all game logs anymore bc too slow to store all game logs in 1 file and search whole file each time
+# instead use player game logs
 def read_player_season_log(player_name, season_year=2024, player_url='', player_id='', all_game_logs={}, todays_date=datetime.today().strftime('%m-%d-%y'), player_game_logs={}):
 	print('\n===Read Player Game Log: ' + player_name.title() + ', ' + str(season_year) + '===\n')
 
@@ -647,11 +649,13 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 	# all_game_logs = read_json(all_logs_filename)
 	#print('all_game_logs:\n' + str(all_game_logs))
 	try:
+		# if storing every players logs in 1 big file
 		if player_name in all_game_logs.keys() and str(season_year) in all_game_logs[player_name].keys():
 			
 			player_game_log_dict = all_game_logs[player_name][str(season_year)]
 			#print('local player_game_log_dict:\n' + str(player_game_log_dict))
 			print('found local game log for player ' + player_name + ' in ALL game logs')
+		# if storing 1 player's logs in a file
 		elif str(season_year) in player_game_logs.keys():
 			player_game_log_dict = player_game_logs[str(season_year)]
 			#print('local player_game_log_dict:\n' + str(player_game_log_dict))
@@ -809,19 +813,52 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 	return player_game_log_dict#player_game_log_df # can return this df directly or first arrange into list but seems simpler and more intuitive to keep df so we can access elements by keyword
 
 # here we decide default season year, so make input variable parameter
-def read_player_season_logs(player_name, read_x_seasons=1, player_espn_ids={}, season_year=2024, all_game_logs={}, todays_date=datetime.today().strftime('%m-%d-%y') ):
+def read_player_season_logs(player_name, read_x_seasons=1, player_espn_ids={}, season_year=2024, all_game_logs={}, todays_date=datetime.today().strftime('%m-%d-%y'), current_year_str=''):
 	print('\n===Read Player Season Logs: ' + player_name.title() + '===\n')
 
+	player_name = player_name.lower()
+
 	# see if saved season logs for player
-	player_game_logs_filename = 'data/game logs/' + player_name + ' game logs ' + todays_date + '.json'
-	print('player_game_logs_filename: ' + player_game_logs_filename)
-	print('Try to find local game logs for ' + player_name + '.')
-	init_player_game_logs = read_json(player_game_logs_filename)
+	# need to separate current season from prev seasons bc only cur seas changes
+	# get current season which changes after new game
+	#player_game_logs_filename = 'data/game logs/' + player_name + ' game logs ' + todays_date + '.json'
+	# always current yr bc no matter what yr of interest only current yr changes with each new game
+	if current_year_str == '':
+		current_year_str = determiner.determine_current_season_year() #str(datetime.today().year)
+	player_cur_season_log_filename = 'data/game logs/' + player_name + ' ' + current_year_str + ' game log ' + todays_date + '.json'
+	print('player_cur_season_log_filename: ' + player_cur_season_log_filename)
+	print('Try to find local CURRENT season game log for ' + player_name + '.')
+	# init_player_cur_season_log = {'PTS':[],...}
+	init_player_cur_season_log = read_json(player_cur_season_log_filename)
+	print('init_player_cur_season_log: ' + str(init_player_cur_season_log))
+	
+
+	# get prev seasons unchanged
+	# before only if it was matching todays date would it be filled
+	# but now prev logs is unchanged so it will be refilled if ever filled before
+	player_prev_logs_filename = 'data/game logs/' + player_name + ' prev logs.json'
+	print('player_prev_logs_filename: ' + player_prev_logs_filename)
+	print('Try to find local PREVIOUS seasons game logs for ' + player_name + '.')
+	# init_player_prev_logs = {'year':{'PTS':[],...},...}
+	init_player_prev_logs = read_json(player_prev_logs_filename)
+	print('init_player_prev_logs: ' + str(init_player_prev_logs))
+	# need to copy init game logs bc this run may not have all players but we dont want to remove other players
+	#player_prev_logs = copy.deepcopy(init_player_prev_logs) # season logs for a player
+
+	# combine cur log and prev logs into player game logs
+	#init_player_game_logs = copy.deepcopy(init_player_cur_season_log) # first add cur yr
+	# OR init new dict and set vals from old dict
+	init_player_game_logs = {}
+	if len(init_player_cur_season_log.keys()) > 0:
+		init_player_game_logs[current_year_str] = init_player_cur_season_log
+	for year, year_log in init_player_prev_logs.items():
+		init_player_game_logs[year] = year_log
 	#print('init_player_game_logs: ' + str(init_player_game_logs))
 	# need to copy init game logs bc this run may not have all players but we dont want to remove other players
+	# we must compare init to final logs to see if changed then write to file
+	# now player game logs could have prev logs but not cur yr log
 	player_game_logs = copy.deepcopy(init_player_game_logs) # season logs for a player
-
-	player_name = player_name.lower()
+	
 
 	#player_game_logs = []
 	player_season_logs = {}
@@ -875,11 +912,26 @@ def read_player_season_logs(player_name, read_x_seasons=1, player_espn_ids={}, s
 		# else:
 		# 	break
 
+
+	# divide player game logs into cur yr and prev yrs
+	cur_yr_game_log = {} #player_game_logs[current_year_str]
+	prev_yr_game_logs = {}
+	for year, year_log in player_game_logs.items():
+		if year == current_year_str:
+			cur_yr_game_log = year_log
+		else:
+			prev_yr_game_logs[year] = year_log
+
 	#print('init_player_game_logs: ' + str(init_player_game_logs))
 	#print('final_player_game_logs: ' + str(player_game_logs))
-	if not player_game_logs == init_player_game_logs:
-		print('player ' + player_name + ' game logs changed so write to file for player ' + player_name)
-		writer.write_json_to_file(player_game_logs, player_game_logs_filename, 'w')
+	if not cur_yr_game_log == init_player_cur_season_log:
+		print('player ' + player_name + ' CURRENT year game log changed so write to file for player ' + player_name)
+		writer.write_json_to_file(cur_yr_game_log, player_cur_season_log_filename, 'w')
+	#print('init_player_game_logs: ' + str(init_player_game_logs))
+	#print('final_player_game_logs: ' + str(player_game_logs))
+	if not prev_yr_game_logs == init_player_prev_logs:
+		print('player ' + player_name + ' PREVIOUS year game logs changed so write to file for player ' + player_name)
+		writer.write_json_to_file(prev_yr_game_logs, player_prev_logs_filename, 'w')
 
 	#print('player_season_logs: ' + str(player_season_logs))
 	return player_season_logs#player_game_logs
@@ -900,11 +952,14 @@ def read_all_players_season_logs(player_names, read_x_seasons=1, player_espn_ids
 	# print('init_all_game_logs: ' + str(init_all_game_logs))
 	# need to copy init game logs bc this run may not have all players but we dont want to remove other players
 	all_game_logs = {}#copy.deepcopy(init_all_game_logs)
+
+	# needed bc only current season changes and cur yr does not always equal cur season yr. depends on mth
+	cur_yr_str = determiner.determine_current_season_year()
 	
 
 	for player_name in player_names:
 		# {player:season:log}
-		players_season_logs = read_player_season_logs(player_name, read_x_seasons, player_espn_ids, season_year, all_game_logs)
+		players_season_logs = read_player_season_logs(player_name, read_x_seasons, player_espn_ids, season_year, all_game_logs, current_year_str=cur_yr_str)
 		all_players_season_logs[player_name] = players_season_logs
 
 		# if log is already in file no need to overwrite but the output will be the same as all game logs so it makes no difference
@@ -2665,3 +2720,12 @@ def read_stat_odds(stat_dict, all_players_odds={}):
 
 	print('odds: ' + odds)
 	return odds
+
+# read lineups from internet
+# https://www.rotowire.com/basketball/nba-lineups.php
+def read_all_lineups(players, player_teams):
+	print('\n===Read All Lineups===\n')
+
+	all_lineups = {}
+
+	return all_lineups

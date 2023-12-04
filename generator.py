@@ -2985,7 +2985,7 @@ def generate_all_stat_probs_dict(all_player_stat_probs, all_player_stat_dicts={}
 
     
 
-    print('all_stat_probs_dict: ' + str(all_stat_probs_dict))
+    #print('all_stat_probs_dict: ' + str(all_stat_probs_dict))
     return all_stat_probs_dict
 
 # flatten nested dicts into one level and list them
@@ -3631,18 +3631,25 @@ def generate_player_current_conditions(player, game_teams, player_teams, all_lin
     player_current_conditions['loc'] = determiner.determine_player_game_location(player, game_teams, player_teams)
     
     # condition: teammates and opps lineups
+    # https://www.rotowire.com/basketball/nba-lineups.php
     # get teammates and opps conds
-    player_team_lineup = all_lineups[player_teams[player]]
-    # determine opp team from game teams
-    opp_team = determiner.determine_opponent_team(player, game_teams, player_teams) #game_teams[opp_idx]
-    opponent_lineup = all_lineups[opp_team]
-    # dealing with the ppl we know are out is first and then figure out how to deal with uncertain players
-    player_current_conditions['starters'] = all_lineups
-    player_current_conditions['bench'] = all_lineups
-    player_current_conditions['out'] = all_lineups
-    player_current_conditions['unknown'] = all_lineups
-    player_current_conditions['opp players'] = all_lineups # different from 'opp' which is team
-
+    player_team = player_teams[player]
+    # player team should be in all lineups if playing today
+    if player_team in all_lineups.keys():
+        player_team_lineup = all_lineups[player_team]
+        # determine opp team from game teams
+        # opp_team = determiner.determine_opponent_team(player, game_teams, player_teams) #game_teams[opp_idx]
+        # opponent_lineup = all_lineups[opp_team]
+        # dealing with the ppl we know are out is first and then figure out how to deal with uncertain players
+        player_current_conditions['out'] = player_team_lineup['out']
+        # player_current_conditions['starters'] = all_lineups
+        # player_current_conditions['bench'] = all_lineups
+        # player_current_conditions['unknown'] = all_lineups
+        # player_current_conditions['opp players'] = all_lineups # different from 'opp' which is team
+        # player_current_conditions['num teammates out'] = all_lineups
+        # player_current_conditions['minutes to fill'] = all_lineups
+    else:
+        print('Warning: player team ' + player_team + ' not in all lineups!')
 
     print('player_current_conditions: ' + str(player_current_conditions))
     return player_current_conditions
@@ -3661,6 +3668,7 @@ def generate_all_current_conditions(players, game_teams, player_teams):
     # so use mean minutes from stat dict to see how much playing time needs to be distributed to teammates
     # if player listed as out how do we know if they would have been a starter?
     # could get mean minutes played to see play time which might be better than knowing if starter
+    # also see which position is out and needs to be filled
     # all_teammates_out = {game:{team:{out:[],gtd:[]}
     all_teammates_out = {}
     all_starters = {}
@@ -3994,33 +4002,53 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
     # 6. see if any invalid single bets (only 1 good option for that game)
     # 7. replace invalid bets with next best valid ev
     
+    prop_tables = [available_prop_dicts]
+    sheet_names = ['All']
+
     # 1. iso tru prob >= 90
     # define high prob eg >=90
     # we use isolator for strictly isolating parts of existing data when there is no processing or computation between input output
     high_prob_props = isolator.isolate_high_prob_props(available_prop_dicts)
-    
+    prop_tables.append(high_prob_props)
+    sheet_names.append('High Prob')
     # sort all high prob props by ev so we can potentially see 0 and -ev options incorrectly calculated due to irregular circumstance
     # sort_keys = ['ev']
     # sorted_high_props_by_ev = sorter.sort_dicts_by_keys(plus_ev_props, sort_keys)
 
+    # strategy 1 props
+    s1_props = high_prob_props
+
     # 2. iso +ev
-    plus_ev_props = isolator.isolate_plus_ev_props(high_prob_props)
+    if 'ev' in high_prob_props[0].keys():
+        plus_ev_props = isolator.isolate_plus_ev_props(high_prob_props)
+        
+        # 3. out of remaining options, sort by ev
+        sort_keys = ['ev']
+        plus_ev_props = sorter.sort_dicts_by_keys(plus_ev_props, sort_keys)
+        prop_tables.append(plus_ev_props)
+        sheet_names.append('+EV')
+
+        # 4. iso top x remaining options
+        dk_max_allowed = 20
+        fd_max_allowed = 25
+        # ideal max depends on cumulative ev
+        top_options = plus_ev_props[0:dk_max_allowed]
+        print('top_options: ' + str(top_options))
+
+        # 5. sort by game and team and stat
+        sort_keys = ['game', 'team', 'stat']
+        top_options = sorter.sort_dicts_by_str_keys(top_options, sort_keys)
+        #writer.list_dicts(top_options, desired_order)
+        prop_tables.append(top_options)
+        sheet_names.append('Top')
+
+        s1_props = top_options
+
+        prop_tables = prop_tables.reverse() #[top_options, plus_ev_props, high_prob_props, available_prop_dicts]
+        sheet_names = sheet_names.reverse() #['Top', '+EV', 'High Prob', 'All'] #, 'Rare' # rare shows those where prev val is anomalous so unlikely to repeat anomaly (eg player falls in bottom 10% game)
     
-    # 3. out of remaining options, sort by ev
-    sort_keys = ['ev']
-    plus_ev_props = sorter.sort_dicts_by_keys(plus_ev_props, sort_keys)
 
-    # 4. iso top x remaining options
-    dk_max_allowed = 20
-    fd_max_allowed = 25
-    # ideal max depends on cumulative ev
-    top_options = plus_ev_props[0:dk_max_allowed]
-    print('top_options: ' + str(top_options))
-
-    # 5. sort by game and team and stat
-    sort_keys = ['game', 'team', 'stat']
-    top_options = sorter.sort_dicts_by_str_keys(top_options, sort_keys)
-    writer.list_dicts(top_options, desired_order)
+    #writer.list_dicts(s1_props, desired_order)
 
     # strategy 2: highest +ev
     # strategy 3: highest prob
@@ -4030,8 +4058,6 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
     # todo: make fcn to classify recently broken streaks bc that recent game may be anomaly and they may revert back to streak
     # todo: to fully predict current player stats, must predict teammate and opponent stats and prioritize and align with totals
     
-    prop_tables = [top_options, plus_ev_props, high_prob_props, available_prop_dicts]
-    sheet_names = ['Top', '+EV', 'High Prob', 'All'] #, 'Rare' # rare shows those where prev val is anomalous so unlikely to repeat anomaly (eg player falls in bottom 10% game)
     writer.write_prop_tables(prop_tables, sheet_names, desired_order)
     
     #print('player_outcomes: ' + str(player_outcomes))
