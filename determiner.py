@@ -1168,6 +1168,22 @@ def determine_sample_size(player_stat_dict, cur_conds):
     #print('sample_size: ' + str(sample_size))
     return sample_size
 
+def determine_probs_sample_size(player_stat_probs_dict, cur_conds):
+    sample_size = 0
+    
+    condition = cur_conds['condition']
+    year = cur_conds['year']
+    part = cur_conds['part']
+
+    if year in player_stat_probs_dict.keys() and part in player_stat_probs_dict[year].keys() and condition in list(player_stat_probs_dict[year][part].values())[0].keys():
+        # stat_dict = list(player_stat_dict[year][part].values())[0][condition]
+        # sample_size = len(stat_dict.keys())
+
+        prob = list(player_stat_probs_dict[year][part].values())[0][condition] # x/y
+        sample_size = re.split('/', prob)[1] # y
+
+    return sample_size
+
 # all yrs for single condition
 # player_stat_dict: {2023: {'regular': {'pts': {'all': {0: 18, 1: 19...
 def determine_condition_sample_size(player_stat_dict, condition, part, season_years):

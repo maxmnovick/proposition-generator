@@ -22,7 +22,7 @@ irreg_play_time = {'craig porter': 25, 'reggie jackson': 35}
 
 # settings
 find_matchups = False
-find_players = True # if true, read all players in game box scores to see prob with teammates out
+find_players = False # if true, read all players in game box scores to see prob with teammates out
 # read new teams after trades and acquisitions new players
 read_new_teams = False
 # read all seasons to compare and see trend
@@ -32,18 +32,22 @@ read_season_year = 2024 # user can choose year. read x seasons previous
 read_new_odds = True 
 # set false to save time if observing all probs
 # make list of sources with different odds 
-read_odds = False 
+read_odds = False # set false to test other features
+# keep in mind, when we add a new feature such as a new condition to the stat dict,
+# then we must manually erase old saved stat dict OR make setting to overwrite it
+# or else we would need to read from internet every time anyway which defeats the purpose of storing locally
+read_new_stats = False # set true when we add new feature to stats dict so we want to manually overwrite old dict rather than usual behavior of trusting prev stat dicts
 settings = {'find matchups': find_matchups, 'find players': find_players, 'read new teams': read_new_teams, 'read x seasons': read_x_seasons, 'read season year': read_season_year, 'read new odds': read_new_odds, 'read odds': read_odds, 'irreg play time': irreg_play_time}
 
 
 # gen list of player names given teams so we dont have to type all names
 # if no date given, and if past 10pm then assume getting data for next day
 # https://www.espn.com/nba/schedule
-game_teams = [('bos','ind')]#, ('nop','sac')]#, ('nop','lac')]
+game_teams = [('nop','sac')]#, ('nop','lac')]
 # we can make read new teams var false at first bc the file has not been created yet so we will write for the first time
 # we make it true to read new teams after trades, which tells it to overwrite existing file or make a new file with the date in the title
 #players_names = reader.read_teams_players(game_teams, read_new_teams) #generator.generate_players_names(teams) # generate is wrong term bc we are not computing anything only reading players on each team
-players_names = ['jayson tatum'] # use for testing
+players_names = ['zion williamson'] # use for testing
 
 
 

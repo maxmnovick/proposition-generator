@@ -339,7 +339,7 @@ def read_game_box_scores(game_key, game_id='', game_url='', existing_game_ids_di
 	game_box_scores_dict = {} # {away:df, home:df}
 
 	# try to read local box scores
-	if game_id in existing_game_ids_dict.keys():
+	#if game_id in existing_game_ids_dict.keys():
 
 	# get espn player id from google so we can get url
 	if game_url == '':
@@ -357,10 +357,12 @@ def read_game_box_scores(game_key, game_id='', game_url='', existing_game_ids_di
 
 	len_html_results = len(html_results) # each element is a dataframe/table so we loop thru each table
 
-	game_data = game_key.split()
-	away_team = game_data[0]
-	home_team = game_data[1]
+	# game_data = game_key.split()
+	# away_team = game_data[0]
+	# home_team = game_data[1]
 
+	# order is always away-home for this espn page ref
+	#team_locs = ['away','home']
 	team_loc = 'away'
 
 	for order in range(len_html_results):
@@ -817,6 +819,38 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 	#print('player_game_log_dict: ' + str(player_game_log_dict))
 	return player_game_log_dict#player_game_log_df # can return this df directly or first arrange into list but seems simpler and more intuitive to keep df so we can access elements by keyword
 
+# in this format 1 file has current year and other file has prev yrs
+def read_json_multiple_files(files):
+
+	final_dict = {} 
+
+	for file in files:
+		print('file: ' + file)
+		init_stat_dict = read_json(file)
+
+		for key, val in init_stat_dict.items():
+			final_dict[key] = val
+
+	return final_dict
+
+# cur vals get updated each day
+# prev vals are perm
+def read_cur_and_prev_json(cur_file,prev_file,current_year_str=''):
+	cur_and_prev = {}
+
+	cur_dict = read_json(cur_file)
+	prev_dict = read_json(prev_file)
+
+	if current_year_str == '':
+		current_year_str = determiner.determine_current_season_year()
+
+	if len(cur_dict.keys()) > 0:
+		cur_and_prev[current_year_str] = cur_dict
+	for year, year_log in prev_dict.items():
+		cur_and_prev[year] = year_log
+
+	return cur_and_prev
+
 # here we decide default season year, so make input variable parameter
 def read_player_season_logs(player_name, read_x_seasons=1, player_espn_ids={}, season_year=2024, all_game_logs={}, todays_date=datetime.today().strftime('%m-%d-%y'), current_year_str=''):
 	print('\n===Read Player Season Logs: ' + player_name.title() + '===\n')
@@ -831,37 +865,38 @@ def read_player_season_logs(player_name, read_x_seasons=1, player_espn_ids={}, s
 	if current_year_str == '':
 		current_year_str = determiner.determine_current_season_year() #str(datetime.today().year)
 	player_cur_season_log_filename = 'data/game logs/' + player_name + ' ' + current_year_str + ' game log ' + todays_date + '.json'
-	print('player_cur_season_log_filename: ' + player_cur_season_log_filename)
-	print('Try to find local CURRENT season game log for ' + player_name + '.')
-	# init_player_cur_season_log = {'PTS':[],...}
-	init_player_cur_season_log = read_json(player_cur_season_log_filename)
-	print('init_player_cur_season_log: ' + str(init_player_cur_season_log))
+	#print('player_cur_season_log_filename: ' + player_cur_season_log_filename)
+	# print('Try to find local CURRENT season game log for ' + player_name + '.')
+	# # init_player_cur_season_log = {'PTS':[],...}
+	# init_player_cur_season_log = read_json(player_cur_season_log_filename)
+	#print('init_player_cur_season_log: ' + str(init_player_cur_season_log))
 	
 
 	# get prev seasons unchanged
 	# before only if it was matching todays date would it be filled
 	# but now prev logs is unchanged so it will be refilled if ever filled before
 	player_prev_logs_filename = 'data/game logs/' + player_name + ' prev logs.json'
-	print('player_prev_logs_filename: ' + player_prev_logs_filename)
-	print('Try to find local PREVIOUS seasons game logs for ' + player_name + '.')
-	# init_player_prev_logs = {'year':{'PTS':[],...},...}
-	init_player_prev_logs = read_json(player_prev_logs_filename)
-	print('init_player_prev_logs: ' + str(init_player_prev_logs))
+	#print('player_prev_logs_filename: ' + player_prev_logs_filename)
+	# print('Try to find local PREVIOUS seasons game logs for ' + player_name + '.')
+	# # init_player_prev_logs = {'year':{'PTS':[],...},...}
+	# init_player_prev_logs = read_json(player_prev_logs_filename)
+	#print('init_player_prev_logs: ' + str(init_player_prev_logs))
 	# need to copy init game logs bc this run may not have all players but we dont want to remove other players
 	#player_prev_logs = copy.deepcopy(init_player_prev_logs) # season logs for a player
 
 	# combine cur log and prev logs into player game logs
 	#init_player_game_logs = copy.deepcopy(init_player_cur_season_log) # first add cur yr
 	# OR init new dict and set vals from old dict
-	init_player_game_logs = {}
-	if len(init_player_cur_season_log.keys()) > 0:
-		init_player_game_logs[current_year_str] = init_player_cur_season_log
-	for year, year_log in init_player_prev_logs.items():
-		init_player_game_logs[year] = year_log
+	# init_player_game_logs = {}
+	# if len(init_player_cur_season_log.keys()) > 0:
+	# 	init_player_game_logs[current_year_str] = init_player_cur_season_log
+	# for year, year_log in init_player_prev_logs.items():
+	# 	init_player_game_logs[year] = year_log
 	#print('init_player_game_logs: ' + str(init_player_game_logs))
 	# need to copy init game logs bc this run may not have all players but we dont want to remove other players
 	# we must compare init to final logs to see if changed then write to file
 	# now player game logs could have prev logs but not cur yr log
+	init_player_game_logs = read_cur_and_prev_json(player_cur_season_log_filename,player_prev_logs_filename)
 	player_game_logs = copy.deepcopy(init_player_game_logs) # season logs for a player
 	
 
@@ -917,26 +952,27 @@ def read_player_season_logs(player_name, read_x_seasons=1, player_espn_ids={}, s
 		# else:
 		# 	break
 
-
+	writer.write_cur_and_prev(init_player_game_logs, player_game_logs, player_cur_season_log_filename, player_prev_logs_filename, player_name)
 	# divide player game logs into cur yr and prev yrs
-	cur_yr_game_log = {} #player_game_logs[current_year_str]
-	prev_yr_game_logs = {}
-	for year, year_log in player_game_logs.items():
-		if year == current_year_str:
-			cur_yr_game_log = year_log
-		else:
-			prev_yr_game_logs[year] = year_log
+	# cur_yr_game_log = {} #player_game_logs[current_year_str]
+	# prev_yr_game_logs = {}
+	# for year, year_log in player_game_logs.items():
+	# 	if year == current_year_str:
+	# 		cur_yr_game_log = year_log
+	# 	else:
+	# 		prev_yr_game_logs[year] = year_log
 
-	#print('init_player_game_logs: ' + str(init_player_game_logs))
-	#print('final_player_game_logs: ' + str(player_game_logs))
-	if not cur_yr_game_log == init_player_cur_season_log:
-		print('player ' + player_name + ' CURRENT year game log changed so write to file for player ' + player_name)
-		writer.write_json_to_file(cur_yr_game_log, player_cur_season_log_filename, 'w')
-	#print('init_player_game_logs: ' + str(init_player_game_logs))
-	#print('final_player_game_logs: ' + str(player_game_logs))
-	if not prev_yr_game_logs == init_player_prev_logs:
-		print('player ' + player_name + ' PREVIOUS year game logs changed so write to file for player ' + player_name)
-		writer.write_json_to_file(prev_yr_game_logs, player_prev_logs_filename, 'w')
+	# #print('init_player_game_logs: ' + str(init_player_game_logs))
+	# #print('final_player_game_logs: ' + str(player_game_logs))
+	# #init_player_cur_season_log = init_player_game_logs
+	# if not cur_yr_game_log == init_player_cur_season_log:
+	# 	print('player ' + player_name + ' CURRENT year game log changed so write to file for player ' + player_name)
+	# 	writer.write_json_to_file(cur_yr_game_log, player_cur_season_log_filename, 'w')
+	# #print('init_player_game_logs: ' + str(init_player_game_logs))
+	# #print('final_player_game_logs: ' + str(player_game_logs))
+	# if not prev_yr_game_logs == init_player_prev_logs:
+	# 	print('player ' + player_name + ' PREVIOUS year game logs changed so write to file for player ' + player_name)
+	# 	writer.write_json_to_file(prev_yr_game_logs, player_prev_logs_filename, 'w')
 
 	#print('player_season_logs: ' + str(player_season_logs))
 	return player_season_logs#player_game_logs
@@ -2179,11 +2215,11 @@ def read_game_key(game_idx, player_reg_season_log, season_year, team_abbrev):
 
 	init_game_date_string = player_reg_season_log.loc[game_idx, 'Date'].lower().split()[1] # 'wed 2/15'[1]='2/15'
 	game_mth = init_game_date_string.split('/')[0]
-	final_season_year = str(season_year)
+	final_season_year = season_year
 	if int(game_mth) > 9:
-		final_season_year = str(season_year - 1)
+		final_season_year = str(int(season_year) - 1)
 		
-	date_str = player_reg_season_log.loc[game_idx, 'Date'] + '/' + str(final_season_year) # dow m/d/y
+	date_str = player_reg_season_log.loc[game_idx, 'Date'] + '/' + final_season_year # dow m/d/y
 	date_data = date_str.split()
 	date = date_data[1] # m/d/y
 	print('date: ' + date)
@@ -2230,11 +2266,9 @@ def read_all_players_in_games(all_player_season_logs_dict, player_teams):#, seas
 	# 'all' would mean all box scores of interest, which for now only concerns players of interest (later could import all for comparison)
 	# existing_box_scores_dict = {'game key':{away:[],home:[]},...}
 	existing_box_scores_dict = {}
-	box_score_filename = 'data/box scores/' + game_key + ' box score.json'
-	print('box_score_filename: ' + box_score_filename)
-	print('Try to find local box score for ' + game_key + '.')
-	box_score = read_json(box_score_filename)
-	print('box_score: ' + str(box_score))
+	# 1230 games per yr so better to keep in file than 1000 files
+	# OR could have player box scores saved after processing raw box score, so 1 file per player
+	
 
 	for player_name, player_season_logs in all_player_season_logs_dict.items():
 
@@ -2243,6 +2277,16 @@ def read_all_players_in_games(all_player_season_logs_dict, player_teams):#, seas
 		team_abbrev = player_teams[player_name]
 		
 		print('team_abbrev: ' + team_abbrev)
+
+
+		# BEFORE saving box scores for prev seasons consider saving relevant probs instead
+		# we also need to know the number of samples, not just the computed prob
+		# sample size comes from player stat dict so we could save prev season stat dicts locally
+		# player_box_scores_filename = 'data/box scores/' + player_name + ' box scores.json'
+		# print('player_box_scores_filename: ' + player_box_scores_filename)
+		# print('Try to find local box score for ' + game_key + '.')
+		# box_score = read_json(player_box_scores_filename)
+		# print('box_score: ' + str(box_score))
 
 	
 		for season_year, player_season_log in player_season_logs.items():

@@ -951,6 +951,7 @@ def write_all_player_stat_probs(all_player_stat_probs):
 # AND write 1 sheet for each strategy
 def write_prop_tables(prop_dicts, sheet_names, desired_order):
     print('\n===Write Prop Tables===\n')
+    print('prop_dicts: ' + str(prop_dicts))
 
     # book name = prop tables
     book_name = 'data/prop tables.xlsx'
@@ -968,3 +969,39 @@ def write_prop_tables(prop_dicts, sheet_names, desired_order):
 
 
     writer.close()
+
+def write_cur_and_prev(init_dict, final_dict, cur_file, prev_file, player_name=''):
+    # take first year as cur yr
+    init_cur_dict = {} #list(init_dict.values)[0]
+    init_prev_dict = {}
+    final_cur_dict = {} #list(final_dict.values)[0]
+    final_prev_dict = {}
+    
+    year_idx = 0
+    for year, year_dict in init_dict.items():
+        
+        if year_idx == 0:
+            init_cur_dict = year_dict
+
+        else:
+            init_prev_dict[year] = year_dict
+
+        year_idx += 1
+
+    year_idx = 0
+    for year, year_dict in final_dict.items():
+        
+        if year_idx == 0:
+            final_cur_dict = year_dict
+
+        else:
+            final_prev_dict[year] = year_dict
+
+        year_idx += 1
+
+    if not init_cur_dict == final_cur_dict:
+        print(player_name + ' CURRENT year data changed so write to file')
+        write_json_to_file(final_cur_dict, cur_file, 'w')
+    if not init_prev_dict == final_prev_dict:
+        print(player_name + ' PREVIOUS year data changed so write to file')
+        write_json_to_file(final_prev_dict, prev_file, 'w')
