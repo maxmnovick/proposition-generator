@@ -29,6 +29,8 @@ from datetime import datetime # get current year so we can get current teams
 
 import copy # deepcopy game logs json so we can add to it before writing to file without losing data
 
+import random # random user agents to avoid being blocked for too many requests
+
 # get data from a file and format into a list (same as generator version of this fcn but more general)
 # input such as Game Data - All Games
 # or Game Log - All Players
@@ -88,13 +90,25 @@ def read_website(url, timeout=10, max_retries=3):
 
 	retries = 0
 
+	# these user agents cause misreading page?
+	user_agents = [
+		'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
+		'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
+		'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
+		'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
+		'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
+		'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15'
+		'Mozilla/5.0 (Macintosh; Intel Mac OS X 13_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15'
+	]
+
 	while retries < max_retries:
 		try:
 			#make the request
-			req = Request(url, headers={
-				'User-Agent': 'Mozilla/5.0',
-			})
-			page = urlopen(req, timeout=timeout)
+			headers = {'User-Agent': 'Mozilla/5.0'}
+			#headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'}
+			#headers = {'User-Agent': random.choice(user_agents)}
+			req = Request(url, headers=headers)
+			page = urlopen(req, timeout=timeout) # response
 
 			#data = page.read()
 
@@ -105,24 +119,25 @@ def read_website(url, timeout=10, max_retries=3):
 			return soup
 
 		except URLError as e:
+
 			if isinstance(e.reason, TimeoutError):
 				# If a timeout occurs, wait for 10 seconds and then retry\
 				retries += 1
-				print(f"Timeout error occurred. Retrying {retries}/{max_retries}...")
+				print(f"Timeout error occurred. Retrying {retries}/{max_retries}...", e, e.getheaders(), e.gettext(), e.getcode())
 				time.sleep(10)
 				
 			else:
                 # If the error is different than a timeout, raise it
 				#raise
 				retries += 1
-				print(f"URLError error occurred. Retrying {retries}/{max_retries}...")
+				print(f"URLError error occurred. Retrying {retries}/{max_retries}...", e, e.getheaders(), e.gettext(), e.getcode())
 				time.sleep(10)
 			
 		except Exception as e:
             # If any other exception occurs, raise it
 			#raise
 			retries += 1
-			print(f"Exception error occurred. Retrying {retries}/{max_retries}...")
+			print(f"Exception error occurred. Retrying {retries}/{max_retries}...", e, e.getheaders(), e.gettext(), e.getcode())
 			time.sleep(10)
 		except:
 			print(f"server not found?")
@@ -148,6 +163,7 @@ def read_game_espn_id(game_key, existing_game_ids_dict={}):
 	# print('search_key: ' + search_key)
 
 	if game_key in existing_game_ids_dict.keys():
+		print('found game key saved')
 		espn_id = existing_game_ids_dict[game_key]
 
 	else:
@@ -162,6 +178,8 @@ def read_game_espn_id(game_key, existing_game_ids_dict={}):
 
 		soup = read_website(site, timeout=10, max_retries=3)
 
+		time.sleep(1) # do we need to sleep bt calls to google to avoid being blocked by error 429 too many requests
+
 			# req = Request(site, headers={
 			# 	'User-Agent': 'Mozilla/5.0',
 			# })
@@ -170,15 +188,22 @@ def read_game_espn_id(game_key, existing_game_ids_dict={}):
 
 			# soup = BeautifulSoup(page, features="lxml")
 		if soup is not None:
+			#print('soup: ' + str(soup))
 			links_with_text = [] # id is in first link with text
 
 			for a in soup.find_all('a', href=True):
+				print('a.text: ' + str(a.text))
+				print('a[href]: ' + str(a['href']))
 				if a.text and a['href'].startswith('/url?'):
 					links_with_text.append(a['href'])
 
+			print('links_with_text: ' + str(links_with_text))
+
 			links_with_id_text = [x for x in links_with_text if 'gameId/' in x]
+			print('links_with_id_text: ' + str(links_with_id_text))
 
 			espn_id_link = links_with_id_text[0] # string starting with player id
+			print('espn_id_link: ' + str(espn_id_link))
 
 			espn_id = re.findall(r'\d+', espn_id_link)[0]
 
@@ -296,51 +321,69 @@ def read_all_player_espn_ids(player_names, player_of_interest=''):
 	return espn_ids_dict
 
 
-# all_players_in_games_dict = {game:{away:[],home:[]}}
+# all_players_in_games_dict = {game:{away:{starters:[],bench:[]},home:{starters:[],bench:[]}}
 # we will convert away home to teammates opponents given current player of interest
+# game_box_scores_dict = {away:df, home:df}
 def read_players_in_box_score(game_box_scores_dict):
 	print("\n===Read Players in Box Score===\n")
 
-	players_in_box_score_dict = {'away':[],'home':[]}
+	players_in_box_score_dict = {'away':{'starters':[],'bench':[]},'home':{'starters':[],'bench':[]}}
 
 	#team_idx = 0
-	for loc, players in players_in_box_score_dict.items():
+	for loc, players_dict in players_in_box_score_dict.items():
+		print('\nloc:' + str(loc))
+		print('players_dict:' + str(players_dict))
 		team_box_score = game_box_scores_dict[loc]
-		print('team_box_score:\n' + str(team_box_score))
+		print('team_box_score:' + str(team_box_score))
 		#home_team_box_score = game_box_scores[1]
 
 		players = team_box_score[0].drop(0).to_list()
-		print('players:\n' + str(players))
+		print('players:' + str(players))
 
-		players_in_box_score_dict[loc] = players
+		# split list into starters and bench
+		bench_idx = 5 # bc always 5 starters
+		starters = players[:bench_idx]
+		bench = players[bench_idx+1:]
+
+		team_part = 'starters'
+		players_dict[team_part] = starters
+		team_part = 'bench'
+		players_dict[team_part] = bench
 
 
 
 		#team_idx += 1
 
-
+	# players_in_box_score_dict = {away:{starters:[],bench:[]},home:{starters:[],bench:[]}}
 	print('players_in_box_score_dict: ' + str(players_in_box_score_dict))
 	return players_in_box_score_dict
 
 
 # get game box scores from espn.com
 # 1 box score per team
-def read_game_box_scores(game_key, game_id='', game_url='', existing_game_ids_dict={}):
+# game_box_scores_dict = {away:df, home:df}
+# currently returns empty dict if results already saved
+# already checked that it is current yr or unsaved prev yr before running this fcn
+# year idx saves time so we dont have to check if game key in dict
+# also game ids saves time bc faster list
+# BUT cur yr box scores is only cur yr so which is actually faster???
+# both are actually search as dicts so level 1 is shorter in cur yr box scores dict
+# if year_idx == 0 and game_key in init_cur_yr_game_players_dict.keys(): #game_id in existing_game_ids_dict.keys(): 
+# bc only run for unsaved games
+def read_game_box_scores(game_key, game_id='', existing_game_ids_dict={}, init_cur_yr_game_players_dict={}, game_url=''):
 	print("\n===Read Game Box Scores: " + game_key.upper() + "===\n")
 
 	# display player game box scores in readable format
 	pd.set_option('display.max_columns', None)
 
-	
-
-
-	game_box_scores = [] # players, stats for away team and home team
+	#game_box_scores = [] # players, stats for away team and home team
 
 	game_box_scores_dict = {} # {away:df, home:df}
 
 	# try to read local box scores
 	#if game_id in existing_game_ids_dict.keys():
-
+	
+	
 	# get espn player id from google so we can get url
 	if game_url == '':
 		if game_id == '':
@@ -441,12 +484,14 @@ def read_game_box_scores(game_key, game_id='', game_url='', existing_game_ids_di
 			else:
 				print('Warning: player_box_score_df final_idx ' + str(final_idx) + ' = 0!')
 
+			# remove unwanted rows/columns
 			# if no dnp then remove lines after 'team'
 			player_box_score_df = player_box_score_df.dropna(axis=1)
 			print('player_box_score_df:\n' + str(player_box_score_df))
 
-			player_box_score_df = player_box_score_df.drop(player_box_score_df.index[6]).reset_index()
-			print('player_box_score_df:\n' + str(player_box_score_df))
+			# remove bench row? no bc we want to separate
+			# player_box_score_df = player_box_score_df.drop(player_box_score_df.index[6]).reset_index()
+			# print('player_box_score_df:\n' + str(player_box_score_df))
 
 			player_box_score_df['Game'] = game_key
 			print('player_box_score_df:\n' + str(player_box_score_df))
@@ -483,7 +528,7 @@ def read_game_box_scores(game_key, game_id='', game_url='', existing_game_ids_di
 			# init_player_column = html_result_df.loc['starters']
 			# print('init_player_column: ' + str(init_player_column))
 
-			# final format
+			# old: final format
 			# 1       B. Ingram SF
 			# 2        H. Jones SF
 			# 3   J. Valanciunas C
@@ -498,21 +543,15 @@ def read_game_box_scores(game_key, game_id='', game_url='', existing_game_ids_di
 			# 13        J. Hayes C
 			# 14   K. Lewis Jr. PG
 			# 15      D. Seabron G
+			# new final format keeps starters and bench separate
 
-
-
-			game_box_scores.append(player_box_score_df)
-
-
+			#game_box_scores.append(player_box_score_df)
 			game_box_scores_dict[team_loc] = player_box_score_df
 			#print("game_box_scores_dict: " + str(game_box_scores_dict))
-
 
 			team_loc = 'home' # order is always away-home for this espn page ref
 
 
-
-			
 
 
 	# 	if len(html_result_df.columns.tolist()) == 15:
@@ -583,6 +622,7 @@ def read_game_box_scores(game_key, game_id='', game_url='', existing_game_ids_di
 	# 	pass
 
 	
+	# game_box_scores_dict = {away:df, home:df}
 	print("game_box_scores_dict: " + str(game_box_scores_dict))
 	return game_box_scores_dict # can return this df directly or first arrange into list but seems simpler and more intuitive to keep df so we can access elements by keyword
 
@@ -592,6 +632,16 @@ def read_web_data(url, timeout=10, max_retries=3):
 	# display tables in readable format
 	pd.set_option('display.max_columns', None)
 
+	user_agents = [
+		'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
+		'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'
+		'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
+		'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
+		'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
+		'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15'
+		'Mozilla/5.0 (Macintosh; Intel Mac OS X 13_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15'
+	]
+
 	retries = 0
 	while retries < max_retries:
 		try:
@@ -599,7 +649,7 @@ def read_web_data(url, timeout=10, max_retries=3):
 			#response.raise_for_status()  # Will raise an HTTPError if the HTTP request returned an unsuccessful status code
 
 			#list_of_dataframes = pd.read_html(url)
-			headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+			headers = {'User-Agent': random.choice(user_agents)}#'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
 			r = requests.get(url, headers=headers, timeout=timeout)
 			#r.raise_for_status(headers=headers)
 			#print('r: ' + str(r))
@@ -2211,20 +2261,20 @@ def extract_dict_from_data(data_type):
 	return existing_game_ids_dict
 
 # assemble components of game key into string for search
-def read_game_key(game_idx, player_reg_season_log, season_year, team_abbrev):
+def read_game_key(game_idx, player_reg_season_log, season_year, team_abbrev, row):
 
-	init_game_date_string = player_reg_season_log.loc[game_idx, 'Date'].lower().split()[1] # 'wed 2/15'[1]='2/15'
+	init_game_date_string = row['Date'].lower().split()[1]#player_reg_season_log.loc[game_idx, 'Date'].lower().split()[1] # 'wed 2/15'[1]='2/15'
 	game_mth = init_game_date_string.split('/')[0]
 	final_season_year = season_year
 	if int(game_mth) > 9:
 		final_season_year = str(int(season_year) - 1)
 		
-	date_str = player_reg_season_log.loc[game_idx, 'Date'] + '/' + final_season_year # dow m/d/y
+	date_str = row['Date'] + '/' + final_season_year #player_reg_season_log.loc[game_idx, 'Date'] + '/' + final_season_year # dow m/d/y
 	date_data = date_str.split()
 	date = date_data[1] # m/d/y
 	print('date: ' + date)
 
-	opp_str = player_reg_season_log.loc[game_idx, 'OPP']
+	opp_str = row['OPP']#player_reg_season_log.loc[game_idx, 'OPP']
 	opp_abbrev = read_team_abbrev(opp_str) #re.sub('@|vs','',opp_str)
 
 	# irregular_abbrevs = {'no':'nop', 'ny':'nyk', 'sa': 'sas', 'gs':'gsw' } # for these match the first 3 letters of team name instead
@@ -2243,15 +2293,23 @@ def read_game_key(game_idx, player_reg_season_log, season_year, team_abbrev):
 		
 	game_key = away_abbrev + ' ' + home_abbrev + ' ' + date
 	print('game_key: ' + game_key)
+	return game_key
 
 # find teammates and opponents for each game played by each player
 # all_players_in_games_dict = {player:{game:{teammates:[],opponents:[]}}}
-def read_all_players_in_games(all_player_season_logs_dict, player_teams):#, season_year=2024):
+# OR
+# all_players_in_games_dict = {game:{away:{starters:[],bench:[]},home:starters:[],bench:[]}}
+# use init_player_stat_dict to see saved stats
+def read_all_players_in_games(all_player_season_logs_dict, player_teams, cur_yr, init_player_stat_dicts={}):#, season_year=2024):
 	
 	print('\n===Read All Players in Games===\n')
 	
 	all_players_in_games_dict = {} # {player:{game:{teammates:[],opponents:[]}}}
 	
+	filepath = 'data/' + cur_yr + ' box scores.json'
+	init_cur_yr_game_players_dict = read_json(filepath)
+	print('init_cur_yr_game_players_dict: ' + str(init_cur_yr_game_players_dict))
+
 	#season_year = 2023
 
 	# game id in url
@@ -2271,13 +2329,13 @@ def read_all_players_in_games(all_player_season_logs_dict, player_teams):#, seas
 	
 
 	for player_name, player_season_logs in all_player_season_logs_dict.items():
-
 		print('player_name: ' + player_name)
 		
 		team_abbrev = player_teams[player_name]
-		
 		print('team_abbrev: ' + team_abbrev)
 
+		init_player_stat_dict = init_player_stat_dicts[player_name]
+		print('init_player_stat_dict: ' + str(init_player_stat_dict))
 
 		# BEFORE saving box scores for prev seasons consider saving relevant probs instead
 		# we also need to know the number of samples, not just the computed prob
@@ -2288,46 +2346,76 @@ def read_all_players_in_games(all_player_season_logs_dict, player_teams):#, seas
 		# box_score = read_json(player_box_scores_filename)
 		# print('box_score: ' + str(box_score))
 
-	
+		#init_player_stat_dict = read_cur_and_prev_json(player_cur_stat_dict_filename,player_prev_stat_dicts_filename)
+
+		#year_idx = 0 # 1st yr is cur yr which we treat different than prev yrs bc it changes with each new game
 		for season_year, player_season_log in player_season_logs.items():
+			print('season_year: ' + season_year)
+			# if prev season yr already saved then no need to get box scores
+			# bc only used to make stat dict
+			# if cur season yr then read saved local box scores and new box scores from internet
+			# always run for cur yr but only run for unsaved prev yr
+			# bc we need to update cur yr each game
+			if season_year == cur_yr or season_year not in init_player_stat_dict.keys():
+				# read box scores
 
-			player_season_log_df = pd.DataFrame(player_season_log)
-			
-			player_reg_season_log = determiner.determine_regular_season_games(player_season_log_df)
-			
-			#players_in_game = [] # unordered list of all players in game independent of team
-			#players_in_game_dict = {} # {teammates:[],opponents:[]}
-			
-			for game_idx, row in player_reg_season_log.iterrows():
+				# for each reg season game
+				player_season_log_df = pd.DataFrame(player_season_log)
+				player_reg_season_log = determiner.determine_regular_season_games(player_season_log_df)
 				
-				print('\n===Game ' + str(game_idx) + '===')
-                # season year-1 for first half of season oct-dec bc we say season year is end of season
+				#players_in_game = [] # unordered list of all players in game independent of team
+				#players_in_game_dict = {} # {teammates:[],opponents:[]}
 				
-				game_key = read_game_key(game_idx, player_reg_season_log, season_year, team_abbrev)
-		
-				# if we have not yet added this game to the dict
-				# then get game box score players
-				if not game_key in all_players_in_games_dict.keys():
-                
-					game_espn_id = read_game_espn_id(game_key, existing_game_ids_dict)
-
-
-					# get the game box score page using the game id
-					# get the box score from the page in a df
-					game_box_scores_dict = read_game_box_scores(game_key, game_espn_id)
-
-
-					# given box scores for each team, return lists of teammates and opponents
-					players_in_box_score_dict = read_players_in_box_score(game_box_scores_dict)
+				for game_idx, row in player_reg_season_log.iterrows():
 					
+					print('\n===Game ' + str(game_idx) + '===')
+					print('row: ' + str(row))
+					# season year-1 for first half of season oct-dec bc we say season year is end of season
 					
-					all_players_in_games_dict[game_key] = players_in_box_score_dict
+					game_key = read_game_key(game_idx, player_reg_season_log, season_year, team_abbrev, row)
+			
+					# if we have not yet added this game to the dict
+					# then get game box score players
+					if not game_key in all_players_in_games_dict.keys():
+					
+						game_espn_id = read_game_espn_id(game_key, existing_game_ids_dict)
+
+						players_in_box_score_dict = {}
+						# add year idx to save time bc if not 0 then no need to check game key which is long dict search
+						if season_year == cur_yr and game_key in init_cur_yr_game_players_dict.keys():
+							players_in_box_score_dict = init_cur_yr_game_players_dict[game_key]
+						else:
+							# get the game box score page using the game id
+							# get the box score from the page in a df
+							# game_box_scores_dict = {away:df, home:df}
+							# currently returns empty dict if results already saved
+							game_box_scores_dict = read_game_box_scores(game_key, game_espn_id)
+
+							# now that we have box scores we can isolate stats of interest, starting with player name
+							# given box scores for each team, return lists of teammates and opponents or home/away?
+							# need to save as home away so we only need to read once per game and not once per player
+							# for each player knowing their team we can tell which is opponents
+							# players_in_box_score_dict = {away:{starters:[],bench:[]},home:{starters:[],bench:[]}}
+							players_in_box_score_dict = read_players_in_box_score(game_box_scores_dict)
+						
+							# may need to save player box scores if internet connection fails during read all box scores
+						
+						all_players_in_games_dict[game_key] = players_in_box_score_dict
 				
+				# save cur yr box scores
+				# if read new box scores from internet
+				# may need to append to file each game if internet connection fails
+				# so when we rerun it resumes where it left off
+				if season_year == cur_yr and not init_cur_yr_game_players_dict == all_players_in_games_dict:
+					writer.write_json_to_file(all_players_in_games_dict, filepath, 'w')
+
+
 				# test first game
 				# if game_idx == 0:
 				# 	break
 		
 			#season_year -= 1
+			#year_idx += 1
 		
 	print('all_players_in_games_dict: ' + str(all_players_in_games_dict))
 	return all_players_in_games_dict

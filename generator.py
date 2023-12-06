@@ -208,9 +208,9 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, play
             # see if this game is 1st or 2nd night of back to back bc we want to see if pattern for those conditions
             init_game_date_string = player_game_log.loc[game_idx, 'Date'].lower().split()[1] # 'wed 2/15'[1]='2/15'
             game_mth = init_game_date_string.split('/')[0]
-            final_season_year = str(season_year)
-            if int(game_mth) in range(10,13):
-                final_season_year = str(season_year - 1)
+            final_season_year = season_year
+            if int(game_mth) > 9:
+                final_season_year = str(int(season_year) - 1)
             game_date_string = init_game_date_string + "/" + final_season_year
             #print("game_date_string: " + str(game_date_string))
             game_date_obj = datetime.strptime(game_date_string, '%m/%d/%Y')
@@ -257,9 +257,9 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, play
                 init_prev_game_date_string = player_game_log.loc[str(prev_game_idx), 'Date'].lower().split()[1]
             
                 prev_game_mth = init_prev_game_date_string.split('/')[0]
-                final_season_year = str(season_year)
-                if int(prev_game_mth) in range(10,13):
-                    final_season_year = str(season_year - 1)
+                final_season_year = season_year
+                if int(prev_game_mth) > 9:
+                    final_season_year = str(int(season_year) - 1)
                 prev_game_date_string = init_prev_game_date_string + "/" + final_season_year
                 #print("prev_game_date_string: " + str(prev_game_date_string))
                 prev_game_date_obj = datetime.strptime(prev_game_date_string, '%m/%d/%Y')
@@ -475,8 +475,8 @@ def generate_player_stat_dict(player_name, player_season_logs, projected_lines_d
     # or else we would need to read from internet every time anyway which defeats the purpose of storing locally
     # init_player_stat_dict
     # better to get cur yr here bc also used to divide before writing, although could just take first item in dict as cur yr
-    # if current_year_str == '':
-    #     current_year_str = determiner.determine_current_season_year()
+    if current_year_str == '':
+        current_year_str = determiner.determine_current_season_year()
     player_cur_stat_dict_filename = 'data/stat dicts/' + player_name + ' ' + current_year_str + ' stat dict ' + todays_date + '.json'
     # print('player_cur_stat_dict_filename: ' + cur_file)
     # print('Try to find local CURRENT season stat dict for ' + player_name + '.')
@@ -563,6 +563,24 @@ def generate_player_stat_dict(player_name, player_season_logs, projected_lines_d
         
         # gen all stats dicts for this part of this season
         # here we convert season year key to string?
+        # cur season stat dict gets replaced each day bc file has date in name
+        # so do we need to save cur season box scores which make up cur stat dict?
+        # OR can we add new entries to existing cur stat dict?
+        # if we add new entries instead of overwriting, 
+        # then it would require read from internet each run?
+        # the condition is if season year in stat dict and it is missing games
+        # but we would only know if missing games bc we read from internet
+        # the rule seems to be if the data changes,
+        # then we must name the file based on how often we want to update it
+        # in this case the date is in the file so we know if we ran it before/after last change
+        # could we save the box score stat dicts separately if we are already planning on saving box scores?
+        # we can subtract number we have saved from number of games in log read from internet
+        # so we know how many new box scores since last run
+        # must then search for prev saved file
+        # is it easier to keep prev day cur season files so we can see difference between cur day
+        # OR keep cur season box scores local so we can reconstruct cur season stat dict from local box scores 
+        # and only read newest box score from internet
+        # seems easier to save cur seas box scores
         if season_year not in player_stat_dict.keys() and season_yr_str not in player_stat_dict.keys():
             player_stat_dict[season_yr_str] = {}
         
@@ -3855,7 +3873,17 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
         # first read all matchup data from internet and then loop through tables
         all_matchup_data = reader.read_all_matchup_data(matchup_data_sources) # all_matchup_data=[matchup_data1,..], where matchup_data = [pg_matchup_df, sg_matchup_df, sf_matchup_df, pf_matchup_df, c_matchup_df]
 
+    # get info about current todays date
+    current_year_str = determiner.determine_current_season_year()
+    todays_date=datetime.today().strftime('%m-%d-%y')
 
+    # use init stat dicts to see which stats already saved so no need to read from internet
+    # use for box scores
+    init_player_stat_dicts = {}
+    for player_name in player_names:
+        player_cur_stat_dict_filename = 'data/stat dicts/' + player_name + ' ' + current_year_str + ' stat dict ' + todays_date + '.json'
+        player_prev_stat_dicts_filename = 'data/stat dicts/' + player_name + ' prev stat dicts.json'
+        init_player_stat_dicts[player_name] = reader.read_cur_and_prev_json(player_cur_stat_dict_filename,player_prev_stat_dicts_filename)
     # find teammates and opponents for each game played by each player
     find_players = False
     if 'find players' in settings.keys():
@@ -3864,11 +3892,12 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
     # or
     # v2: all_players_in_games_dict = {player:{game:{teammates:[],opponents:[]}}}
     # OR
-    # v3: all_players_in_games_dict = {player:{game:{starters:[],bench:[],opponents:[]}}}
+    # v3: all_players_in_games_dict = {game:{starters:[],bench:[],opponents:[]}}}
     # start with v1 bc it is general for all games with no duplicates for players
     all_players_in_games_dict = {} 
     if find_players == True:
-        all_players_in_games_dict = reader.read_all_players_in_games(all_player_season_logs_dict, player_teams)#, season_year) # go thru players in all_player_season_logs_dict to get game ids
+        # if we already have saved prev seasons then will only return this season games
+        all_players_in_games_dict = reader.read_all_players_in_games(all_player_season_logs_dict, player_teams, current_year_str, init_player_stat_dicts)#, season_year) # go thru players in all_player_season_logs_dict to get game ids
 
 
     irreg_play_time = settings['irreg play time']
@@ -3887,6 +3916,8 @@ def generate_players_outcomes(player_names=[], game_teams=[], settings={}, today
         # prob for each stat over and under
         # key_type = 'data/stat probs/' + player_name + ' prev probs.json'
         # init_player_stat_probs = reader.read_json(key_type)
+
+
 
         #print('all_player_season_logs_dict: ' + str(all_player_season_logs_dict))
         player_season_logs = all_player_season_logs_dict[player_name]
