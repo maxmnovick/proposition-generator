@@ -326,15 +326,24 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, play
             # the order we fill the stats dict depends on the order of games played bc we are going game by game
             if len(all_players_in_games_dict.keys()) > 0:
                 if game_key in all_players_in_games_dict.keys():
-                    game_players = all_players_in_games_dict[game_key] # {away:[],home:[]}
+                    game_players = all_players_in_games_dict[game_key] # {away:{starters:[],bench:[]},home:{starters:[],bench:[]}}
                     #print('game_players: ' + str(game_players))
 
+                    # {starters:[],bench:[]}
                     game_teammates = game_players['away']
                     if player_team == home_abbrev:
                         game_teammates = game_players['home']
 
-                    # we need players in alphabetical string so we can compare to other games
+                    # we need players in alphabetical string to easily compare to other games
                     game_teammates_str = generate_players_string(game_teammates)
+                    # OR we could compare each player in list
+                    # but then what would we use as key? names in order so first 5 are starters and remaining are bench
+                    # order matters bc it is in order of position and therefore matchup 
+                    # but it is also arbitrary so could mislead and reduce sample size
+                    # ideally get both samples only in order by position and samples where order does not matter as long as the players played together
+                    # first say order does not matter and then get where order matters
+                    # bc we can get more samples which should improve accuracy
+                    # still separate starters and bench
 
                     # only add key for current teammates bc we dont need to see all teammates here
                     # if no inactive players given then we can see all previous games with any (even 1) of current teammates

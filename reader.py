@@ -2417,11 +2417,13 @@ def read_all_players_in_games(all_player_season_logs_dict, player_teams, cur_yr,
 			#season_year -= 1
 			#year_idx += 1
 		
+	# all_players_in_games_dict = {game:{away:{starters:[],bench:[]},home:starters:[],bench:[]}}
 	print('all_players_in_games_dict: ' + str(all_players_in_games_dict))
 	return all_players_in_games_dict
 
-# all_players_in_games_dict = { game key: {away:[],home:[]}}
+# all_players_in_games_dict = {game:{away:{starters:[],bench:[]},home:starters:[],bench:[]}}
 # use player team to get teammates from box score
+# all_teammates = {starters:[],bench:[]}
 def read_all_teammates(player_name, all_players_in_games_dict, player_team=''):
 
 	print('\n===Read All Teammates for ' + player_name + '===\n')
