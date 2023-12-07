@@ -1305,3 +1305,45 @@ def determine_player_start(player, player_abbrev, player_team_lineup):
         player_start = bench_key
 
     return player_start
+
+# see if any of desired keys in stat dict already
+# bc if not then we need to read from internet
+# for a given condition such as player start, 
+# the stat dict could take multiple values, in this case start or bench
+# but most keys can take more than 2 values
+def determine_key_in_stat_dict(desired_keys, stat_dict_keys):
+    key_in_stat_dict = False
+
+    for key in stat_dict_keys:
+        if key in desired_keys:
+            key_in_stat_dict = True
+            break
+
+    return key_in_stat_dict
+
+def determine_need_box_score(season_year, cur_yr, init_player_stat_dict):
+
+    need_box_score = False
+
+    # if prev season yr already saved then no need to get box scores
+    # bc only used to make stat dict
+    # if cur season yr then read saved local box scores and new box scores from internet
+    # always run for cur yr but only run for unsaved prev yr
+    # bc we need to update cur yr each game
+    # REMEMBER: we could save stat dict with find players turned off 
+    # so it would have season yr but not team players condition
+    # seeing that any team players condition has been saved shows us that we ran with find players turned on
+    # bc we only add those conditions if we know team players
+    team_players_conditions = ['start','bench'] # if either of these are keys in stat dict then we already saved box scores
+
+    condition_keys = init_player_stat_dict[season_year].keys()
+
+    # could remove determine key in stat dict if we always run with find players on
+    # but we cannot do that so we could ensure only save stat dict if we have
+    # all players in games bc that is the only thing we check? no we also check stat dicts before reading game logs
+    # and later we will save stat probs so not even save stat dicts but it will behave the same
+    if season_year == cur_yr or season_year not in init_player_stat_dict.keys() or not determine_key_in_stat_dict(team_players_conditions, condition_keys):
+        need_box_score = True
+
+
+    return need_box_score

@@ -2380,7 +2380,12 @@ def read_all_players_in_games(all_player_season_logs_dict, player_teams, cur_yr,
 			# if cur season yr then read saved local box scores and new box scores from internet
 			# always run for cur yr but only run for unsaved prev yr
 			# bc we need to update cur yr each game
-			if season_year == cur_yr or season_year not in init_player_stat_dict.keys():
+			# REMEMBER: we could save stat dict with find players turned off 
+			# so it would have season yr but not team players condition
+			# seeing that any team players condition has been saved shows us that we ran with find players turned on
+			# bc we only add those conditions if we know team players
+			team_players_condition = 'out'
+			if season_year == cur_yr or season_year not in init_player_stat_dict.keys() or team_players_condition not in init_player_stat_dict[season_year].keys():
 				# read box scores
 
 				# for each reg season game
