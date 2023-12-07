@@ -2384,8 +2384,9 @@ def read_all_players_in_games(all_player_season_logs_dict, player_teams, cur_yr,
 			# so it would have season yr but not team players condition
 			# seeing that any team players condition has been saved shows us that we ran with find players turned on
 			# bc we only add those conditions if we know team players
-			team_players_condition = 'out'
-			if season_year == cur_yr or season_year not in init_player_stat_dict.keys() or team_players_condition not in init_player_stat_dict[season_year].keys():
+			# team_players_conditions = ['start']
+			# team_players_condition not in init_player_stat_dict[season_year].keys()
+			if determiner.determine_need_box_score(season_year, cur_yr, init_player_stat_dict):
 				# read box scores
 
 				# for each reg season game
