@@ -1295,3 +1295,13 @@ def determine_current_season_year():
 
     # prefer string bc used as key in dict
     return str(cur_season_yr)
+
+# {starters:[],out:[],bench:[],unknown:[]}
+# player_start = 'start' or 'bench'
+def determine_player_start(player, player_abbrev, player_team_lineup):
+    player_start = 'start'
+    bench_key = 'bench'
+    if player in player_team_lineup[bench_key] or player_abbrev in player_team_lineup[bench_key]:
+        player_start = bench_key
+
+    return player_start
