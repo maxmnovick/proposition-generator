@@ -577,11 +577,12 @@ def generate_full_season_stat_dict(player_stat_dict):
 # use player_team to get away/home team to get game key to get players in game
 # need current_year_str to get filename for cur yr bc season yr not always cur yr
 # do not need to pass in season_year and minus 1 per loop bc looping thru season logs
-def generate_player_stat_dict(player_name, player_season_logs, projected_lines_dict, todays_games_date_obj, all_players_in_games_dict={}, player_team='', season_year=2024, current_year_str='', todays_date=datetime.today().strftime('%m-%d-%y')):
+def generate_player_stat_dict(player_name, player_season_logs, projected_lines_dict, todays_games_date_obj, all_players_in_games_dict={}, player_teams={}, season_year=2024, current_year_str='', todays_date=datetime.today().strftime('%m-%d-%y')):
 
     print('\n===Generate Player Stat Dict===\n')
     print('===' + player_name.title() + '===')
-    print('===' + player_team.upper() + '===\n')
+
+    #print('===' + player_team.upper() + '===\n')
 
     player_stat_dict = {}
 
@@ -617,7 +618,7 @@ def generate_player_stat_dict(player_name, player_season_logs, projected_lines_d
     # or we could get from box scores we already saved locally
     # in all_teammates, we only want teammates per season bc if all seasons then misleading data
     # all_teammates = {yr:[teammate,...],...}
-    all_teammates = reader.read_all_teammates(player_name, all_players_in_games_dict, player_team)
+    all_teammates = reader.read_all_teammates(player_name, all_players_in_games_dict, player_teams, player_season_logs)
 
 
     # get current opponent if available so we can focus on current conditions
@@ -1429,7 +1430,7 @@ def generate_all_players_avg_range_dicts(all_players_stats_dicts):
 
 # if player names is blank, use all players found in raw projected lines
 # use player_espn_ids_dict to get teams
-def generate_projected_lines_dict(raw_projected_lines, player_espn_ids_dict={}, player_teams={}, player_names=[], read_new_teams=False):
+def generate_projected_lines_dict(raw_projected_lines, player_espn_ids_dict={}, player_teams={}, player_names=[], read_new_teams=False, cur_yr=''):
     #print('\n===Generate Projected Lines Dict===\n')
     #print('raw_projected_lines: ' + str(raw_projected_lines))
     # need data type and input type to get file name
@@ -1454,7 +1455,7 @@ def generate_projected_lines_dict(raw_projected_lines, player_espn_ids_dict={}, 
         player_teams = reader.read_all_players_teams(player_espn_ids_dict, read_new_teams) # only read team from internet if not saved
 
     # convert raw projected lines to projected lines
-    projected_lines = reader.read_projected_lines(raw_projected_lines, player_teams)
+    projected_lines = reader.read_projected_lines(raw_projected_lines, player_teams, cur_yr=cur_yr)
 
     projected_lines_dict = {}
     header_row = projected_lines[0]
@@ -2802,7 +2803,7 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
     return sorted_consistent_stat_dicts
 
 # stat_dict: {'player name': 'Trevelin Queen', 'stat name': 'ast', 'prob val': 0, 'prob': 100...
-def generate_available_prop_dicts(stat_dicts, game_teams=[], player_teams={}):
+def generate_available_prop_dicts(stat_dicts, game_teams=[], player_teams={}, cur_yr=''):
     print('\n===Generate Available Prop Dicts===\n')
     available_prop_dicts = []
     maybe_available_props = []
@@ -2821,7 +2822,7 @@ def generate_available_prop_dicts(stat_dicts, game_teams=[], player_teams={}):
     # and we need to isolate into separate loops
     # so we can read page once and use for all teammates
     #all_players_odds: {'mia': {'pts': {'Bam Adebayo': {'18': '−650','20': '+500',...
-    all_players_odds = reader.read_all_players_odds(game_teams, player_teams) # {team: stat: { player: odds,... }}
+    all_players_odds = reader.read_all_players_odds(game_teams, player_teams, cur_yr=cur_yr) # {team: stat: { player: odds,... }}
 
     #for team in teams:
         #all_players_odds = reader.read_all_stat_odds(stat_dict, all_players_odds)
@@ -3163,9 +3164,9 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}, all_curre
     for player, player_stat_probs_dict in all_stat_probs_dict.items():
         #print('\n===Player: ' + str(player) + '===\n')
         #stat_val_probs_dict = {'player': player}
-        player_team = ''
-        if player in player_teams.keys():
-            player_team = player_teams[player]
+        player_team = list(player_teams[player][cur_yr].keys())[-1] # current team
+        # if player in player_teams.keys():
+        #     player_team = player_teams[player]
         #stat_val_probs_dict['team'] = player_team
 
         # add game num for ref so we can sort by game to ensure at least 2 picks per game 
@@ -3780,18 +3781,21 @@ def generate_player_unit_stat_probs(player_stat_dict, player_name, player_season
 # p1:{loc:l1, city:c1, dow:d1, tod:t1,...}
 # all lineups has random combo of full names and abbrevs so check both
 # all_lineups = {team:{starters:[Klay Thompson, D. Green,...],out:[],bench:[],unknown:[]},...}
-def generate_player_current_conditions(player, game_teams, player_teams, all_lineups={}, player_abbrev=''):
+def generate_player_current_conditions(player, game_teams, player_teams, all_lineups={}, player_abbrev='', cur_yr=''):
     print('\n===Generate Player Current Conditions: ' + player + '===\n')
 
     player_current_conditions = {}
 
+    player_team = list(player_teams[player][cur_yr].keys())[-1] # current team
+    print('player_team: ' + str(player_team))
+
     # condition: location
-    player_current_conditions['loc'] = determiner.determine_player_game_location(player, game_teams, player_teams)
+    player_current_conditions['loc'] = determiner.determine_player_game_location(player, game_teams, player_team)
     
     # condition: teammates and opps lineups
     # https://www.rotowire.com/basketball/nba-lineups.php
     # get teammates and opps conds
-    player_team = player_teams[player]
+    #player_team = player_teams[player]
     # player team should be in all lineups if playing today
     if player_team in all_lineups.keys():
         # {starters:[],out:[],bench:[],unknown:[]}
@@ -3819,7 +3823,7 @@ def generate_player_current_conditions(player, game_teams, player_teams, all_lin
 
 # make dict of all current conditions for each player so we can use to compute true prob
 # all_current_conditions = {p1:{loc:l1, city:c1, dow:d1, tod:t1,...}, p2:{},...} OR {player1:[c1,c2,...], p2:[],...}
-def generate_all_current_conditions(players, game_teams, player_teams, rosters):
+def generate_all_current_conditions(players, game_teams, player_teams, rosters, find_players, cur_yr):
     print('\n===Generate All Current Conditions===\n')
 
     all_current_conditions = {}
@@ -3843,7 +3847,9 @@ def generate_all_current_conditions(players, game_teams, player_teams, rosters):
     # 'out' will never include gtd bc we must classify gtd as 'starter', 'bench' or 'unknown' based on injury report certainty
     # if there are unknowns then starters and bench are also unknown so should we classify by mean minutes?
     #all_lineups = {confirmed:{team:{starters:[],out:[],bench:[],unknown:[]},...}, expected:{team:{starters:[],bench:[],out:[]},...}}
-    all_lineups = reader.read_all_lineups(players, player_teams, rosters)
+    all_lineups = {}
+    if find_players:
+        all_lineups = reader.read_all_lineups(players, player_teams, rosters)
     # if questionable then it is very hard to say how teammates will perform so can only go with safest options
     # we could figure out how likely it is for player to play based on injury reports
     # and adjust teammates true probs accordingly
@@ -3859,7 +3865,7 @@ def generate_all_current_conditions(players, game_teams, player_teams, rosters):
     for player in players:
 
         # need to pass all lineups bc opponent lineups matter too
-        player_curr_conds = generate_player_current_conditions(player, game_teams, player_teams, all_lineups)
+        player_curr_conds = generate_player_current_conditions(player, game_teams, player_teams, all_lineups, cur_yr=cur_yr)
 
         all_current_conditions[player] = player_curr_conds
 
@@ -3949,12 +3955,13 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
     # what if we want to read previous season?
     if 'read new teams' in settings.keys():
         read_new_teams = settings['read new teams']
+    # player_teams = {player:{year:{team:gp,...},...}}
     player_teams = reader.read_all_players_teams(player_espn_ids_dict, read_new_teams) # only read team from internet if not saved
 
     # if we gave player lines, then format them in dict
     projected_lines_dict = {}
     if len(raw_projected_lines) > 0:
-        projected_lines_dict = generate_projected_lines_dict(raw_projected_lines, player_espn_ids_dict, player_teams, player_names, settings['read new teams'])
+        projected_lines_dict = generate_projected_lines_dict(raw_projected_lines, player_espn_ids_dict, player_teams, players_names, settings['read new teams'], cur_yr=current_year_str)
     print('projected_lines_dict after gen projected lines: ' + str(projected_lines_dict))
 
     # read game logs
@@ -4125,6 +4132,7 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
         player_unit_stat_probs = generate_player_unit_stat_probs(player_stat_dict, player_name, player_season_logs)
         all_unit_stat_probs[player_name] = player_unit_stat_probs
 
+        
 
 
 
@@ -4141,6 +4149,10 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
     # now we want all players in a single table sorted by high to low prob
     # problem is many of the high probs wont be available so we need to iso available props
     # once we have odds, we need to sort by expected val bc some lower prob may be higher ev
+    
+    # currently we are not using other players stats to determine probability 
+    # but we may eventually use other similar players to get more samples for current player
+    # so need to get all player stats before getting all stat probs
     # all_stat_probs_dict = {player:stat:val:conditions}
     all_stat_probs_dict = generate_all_stat_probs_dict(all_player_stat_probs, all_player_stat_dicts, all_unit_stat_probs, season_years, irreg_play_time)
     
@@ -4149,7 +4161,7 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
     # and also later we order spreadsheet based on current conditions used to get true prob
     # conditions such as prev val are player specific but most conditions are team specific
     # all_current_conditions = {p1:{loc:l1, city:c1, dow:d1, tod:t1,...}, p2:{},...} OR {player1:[c1,c2,...], p2:[],...}
-    all_current_conditions = generate_all_current_conditions(players_names, game_teams, player_teams, rosters) #determiner.determine_current_conditions() # [all, regular, home, ...]
+    all_current_conditions = generate_all_current_conditions(players_names, game_teams, player_teams, rosters, find_players, current_year_str) #determiner.determine_current_conditions() # [all, regular, home, ...]
     all_stat_probs_dict = generate_all_true_probs(all_stat_probs_dict, all_player_stat_dicts, season_years, all_current_conditions)
     
     # flatten nested dicts into one level and list them
@@ -4173,7 +4185,7 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
     if 'read odds' in settings.keys():
         read_odds = settings['read odds']
     if read_odds:
-        available_prop_dicts = generate_available_prop_dicts(all_stat_prob_dicts, game_teams, player_teams)
+        available_prop_dicts = generate_available_prop_dicts(all_stat_prob_dicts, game_teams, player_teams, current_year_str)
         desired_order.extend(['odds','ev']) # is there another way to ensure odds comes after true prob
 
     #desired_order = ['player', 'team', 'stat','ok val','ok val prob','odds','ok val post prob', 'ok val min margin', 'ok val post min margin', 'ok val mean margin', 'ok val post mean margin']

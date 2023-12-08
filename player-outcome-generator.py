@@ -33,9 +33,10 @@ read_new_odds = True
 # then we must manually erase old saved stat dict OR make setting to overwrite it
 # or else we would need to read from internet every time anyway which defeats the purpose of storing locally
 read_new_stats = False # set true when we add new feature to stats dict so we want to manually overwrite old dict rather than usual behavior of trusting prev stat dicts
+read_new_lineups = True # even if we saved lineups today they may have changed but we may not want to get new lineups yet if we are testing something else
 
 # === FIND PLAYERS ===
-find_players = True # if true, read all players in game box scores to see prob with teammates out
+find_players = False # if true, read all players in game box scores to see prob with teammates out
 
 # === READ ODDS ===
 # set false to save time if observing all probs
@@ -48,11 +49,11 @@ settings = {'find matchups': find_matchups, 'find players': find_players, 'read 
 # gen list of player names given teams so we dont have to type all names
 # if no date given, and if past 10pm then assume getting data for next day
 # https://www.espn.com/nba/schedule
-game_teams = [('den','lac')]#, ('phx','lal')
+game_teams = [('mil','lal')]#, ('nop','lal')
 # we can make read new teams var false at first bc the file has not been created yet so we will write for the first time
 # we make it true to read new teams after trades, which tells it to overwrite existing file or make a new file with the date in the title
-players_names = reader.read_teams_players(game_teams, read_new_teams) #generator.generate_players_names(teams) # generate is wrong term bc we are not computing anything only reading players on each team
-#players_names = ['rj barrett'] # use for testing
+#players_names = reader.read_teams_players(game_teams, read_new_teams) #generator.generate_players_names(teams) # generate is wrong term bc we are not computing anything only reading players on each team
+players_names = ['damian lillard'] # use for testing
 
 
 # if we get rosters instead of player names then read all players on rosters

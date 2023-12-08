@@ -1259,12 +1259,12 @@ def determine_opponent_team(player, game_teams, player_teams):
 
 # determine condition of player current game location
 # based on input game teams
-def determine_player_game_location(player, game_teams, player_teams):
-    
+# player_teams = {player:{year:{team:gp,...},...}
+def determine_player_game_location(player, game_teams, player_team):
+    print('\n===Determine Player Game Location: ' + player + '===\n')
+
     player_current_location = ''
 
-    player_team = player_teams[player]
-    print('player_team: ' + str(player_team))
     for teams in game_teams:
         away_team = teams[0]
         print('away_team: ' + str(away_team))
@@ -1281,6 +1281,7 @@ def determine_player_game_location(player, game_teams, player_teams):
             player_current_location = location
             break # found team in list games so go to next player
 
+    print('player_current_location: ' + str(player_current_location))
     return player_current_location
 
 # use current month to tell season yr
@@ -1295,6 +1296,14 @@ def determine_current_season_year():
 
     # prefer string bc used as key in dict
     return str(cur_season_yr)
+
+def determine_game_year(game_mth, season_year):
+    game_year = season_year
+    if game_mth > 9:
+        game_year = str(int(season_year) - 1)
+
+    return game_year
+
 
 # {starters:[],out:[],bench:[],unknown:[]}
 # player_start = 'start' or 'bench'
@@ -1335,8 +1344,9 @@ def determine_need_box_score(season_year, cur_yr, init_player_stat_dict):
     # seeing that any team players condition has been saved shows us that we ran with find players turned on
     # bc we only add those conditions if we know team players
     team_players_conditions = ['start','bench'] # if either of these are keys in stat dict then we already saved box scores
-
-    condition_keys = init_player_stat_dict[season_year].keys()
+    condition_keys = []
+    if season_year in init_player_stat_dict.keys():
+        condition_keys = init_player_stat_dict[season_year].keys()
 
     # could remove determine key in stat dict if we always run with find players on
     # but we cannot do that so we could ensure only save stat dict if we have
