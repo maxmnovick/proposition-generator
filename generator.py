@@ -598,7 +598,7 @@ def generate_full_season_stat_dict(player_stat_dict):
 # use player_team to get away/home team to get game key to get players in game
 # need current_year_str to get filename for cur yr bc season yr not always cur yr
 # do not need to pass in season_year and minus 1 per loop bc looping thru season logs
-def generate_player_stat_dict(player_name, player_season_logs, todays_games_date_obj, all_players_in_games_dict={}, player_teams={}, season_year=2024, current_year_str='', todays_date=datetime.today().strftime('%m-%d-%y'), game_teams=[], projected_lines_dict={}, init_player_stat_dict={}):
+def generate_player_stat_dict(player_name, player_season_logs, todays_games_date_obj, all_players_in_games_dict={}, player_teams={}, current_year_str='', todays_date=datetime.today().strftime('%m-%d-%y'), game_teams=[], projected_lines_dict={}, init_player_stat_dict={}):
 
     print('\n===Generate Player Stat Dict: ' + player_name.title() + '===\n')
     #print('===' + player_team.upper() + '===\n')
@@ -695,8 +695,8 @@ def generate_player_stat_dict(player_name, player_season_logs, todays_games_date
     for season_year, player_game_log in player_season_logs.items():
 
         # need string to compare to json
-        season_yr_str = str(season_year)
-        print("\n===Year " + season_yr_str + "===\n")
+        #season_yr_str = str(season_year)
+        print("\n===Year " + season_year + "===\n")
 
         player_game_log_df = pd.DataFrame(player_game_log)#.from_dict(player_game_log) #pd.DataFrame(player_game_log)
         player_game_log_df.index = player_game_log_df.index.map(str)
@@ -730,13 +730,22 @@ def generate_player_stat_dict(player_name, player_season_logs, todays_games_date
         # OR keep cur season box scores local so we can reconstruct cur season stat dict from local box scores 
         # and only read newest box score from internet
         # seems easier to save cur seas box scores
-        if season_year not in player_stat_dict.keys() and season_yr_str not in player_stat_dict.keys():
-            player_stat_dict[season_yr_str] = {}
+
+        # for now if season yr already in stat dict then no need to read again
+        # but what if new features like find players turned from false to true? then we would need to get stat dict each time and check difference before saving new?
+        # see determine_need_box_score to see how we can still update
+        # if stat dict exists but missing key
+        # print('is season_year string? ' + season_year) # yes, but how??? it is input as int. nooo it is the key in the season logs not the init param so fix
+        # if len(player_stat_dict.keys()) > 0:
+        #     print('is stat dict key string? ' + list(player_stat_dict.keys())[0]) # yes
+        if determiner.determine_need_stat_dict(player_stat_dict, season_year):
+        #if season_year not in player_stat_dict.keys() and season_yr_str not in player_stat_dict.keys(): # if determine_team_player_key_in_stat_dict() team_players_key not in player_stat_dict[season_year].keys():
+            player_stat_dict[season_year] = {}
         
             # only need to get new stat dict if different than saved data
             season_parts = ['regular','postseason','full']
             for season_part in season_parts:
-                player_stat_dict[season_yr_str][season_part] = generate_player_all_stats_dicts(player_name, player_game_log_df, opponent, player_teams, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part) #generate_full_season_stat_dict(player_stat_dict)
+                player_stat_dict[season_year][season_part] = generate_player_all_stats_dicts(player_name, player_game_log_df, opponent, player_teams, season_year, todays_games_date_obj, all_players_in_games_dict, all_teammates, all_seasons_stats_dicts, season_part) #generate_full_season_stat_dict(player_stat_dict)
 
 
         #season_year -= 1
@@ -3814,7 +3823,7 @@ def generate_player_current_conditions(player, game_teams, player_teams, all_lin
 
     player_current_conditions = {}
 
-    player_team = list(player_teams[player][cur_yr].keys())[-1] # current team
+    player_team = determiner.determine_player_current_team(player, player_teams, cur_yr) #list(player_teams[player][cur_yr].keys())[-1] # current team
     print('player_team: ' + str(player_team))
 
     # condition: location
@@ -4107,7 +4116,7 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
 
         #print('projected_lines_dict passed to generate stat dict: ' + str(projected_lines_dict))
         init_player_stat_dict = init_player_stat_dicts[player_name]
-        player_stat_dict = generate_player_stat_dict(player_name, player_season_logs, todays_games_date_obj, all_players_in_games_dict, player_teams, season_year=season_year, current_year_str=current_year_str, game_teams=game_teams, init_player_stat_dict=init_player_stat_dict)
+        player_stat_dict = generate_player_stat_dict(player_name, player_season_logs, todays_games_date_obj, all_players_in_games_dict, player_teams, current_year_str, game_teams=game_teams, init_player_stat_dict=init_player_stat_dict)
 
         # gen all outcomes shows streaks
         # produces list of features to assess

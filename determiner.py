@@ -1245,7 +1245,7 @@ def determine_game_num(game_teams, player_team):
     print('game_num: ' + str(game_num))
     return game_num
 
-
+#list(player_teams[player][cur_yr].keys())[-1] # current team
 def determine_player_current_team(player, player_teams, cur_yr=''):
 
     cur_yr = determine_current_season_year()
@@ -1379,3 +1379,18 @@ def determine_need_box_score(season_year, cur_yr, init_player_stat_dict):
 
 
     return need_box_score
+
+# if missing season yr or missing condition in season yr
+def determine_need_stat_dict(player_stat_dict, season_year):
+
+    need_stat_dict = False
+
+    team_players_conditions = ['start','bench']
+    condition_keys = []
+    if season_year in player_stat_dict.keys():
+        condition_keys = player_stat_dict[season_year].keys()
+
+    if season_year not in player_stat_dict.keys() or not determine_key_in_stat_dict(team_players_conditions, condition_keys):
+        need_stat_dict = True
+
+    return need_stat_dict
