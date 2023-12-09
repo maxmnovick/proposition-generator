@@ -970,35 +970,60 @@ def write_prop_tables(prop_dicts, sheet_names, desired_order):
 
     writer.close()
 
-def write_cur_and_prev(init_dict, final_dict, cur_file, prev_file, player_name=''):
+# init and final dicts combine cur and prev yrs
+# so here we separate to write cur and prev separately
+# bc prev stays same while cur changes each new game
+# need cur_yr bc only cur yr changes
+def write_cur_and_prev(init_dict, final_dict, cur_file, prev_file, cur_yr, player_name=''):
+    print('\n===Write Cur and Prev===\n')
+    print('cur_yr: ' + str(cur_yr))
+
+    if cur_yr == '':
+        cur_yr = determiner.determine_current_season_year()
+
+    print('init_dict: ' + str(init_dict))
+    print('final_dict: ' + str(final_dict))
+    print('cur_file: ' + str(cur_file))
+    print('prev_file: ' + str(prev_file) + '\n')
+    
     # take first year as cur yr
     init_cur_dict = {} #list(init_dict.values)[0]
     init_prev_dict = {}
     final_cur_dict = {} #list(final_dict.values)[0]
     final_prev_dict = {}
     
-    year_idx = 0
+    # if init dict does not have cur yr then init cur dict = {}
+    # if cur_yr in init_dict.keys():
+    #     init_cur_dict = init_dict[cur_yr]
+    # if cur_yr in final_dict.keys():
+    #     final_cur_dict = final_dict[cur_yr]
+
+    #year_idx = 0
     for year, year_dict in init_dict.items():
         
-        if year_idx == 0:
+        if year == cur_yr:
             init_cur_dict = year_dict
 
         else:
             init_prev_dict[year] = year_dict
 
-        year_idx += 1
+        #year_idx += 1
 
-    year_idx = 0
+    #year_idx = 0
     for year, year_dict in final_dict.items():
         
-        if year_idx == 0:
+        if year == cur_yr:
             final_cur_dict = year_dict
 
         else:
             final_prev_dict[year] = year_dict
 
-        year_idx += 1
+        #year_idx += 1
 
+    print('init_cur_dict: ' + str(init_cur_dict))
+    print('final_cur_dict: ' + str(final_cur_dict))
+    print('init_prev_dict: ' + str(init_prev_dict))
+    print('final_prev_dict: ' + str(final_prev_dict))
     if not init_cur_dict == final_cur_dict:
         print(player_name + ' CURRENT year data changed so write to file')
         write_json_to_file(final_cur_dict, cur_file, 'w')

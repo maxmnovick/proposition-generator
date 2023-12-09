@@ -36,14 +36,18 @@ def convert_dicts_to_lists(all_consistent_stat_dicts, desired_order=[]):
 # from 2023-24 to 2024
 def convert_span_to_season(span):
 
+    #print('span: ' + span)
     season_years = span.split('-')
     # for now assume 2000s
     season = '20' + season_years[1]
 
+    #print('season: ' + season)
     return season
 
 def convert_irregular_team_abbrev(init_team_abbrev):
 
+    init_team_abbrev = init_team_abbrev.lower()
+    
     final_team_abbrev = init_team_abbrev
 
     irregular_abbrevs = {'bro':'bkn', 'okl':'okc', 'nor':'nop', 'pho':'phx', 'was':'wsh', 'uth': 'uta', 'utah': 'uta' }
@@ -51,5 +55,5 @@ def convert_irregular_team_abbrev(init_team_abbrev):
     if init_team_abbrev in irregular_abbrevs.keys():
         final_team_abbrev = irregular_abbrevs[init_team_abbrev]
 
-    print('final_team_abbrev: ' + final_team_abbrev)
+    #print('final_team_abbrev: ' + final_team_abbrev)
     return final_team_abbrev

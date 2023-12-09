@@ -414,7 +414,7 @@ def determine_prev_game_date(player_game_log, season_year):
 # season_year=0 so hard fail if no season given but then why not make required var?
 # bc default should assume current season? no bc if we are looking them up they are probably in current season and it is more likely they did not play past season
 def determine_played_season(player_url, player_name='', season_year=0, all_game_logs={}, player_game_logs={}):
-    print('\n===Determine if player ' + player_name + ' played season ' + str(season_year) + '===\n')
+    print('\n===Determine if player ' + player_name.title() + ' played season ' + str(season_year) + '===\n')
     played_season = False
 
     # all game logs too big as one var so consider replacing next version with player game logs
@@ -428,6 +428,7 @@ def determine_played_season(player_url, player_name='', season_year=0, all_game_
         played_season = True
 
     else:
+        print('player season game log not saved')
 
         # response = requests.get(player_url)
         # if response.status_code == 200:
@@ -1244,17 +1245,38 @@ def determine_game_num(game_teams, player_team):
     print('game_num: ' + str(game_num))
     return game_num
 
-def determine_opponent_team(player, game_teams, player_teams):
+
+def determine_player_current_team(player, player_teams, cur_yr=''):
+
+    cur_yr = determine_current_season_year()
+    
+    team = list(player_teams[player][cur_yr].keys())[-1]
+
+    return team
+
+# given todays game matchups
+# output opponent team
+# game_teams = [('mil','mia'),...]
+def determine_opponent_team(player, player_teams, game_teams):
     opp_team = ''
-    player_team = player_teams[player]
-    for team_idx in range(len(game_teams)):
-        team = game_teams[team_idx]
-        if team != player_team:
-            opp_idx = team_idx
+
+    player_team = determine_player_current_team(player, player_teams)
+
+    # look for player team in games
+    for game in game_teams:
+        for team_idx in range(len(game)):
+            team = game[team_idx]
+            if player_team == team: # found game in list of games
+                opp_team_idx = 0
+                if team_idx == 0:
+                    opp_team_idx = 1
+                                
+                opp_team = game[opp_team_idx]
+                break
+
+        if opp_team != '':
             break
-
-    opp_team = game_teams[opp_idx]
-
+        
     return opp_team
 
 # determine condition of player current game location

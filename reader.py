@@ -79,7 +79,7 @@ def extract_data(data_type, input_type='', extension='csv', header=False):
 			all_data.append(data)
 
 	except Exception as e:
-		print("Error opening file. ")
+		print("Error opening file. ", e)
 	
 	#print("all_data: " + str(all_data))
 	return all_data
@@ -716,7 +716,7 @@ def read_web_data(url, timeout=10, max_retries=3):
 # not using all game logs anymore bc too slow to store all game logs in 1 file and search whole file each time
 # instead use player game logs
 def read_player_season_log(player_name, season_year=2024, player_url='', player_id='', all_game_logs={}, todays_date=datetime.today().strftime('%m-%d-%y'), player_game_logs={}):
-	print('\n===Read Player Game Log: ' + player_name.title() + ', ' + str(season_year) + '===\n')
+	print('\n===Read Player Season Log: ' + player_name.title() + ', ' + str(season_year) + '===\n')
 
 	player_game_log_df = pd.DataFrame()
 	player_game_log_dict = {}
@@ -915,6 +915,10 @@ def read_json_multiple_files(files):
 # cur vals get updated each day
 # prev vals are perm
 def read_cur_and_prev_json(cur_file,prev_file,current_year_str=''):
+	print('\n===Read Cur and Prev JSON===')
+	print('cur_file: ' + cur_file)
+	print('prev_file: ' + prev_file + '\n')
+
 	cur_and_prev = {}
 
 	cur_dict = read_json(cur_file)
@@ -928,6 +932,7 @@ def read_cur_and_prev_json(cur_file,prev_file,current_year_str=''):
 	for year, year_log in prev_dict.items():
 		cur_and_prev[year] = year_log
 
+	#print('cur_and_prev: ' + str(cur_and_prev))
 	return cur_and_prev
 
 # here we decide default season year, so make input variable parameter
@@ -976,6 +981,7 @@ def read_player_season_logs(player_name, read_x_seasons=1, player_espn_ids={}, s
 	# we must compare init to final logs to see if changed then write to file
 	# now player game logs could have prev logs but not cur yr log
 	init_player_game_logs = read_cur_and_prev_json(player_cur_season_log_filename,player_prev_logs_filename)
+	print('init_player_game_logs: ' + str(init_player_game_logs))
 	player_game_logs = copy.deepcopy(init_player_game_logs) # season logs for a player
 	
 
@@ -1031,7 +1037,8 @@ def read_player_season_logs(player_name, read_x_seasons=1, player_espn_ids={}, s
 		# else:
 		# 	break
 
-	writer.write_cur_and_prev(init_player_game_logs, player_game_logs, player_cur_season_log_filename, player_prev_logs_filename, player_name)
+	print('final player_game_logs: ' + str(player_game_logs))
+	writer.write_cur_and_prev(init_player_game_logs, player_game_logs, player_cur_season_log_filename, player_prev_logs_filename, current_year_str, player_name)
 	# divide player game logs into cur yr and prev yrs
 	# cur_yr_game_log = {} #player_game_logs[current_year_str]
 	# prev_yr_game_logs = {}
@@ -1053,6 +1060,15 @@ def read_player_season_logs(player_name, read_x_seasons=1, player_espn_ids={}, s
 	# 	print('player ' + player_name + ' PREVIOUS year game logs changed so write to file for player ' + player_name)
 	# 	writer.write_json_to_file(prev_yr_game_logs, player_prev_logs_filename, 'w')
 
+	# now that we have new cur game log, we can delete the old one
+	# by using same name structure with different date
+	# if file does not exist, do nothing
+	# always good reason to have stat dict (or game log) saved is if we want to see how probs changed over time after each game
+	# BUT stat dict also shows that for each condition so that actually applies to stat dict even better than game log
+	# player_old_cur_season_log_key = player_name + ' ' + current_year_str + ' game log '
+	# not_string = todays_date
+	# writer.delete_file(player_old_cur_season_log_key, not_string) # delete file in folder with name containing key string but not other string
+
 	#print('player_season_logs: ' + str(player_season_logs))
 	return player_season_logs#player_game_logs
 
@@ -1071,7 +1087,7 @@ def read_all_players_season_logs(player_names, read_x_seasons=1, player_espn_ids
 	# init_all_game_logs = read_json(all_logs_filename)
 	# print('init_all_game_logs: ' + str(init_all_game_logs))
 	# need to copy init game logs bc this run may not have all players but we dont want to remove other players
-	all_game_logs = {}#copy.deepcopy(init_all_game_logs)
+	#all_game_logs = {}#copy.deepcopy(init_all_game_logs)
 
 	# needed bc only current season changes and cur yr does not always equal cur season yr. depends on mth
 	cur_yr_str = determiner.determine_current_season_year()
@@ -1079,11 +1095,12 @@ def read_all_players_season_logs(player_names, read_x_seasons=1, player_espn_ids
 
 	for player_name in player_names:
 		# {player:season:log}
-		players_season_logs = read_player_season_logs(player_name, read_x_seasons, player_espn_ids, season_year, all_game_logs, current_year_str=cur_yr_str)
+		players_season_logs = read_player_season_logs(player_name, read_x_seasons, player_espn_ids, season_year, all_players_season_logs, current_year_str=cur_yr_str)
+		
 		all_players_season_logs[player_name] = players_season_logs
 
 		# if log is already in file no need to overwrite but the output will be the same as all game logs so it makes no difference
-		all_game_logs[player_name] = players_season_logs # {player:season:log}
+		#all_game_logs[player_name] = players_season_logs # {player:season:log}
 
 		# write for each player is if error interrupts it can resume where it left off
 		# if all game logs unchanged then no need to write to file
@@ -1372,12 +1389,13 @@ def read_team_from_internet(player_name, player_id, read_new_teams=False):
 # the difference is read new teams will always read new teams even if team already saved locally and unchanged
 # user will set input var after trades or aquisitions
 # later program will get news and decide off that instead of requiring user input
-def read_player_team(player_name, player_id, existing_player_teams_dict={}, read_new_teams=False):
+def read_player_team(player_name, player_id, existing_player_teams_dict={}, read_new_teams=False, season_year=''):
 	print("\n===Read Player Team: " + player_name.title() + "===\n")
 	team = '' # team abbrev lowercase bc used as key
 
 	# read_new_teams can be determined by date bc date of trade deadline, start of season and check if any other trade deadlines
-
+	if season_year == '':
+		season_year = determiner.determine_current_season_year()
 
 	# if not given exisiting teams see if local file saved
 	if len(existing_player_teams_dict.keys()) == 0:
@@ -1390,7 +1408,16 @@ def read_player_team(player_name, player_id, existing_player_teams_dict={}, read
 			existing_player_team = row[1]
 
 			existing_player_teams_dict[existing_player_name] = existing_player_team
-		print('existing_player_teams_dict: ' + str(existing_player_teams_dict))
+		
+	print('existing_player_teams_dict: ' + str(existing_player_teams_dict))
+
+	# changed from csv old version to json to save all teams all yrs
+	if len(existing_player_teams_dict.keys()) == 0:
+		file = 'data/all players teams.json'
+		player_teams = read_json(file)
+
+		print('init player_teams: ' + str(player_teams))
+
 
 
 	# if read new teams, then read from internet for all
@@ -1399,7 +1426,7 @@ def read_player_team(player_name, player_id, existing_player_teams_dict={}, read
 		team = read_team_from_internet(player_name, player_id, read_new_teams)
 	else:
 		if player_name in existing_player_teams_dict.keys():
-			team = existing_player_teams_dict[player_name]
+			team = list(existing_player_teams_dict[player_name][season_year].keys())[-1]
 		else:
 			team = read_team_from_internet(player_name, player_id)
 
@@ -1413,6 +1440,9 @@ def read_player_team(player_name, player_id, existing_player_teams_dict={}, read
 # read all players teams from career stats page
 # https://www.espn.com/nba/player/stats/_/id/6442/kyrie-irving
 # teams = {year:{team:gp,...},...}
+# here we read all teams from stats page bc if player was not traded midseason then game log does not say team that yr
+# easier to read once for each player and update when read new teams
+# rather than get team from each box score
 def read_teams_from_internet(player_name, player_id):
 	print("\n===Read Teams from Internet: " + player_name.title() + "===\n")
 
@@ -1421,32 +1451,41 @@ def read_teams_from_internet(player_name, player_id):
 	url = 'https://www.espn.com/nba/player/stats/_/id/' + player_id + '/' + re.sub(' ','-',player_name)
 
 	web_data = read_web_data(url)
-	print("web_data:\n" + str(web_data))
+	#print("web_data:\n" + str(web_data))
 	# which table shows stats? should be only table on page
-	for order in range(len(web_data)):
+	# for order in range(len(web_data)):
 
-		web_df = web_data[order]
-		print('\nweb_df:\n' + str(web_df))
+	# 	web_df = web_data[order]
+	# 	print('\nweb_df:\n' + str(web_df))
 
-	if len(web_data) > 0:
-		stats_df = web_data[0]
-		raw_years = stats_df.loc[:,'SEASON'].tolist() # 2023-24
-		raw_teams = stats_df.loc[:,'TEAM'].tolist()
+	if len(web_data) > 1: # found table
+		# df.drop(df.tail(n).index,inplace=True) # drop last n rows
+		team_years_df = web_data[0]
+		# drop last row bc career stats not 1 yr
+		team_years_df.drop(team_years_df.tail(1).index, inplace=True)
+		print('\nteam_years_df:\n' + str(team_years_df))
+		raw_years = team_years_df.loc[:,'season'].tolist() # 2023-24
+		raw_teams = team_years_df.loc[:,'Team'].tolist()
+		stats_df = web_data[1]
+		stats_df.drop(stats_df.tail(1).index, inplace=True)
+		print('\nstats_df:\n' + str(stats_df))
 		raw_gp = stats_df.loc[:,'GP'].tolist() # games played
 
-	# if repeat same year that means 2 teams in same year
-	# so need games played to tell which games in log were on which team
+		# if repeat same year that means 2 teams in same year
+		# so need games played to tell which games in log were on which team
 
-	for stat_idx in range(len(raw_years)):
-		year = converter.convert_span_to_season(raw_years[stat_idx]) # from 2023-24 to 2024
-		team = converter.convert_irregular_team_abbrev(raw_teams[stat_idx]) # convert irregular abbrevs
+		for stat_idx in range(len(raw_years)):
+			year = converter.convert_span_to_season(raw_years[stat_idx]) # from 2023-24 to 2024
+			team = converter.convert_irregular_team_abbrev(raw_teams[stat_idx]) # convert irregular abbrevs
 
-		if year not in teams.keys():
-			teams[year] = {}
+			gp = raw_gp[stat_idx]
 
-		teams[year][team] = raw_gp
+			if year not in teams.keys():
+				teams[year] = {}
 
-	print('teams: ' + teams)
+			teams[year][team] = gp
+
+	print('teams: ' + str(teams))
 	return teams
 
 # teams = {year:team,...}
@@ -1469,21 +1508,25 @@ def read_teams_from_internet(player_name, player_id):
 # https://www.espn.com/nba/player/stats/_/id/6442/kyrie-irving
 # only need to read new teams after trades but we dont have alerts for trades 
 # so cant assume no new teams but also rare enough to keep off until manually alerted or feature added
+# here we read all teams from stats page bc if player was not traded midseason then game log does not say team that yr
 def read_all_players_teams(player_espn_ids_dict, read_new_teams=False):
 	print("\n===Read All Players Teams===\n")
-	all_players_teams = {}
 
-	all_players_teams_file = 'all players teams.json'
+	all_players_teams_file = 'data/all players teams.json'
 
 	init_all_players_teams = read_json(all_players_teams_file)
+	print("init_all_players_teams: " + str(init_all_players_teams))
+
+	all_players_teams = copy.deepcopy(init_all_players_teams) # need to init as saved teams so we can see difference at end
 
 	for player_name, player_id in player_espn_ids_dict.items():
 		# read player teams
-		print('\n===Player: ' + player_name + '===\n')
+		print('\n===Player: ' + player_name.title() + '===\n')
 		# bc if read new teams then no need to read saved teams?
 		# no, we still need to read prev teams saved, and only get new team from internet
 		# but they all come from same page so it saves no time
 		if read_new_teams:
+			print('READ NEW TEAMS')
 			player_teams = read_teams_from_internet(player_name, player_id)
 
 		else:
@@ -1499,7 +1542,7 @@ def read_all_players_teams(player_espn_ids_dict, read_new_teams=False):
 	if not init_all_players_teams == all_players_teams:
 		writer.write_json_to_file(all_players_teams, all_players_teams_file, 'w')
 
-	print("all_players_teams: " + str(all_players_teams))
+	#print("all_players_teams: " + str(all_players_teams))
 	return all_players_teams
 
 # for all given players, read their teams
@@ -1633,12 +1676,12 @@ def read_roster_from_internet(team_abbrev, read_new_teams=False):
 
 # valid for json files
 def read_json(key_type):
-	print('\n===Read JSON===\n')
+	print('\n===Read JSON===')
 	keys_filename = key_type
 	if not re.search('\.',key_type): # filename
 		key_type = re.sub('\s+','-',key_type)
 		keys_filename = "data/" + key_type.title() + ".json"
-	print("keys_filename: " + keys_filename)
+	print("keys_filename: " + keys_filename + '\n')
 
 	lines = [] # capture each line in the document
 	keys = {}
@@ -2026,7 +2069,7 @@ def extract_json_from_file(data_type, input_type, extension='csv'):
 		# 	all_data.append(data)
 
 	except Exception as e:
-		print("Error opening file. ")
+		print("Error opening file. ", e)
 	
 	print("data_dict: " + str(data_dict))
 
@@ -2166,6 +2209,27 @@ def read_season_log_from_file(data_type, player_name, ext):
 		print("Warning: No player games data!")
 
 	return all_stats
+
+def read_raw_projected_lines(todays_games_date_obj):
+
+	raw_projected_lines = []
+
+	# need data type and input type to get file name
+	data_type = "Player Lines"
+	# optional setting game date if processing a day in advance
+	todays_games_date_str = '' # format: m/d/y, like 3/14/23. set if we want to look at games in advance
+	if todays_games_date_str != '':
+		todays_games_date_obj = datetime.strptime(todays_games_date_str, '%m/%d/%y')
+		
+	# read projected lines or if unavailable get player averages
+    # but if no lines given then we generate most likely lines
+	input_type = str(todays_games_date_obj.month) + '/' + str(todays_games_date_obj.day)
+
+    # raw projected lines in format: [['Player Name', 'O 10 +100', 'U 10 +100', 'Player Name', 'O 10 +100', 'U 10 +100', Name', 'O 10 +100', 'U 10 +100']]
+	raw_projected_lines = extract_data(data_type, input_type, extension='tsv', header=True) # tsv no header
+	
+	print("raw_projected_lines: " + str(raw_projected_lines))
+	return raw_projected_lines
 
 def read_projected_lines(raw_projected_lines, all_player_teams, player_of_interest='', cur_yr=''):
 	print('\n===Read Projected Lines===\n')
@@ -2513,7 +2577,7 @@ def read_all_players_in_games(all_player_season_logs_dict, player_teams, cur_yr,
 				# reverse team gp dict so same order as game idx recent to distant
 				teams = list(reversed(team_gp_dict.keys()))
 				games_played = list(reversed(team_gp_dict.values()))
-				teams_games_played = games_played[player_team_idx]
+				teams_games_played = int(games_played[player_team_idx])
 				for game_idx, row in player_reg_season_log.iterrows():
 					
 					print('\n===Game ' + str(game_idx) + '===')
@@ -2538,7 +2602,7 @@ def read_all_players_in_games(all_player_season_logs_dict, player_teams, cur_yr,
 					# 		final_team_abbrev = team_abbrev
 					# 		break
 
-					if game_idx >= teams_games_played:
+					if int(game_idx) > teams_games_played:
 						player_team_idx += 1
 						teams_games_played += games_played[player_team_idx]
 
@@ -2614,7 +2678,7 @@ def read_all_players_in_games(all_player_season_logs_dict, player_teams, cur_yr,
 # then you know the players team is the team in the game key but not in the game log entry for this date!
 # player_game_logs = {year:{field:...}}
 def read_all_teammates(player_name, all_players_in_games_dict, player_teams={}, player_game_logs={}):
-	print('\n===Read All Teammates for ' + player_name + '===\n')
+	print('\n===Read All Teammates for ' + player_name.title() + '===\n')
 
 	all_teammates = {}#[]
 
@@ -3099,3 +3163,14 @@ def read_all_lineups(players, player_teams, rosters):
 
 
 	return all_lineups
+
+def read_all_players_stat_dicts(players_names, current_year_str, todays_date):
+	print('\n===Read All Players Stat Dicts===\n')
+	init_player_stat_dicts = {}
+	for player_name in players_names:
+		player_cur_stat_dict_filename = 'data/stat dicts/' + player_name + ' ' + current_year_str + ' stat dict ' + todays_date + '.json'
+		player_prev_stat_dicts_filename = 'data/stat dicts/' + player_name + ' prev stat dicts.json'
+		init_player_stat_dicts[player_name] = read_cur_and_prev_json(player_cur_stat_dict_filename,player_prev_stat_dicts_filename)
+
+	print('init_player_stat_dicts: ' + str(init_player_stat_dicts))
+	return init_player_stat_dicts
