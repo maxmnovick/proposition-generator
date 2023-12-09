@@ -598,7 +598,7 @@ def generate_full_season_stat_dict(player_stat_dict):
 # use player_team to get away/home team to get game key to get players in game
 # need current_year_str to get filename for cur yr bc season yr not always cur yr
 # do not need to pass in season_year and minus 1 per loop bc looping thru season logs
-def generate_player_stat_dict(player_name, player_season_logs, todays_games_date_obj, all_players_in_games_dict={}, player_teams={}, current_year_str='', todays_date=datetime.today().strftime('%m-%d-%y'), game_teams=[], projected_lines_dict={}, init_player_stat_dict={}):
+def generate_player_stat_dict(player_name, player_season_logs, todays_games_date_obj, all_players_in_games_dict={}, player_teams={}, current_year_str='', todays_date=datetime.today().strftime('%m-%d-%y'), game_teams=[], projected_lines_dict={}, init_player_stat_dict={}, find_players=False):
 
     print('\n===Generate Player Stat Dict: ' + player_name.title() + '===\n')
     #print('===' + player_team.upper() + '===\n')
@@ -738,7 +738,7 @@ def generate_player_stat_dict(player_name, player_season_logs, todays_games_date
         # print('is season_year string? ' + season_year) # yes, but how??? it is input as int. nooo it is the key in the season logs not the init param so fix
         # if len(player_stat_dict.keys()) > 0:
         #     print('is stat dict key string? ' + list(player_stat_dict.keys())[0]) # yes
-        if determiner.determine_need_stat_dict(player_stat_dict, season_year):
+        if determiner.determine_need_stat_dict(player_stat_dict, season_year, find_players):
         #if season_year not in player_stat_dict.keys() and season_yr_str not in player_stat_dict.keys(): # if determine_team_player_key_in_stat_dict() team_players_key not in player_stat_dict[season_year].keys():
             player_stat_dict[season_year] = {}
         
@@ -4116,7 +4116,7 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
 
         #print('projected_lines_dict passed to generate stat dict: ' + str(projected_lines_dict))
         init_player_stat_dict = init_player_stat_dicts[player_name]
-        player_stat_dict = generate_player_stat_dict(player_name, player_season_logs, todays_games_date_obj, all_players_in_games_dict, player_teams, current_year_str, game_teams=game_teams, init_player_stat_dict=init_player_stat_dict)
+        player_stat_dict = generate_player_stat_dict(player_name, player_season_logs, todays_games_date_obj, all_players_in_games_dict, player_teams, current_year_str, game_teams=game_teams, init_player_stat_dict=init_player_stat_dict, find_players=find_players)
 
         # gen all outcomes shows streaks
         # produces list of features to assess

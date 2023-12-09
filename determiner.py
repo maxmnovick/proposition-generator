@@ -1381,7 +1381,7 @@ def determine_need_box_score(season_year, cur_yr, init_player_stat_dict):
     return need_box_score
 
 # if missing season yr or missing condition in season yr
-def determine_need_stat_dict(player_stat_dict, season_year):
+def determine_need_stat_dict(player_stat_dict, season_year, find_players=False):
 
     need_stat_dict = False
 
@@ -1390,7 +1390,9 @@ def determine_need_stat_dict(player_stat_dict, season_year):
     if season_year in player_stat_dict.keys():
         condition_keys = player_stat_dict[season_year].keys()
 
-    if season_year not in player_stat_dict.keys() or not determine_key_in_stat_dict(team_players_conditions, condition_keys):
+    if season_year not in player_stat_dict.keys():# or not determine_key_in_stat_dict(team_players_conditions, condition_keys):
+        need_stat_dict = True
+    elif find_players and not determine_key_in_stat_dict(team_players_conditions, condition_keys):
         need_stat_dict = True
 
     return need_stat_dict
