@@ -36,7 +36,7 @@ read_new_stats = False # set true when we add new feature to stats dict so we wa
 read_new_lineups = True # even if we saved lineups today they may have changed but we may not want to get new lineups yet if we are testing something else
 
 # === FIND PLAYERS ===
-find_players = False # if true, read all players in game box scores to see prob with teammates out
+find_players = True # if true, read all players in game box scores to see prob with teammates out
 
 # === READ ODDS ===
 # set false to save time if observing all probs

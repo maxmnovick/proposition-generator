@@ -45,12 +45,13 @@ def convert_span_to_season(span):
     return season
 
 def convert_irregular_team_abbrev(init_team_abbrev):
+    print('\n===Convert Irregular Team Abbrev: ' + init_team_abbrev + '===\n')
 
     init_team_abbrev = init_team_abbrev.lower()
-    
+
     final_team_abbrev = init_team_abbrev
 
-    irregular_abbrevs = {'bro':'bkn', 'okl':'okc', 'nor':'nop', 'pho':'phx', 'was':'wsh', 'uth': 'uta', 'utah': 'uta' }
+    irregular_abbrevs = {'bro':'bkn', 'okl':'okc', 'nor':'nop', 'no':'nop', 'pho':'phx', 'was':'wsh', 'uth': 'uta', 'utah': 'uta' }
 
     if init_team_abbrev in irregular_abbrevs.keys():
         final_team_abbrev = irregular_abbrevs[init_team_abbrev]
