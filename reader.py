@@ -801,7 +801,7 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 					if len(html_results[order].columns.tolist()) == 17:
 
 						part_of_season = html_results[order]
-						print('part_of_season:\n' + str(part_of_season))
+						print('\npart_of_season:\n' + str(part_of_season))
 
 						# look at the formatting to figure out how to separate table and elements in table
 						# when only preseason, len html results = 2
@@ -821,6 +821,11 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 							# elif re.search('play-in',last_cell.lower()):
 							# 	part_of_season['Type'] = 'Playin'
 							else:
+								# cannot assign type to whole subsection bc mixed in with in-season tournament
+								# only game that doesnt count is champ so look for label below row: 'championship'
+								# row 2: game stats
+								# row 3: ...CHAMPIONSHIP
+								# so row 2 is type=post
 								part_of_season['Type'] = 'Regular'
 
 						parts_of_season.append(part_of_season)
@@ -829,7 +834,29 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 						#print("Warning: table does not have 17 columns so it is not valid game log.")
 						pass
 
-				
+				for part_of_season in parts_of_season:
+					# cannot assign type to whole subsection bc mixed in with in-season tournament
+					# only game that doesnt count is champ so look for label below row: 'championship'
+					# row 2: game stats
+					# row 3: ...CHAMPIONSHIP
+					# so row 2 is type=post
+					print('part_of_season before: ' + str(part_of_season))
+					for game_idx, row in part_of_season.iterrows():
+						print('game_idx: ' + str(game_idx))
+						print('row before:\n' + str(row))
+						# last_cell = part_of_season.iloc[-1,0]
+						# list from recent to distant so next row shows label for current game
+						next_idx = game_idx + 1
+						if len(part_of_season.index) > next_idx:
+							next_row = part_of_season.iloc[next_idx,0] # could use any field in label row
+							print('next_row: ' + str(next_row))
+							if re.search('championship',next_row.lower()):
+								print('found champ label')
+								row['Type'] = 'Tournament'
+
+								print('row after:\n' + str(row))
+
+					print('part_of_season after: ' + str(part_of_season))
 
 				if len(parts_of_season) > 0:
 
@@ -896,8 +923,8 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 		# table = [header_row]
 		# for row in player_game_data:
 		# 	table.append(row)
-	except:
-		print('Warning: Error getting game log!')
+	except Exception as e:
+		print('Warning: Error getting game log! ', e)
 
 	# add player team to game log bc it could change any game if they get traded midseason
 	# for game_idx, row in player_game_log_df.iterrows():

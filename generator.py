@@ -155,7 +155,7 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, all_
         print('num_season_part_games: ' + str(num_season_part_games))
 
         # if played postseason this yr, then need to rezero index of reg season df bc games played only counts reg seas
-        # if 1st game idx != 0, then we know we played postseaosn
+        # if 1st game idx != 0, then we know we played postseason
         
         # note play in tournament counts as postseason
         # but is listed before reg season unfortunately
@@ -167,6 +167,7 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, all_
         # if season_part == 'postseason':
         #     num_post_games = num_season_part_games # playoff + playin
         if season_part == 'regular':
+            # easier to get num playoff games by type so change from postseason to playoff and playin
             num_playoff_games = int(season_part_game_log.index[0]) # num playoff games not counting playin bc playn listed after 
             #num_post_games = num_playoff_games # + playin
         else: # full
@@ -3550,7 +3551,7 @@ def generate_condition_sample_weight(player_stat_dict, cond_key, cond_val, part,
     # then those few bench games do prove useful so make it neglect any condition that equals all
     # if a player is in does it have same opposite weight as if they are out?
     # with each player accounting for in or out as group, the weight goes up bc more specific but less sample size
-    cond_weights = {'all': 1, 'loc':3, 'start':6, 'in': 10, 'out': 10, 'dow':1, 'tod':2} 
+    cond_weights = {'all': 1, 'loc':3, 'start':6, 'in': 10, 'out': 10, 'dow':1, 'tod':2, 'prev':5} 
     
     s_n = determiner.determine_condition_sample_size(player_stat_dict, cond_val, part) # for all yrs
     
@@ -3695,7 +3696,7 @@ def generate_all_true_probs(all_stat_probs_dict, all_player_stat_dicts, season_y
     #cur_yr = str(season_years[0])
     
     for player, player_probs_dict in all_stat_probs_dict.items():
-        print('\nplayer: ' + str(player))
+        print('\nplayer: ' + player.title())
         player_stat_dict = all_player_stat_dicts[player]
         #print('player_stat_dict: ' + str(player_stat_dict))
         # p1:{loc:l1, city:c1, dow:d1, tod:t1,...}

@@ -524,7 +524,8 @@ def determine_season_part_games(player_game_log, season_part='regular'):
         season_part_games_df = season_part_games_df[~season_part_games_df['Type'].str.startswith('Preseason')]#pd.DataFrame()#player_game_log
 
         # cannot make default all game log bc we want to exclude preseason
-        # select reg season games by type
+        # select season part games by type
+        # so we need to have accurate types set in read season log
         if season_part == 'regular' or season_part == 'postseason':
             season_part_games_df = season_part_games_df[season_part_games_df['Type'].str.startswith(season_part.title())]
             #print("partial reg_season_games_df:\n" + str(reg_season_games_df) + '\n')
