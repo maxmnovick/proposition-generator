@@ -196,6 +196,9 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, all_
         team_gp_dict = {}
         if season_year in all_players_teams[player_name].keys():
             team_gp_dict = all_players_teams[player_name][season_year]
+        team_date_dict = {}
+        if season_year in all_players_teams[player_name].keys():
+            team_date_dict = all_players_teams[player_name][season_year]
         # reverse team gp dict so same order as game idx recent to distant
         teams = list(reversed(team_gp_dict.keys()))
         games_played = list(reversed(team_gp_dict.values()))
@@ -208,7 +211,28 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, all_
             num_recent_reg_games = games_played[0] # num reg games with most recent team
         print('num_recent_reg_games: ' + str(num_recent_reg_games))
         reg_and_playoff_games_played = [num_recent_reg_games + num_playoff_games] + games_played[1:]
+        # use tourney game idx to approximate which team the player was on at the time
+        # CHANGE to get date to be more accurate
+        # tourney_part = determiner.determine_season_part_games(player_game_log, 'tourney')
+        # for game_idx, row in tourney_part.iterrows():
+        #     player_team_idx = 0 # need to reset bc tournament games are independent out of order but we have idx order
+        #     total_gp = 0
+        #     for gp in reg_and_playoff_games_played:
+        #         total_gp += gp
+        #         if int(game_idx) < total_gp:
+        #             break
+        #         player_team_idx += 1
 
+        #     reg_and_playoff_games_played[player_team_idx] += 1
+        # final_gp = []
+        # for gp_idx in range(len(games_played)):
+        #     reg_play_gp = reg_and_playoff_games_played[gp_idx]
+        #     if gp_idx == player_team_idx:
+        #         reg_play_gp += 1
+
+        #     final_gp.append(reg_play_gp)
+
+        
         print('reg_and_playoff_games_played: ' + str(reg_and_playoff_games_played))
         teams_reg_and_playoff_games_played = int(reg_and_playoff_games_played[player_team_idx])
 
@@ -232,6 +256,8 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, all_
             player_team_idx = determiner.determine_player_team_idx(player_name, player_team_idx, game_idx, row, games_played, teams_reg_and_playoff_games_played)
             if len(teams) > player_team_idx:
                 player_team = teams[player_team_idx]
+
+            #player_team = determiner.determine_player_team_by_date(player_name, team_date_dict, row)
 
             # # if postseason then after trade deadline so last team this yr
             # # postseason maybe playin listed after reg season

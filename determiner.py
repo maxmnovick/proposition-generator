@@ -517,16 +517,20 @@ def determine_season_part_games(player_game_log, season_part='regular'):
         # always separate special games
         # reset index first so games line up with teams
         season_part_games_df = player_game_log[~player_game_log['OPP'].str.endswith('*')].reset_index(drop=True)
+        if season_part != 'tournament':
+            season_part_games_df = season_part_games_df[~season_part_games_df['Type'].str.startswith('Tournament')].reset_index(drop=True)
         season_part_games_df.index = season_part_games_df.index.map(str)
         print('season_part_games_df:\n' + str(season_part_games_df))
 
         #season_part_games_df = player_game_log[~player_game_log['Type'].str.startswith('Preseason')]#pd.DataFrame()#player_game_log
+        # dont need to reset index after removing preseason bc those games are at end of log idx
         season_part_games_df = season_part_games_df[~season_part_games_df['Type'].str.startswith('Preseason')]#pd.DataFrame()#player_game_log
 
         # cannot make default all game log bc we want to exclude preseason
         # select season part games by type
         # so we need to have accurate types set in read season log
-        if season_part == 'regular' or season_part == 'postseason':
+        
+        if season_part != 'full': # bc full does not have game type bc it takes all types
             season_part_games_df = season_part_games_df[season_part_games_df['Type'].str.startswith(season_part.title())]
             #print("partial reg_season_games_df:\n" + str(reg_season_games_df) + '\n')
         #elif season_part == 'full':
@@ -1461,16 +1465,34 @@ def determine_player_team_idx(player, player_team_idx, game_idx, row, games_play
     print('\n===Determine Player Team Idx: ' + player.title() + '===\n')
 
     # if type == postseason, then player team idx always =0
+    # game type = season part
     game_type = row['Type']
     print('game_type: ' + str(game_type))
 
     # if postseason then after trade deadline so last team this yr
     # postseason maybe playin listed after reg season
-    if game_type == 'Postseason': # if postseason, player_team_idx = 0 # recent/last team this yr
+    if game_type == 'Postseason' or game_type == 'Playoff' or game_type == 'Playin': # if postseason, player_team_idx = 0 # recent/last team this yr
         player_team_idx = 0
+    # tournament for now assume not traded day before or after 
+    # for tourney game check if also greater than next teams gp
+    elif game_type == 'Tournament':
+        player_team_idx = 0 # need to reset bc tournament games are independent out of order but we have idx order
+        total_gp = 0
+        for gp in games_played:
+            total_gp += gp
+            if int(game_idx) < total_gp:
+                break
+            player_team_idx += 1
+    #     # tourney game not counted in games played
+    #     # AND need game log to tell which team they were on at the time
+    #     # by seeing if they are past GP when they reach it in the log order
+    #     # so when we see tourney game add 1 to gp before switching teams
+    #     # if they happen to get traded before or after this game
+    #     # then how to tell which team they were on at the time? need date
+    #     teams_reg_and_playoff_games_played += 1
     else:
         if int(game_idx) >= teams_reg_and_playoff_games_played: # > or >= make > bc we only need to go to next team if more games
-            #if len(teams) > player_team_idx+1:
+            #if len(teams) > player_team_idx+1:            
             if len(games_played) > player_team_idx+1:
                 player_team_idx += 1
                 teams_reg_and_playoff_games_played += games_played[player_team_idx]                
@@ -1478,3 +1500,22 @@ def determine_player_team_idx(player, player_team_idx, game_idx, row, games_play
 
     print('player_team_idx: ' + str(player_team_idx))
     return player_team_idx
+
+# we need to add date of first game on team to player teams dict
+# player_teams = {team:date,...}
+def determine_player_team_by_date(player, player_teams, row):
+    print('\n===Determine Player Team by Date: ' + player.title() + '===\n')
+
+    # if date before next team, stay current team idx
+    # if date on or after next team, go to next idx
+    # and repeat until date before next team
+
+    game_date = row['Date']
+
+    team = ''
+
+    # for team, date in player_teams.items():
+    #     next_team_date = ''
+    #     if game_date 
+
+    return team
