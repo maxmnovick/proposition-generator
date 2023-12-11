@@ -306,7 +306,7 @@ def read_all_player_espn_ids(player_names, player_of_interest=''):
 	player_ids = extract_data(data_type, header=True)
 	existing_espn_ids_dict = {}
 	for row in player_ids:
-		#print('row: ' + str(row))
+		#print('row:\n' + str(row))
 		player_name = row[0].lower()
 		player_id = row[1]
 
@@ -442,7 +442,7 @@ def read_game_box_scores(game_key, game_id='', existing_game_ids_dict={}, init_c
 
 		# first get players, which is html result with row 0 = 'starters'
 		# for idx, row in html_result.rows:
-		# 	print('row: ' + str(row))
+		# 	print('row:\n' + str(row))
 		print('row 0 loc: ' + str(html_result_df.loc[[0]]))
 		# order is always away-home
 		
@@ -796,7 +796,7 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 					# or we can get last game on old team so we can see if game date after that date
 					# add team as column in game log
 
-					date_team_change = ''
+					#date_team_change = ''
 
 					if len(html_results[order].columns.tolist()) == 17:
 
@@ -1295,8 +1295,10 @@ def read_player_position(player_name, player_id, season_year=2024, existing_play
 		if soup is not None:
 			# find last element of ul with class PlayerHeader__Team_Info
 			position = str(list(soup.find("ul", {"class": "PlayerHeader__Team_Info"}).descendants)[-1])
-			#print("position_elementn:\n" + str(position_element))
+			#print("position_element:\n" + str(position_element))
+			print('position: ' + position)
 
+			# eg point guard -> pg
 			if len(position) > 2: # use abbrev
 				pos_abbrev = ''
 				words = position.split()
@@ -1337,7 +1339,7 @@ def read_player_position(player_name, player_id, season_year=2024, existing_play
 	return position
 
 def read_all_players_positions(player_espn_ids_dict, season_year=2024):
-	#print("\n===Read All Players Positions===\n")
+	print("\n===Read All Players Positions===\n")
 	players_positions_dict = {}
 
 	# see if position saved in file
@@ -1356,7 +1358,7 @@ def read_all_players_positions(player_espn_ids_dict, season_year=2024):
 		pos = read_player_position(name, id, season_year, existing_player_positions_dict)
 		players_positions_dict[name] = pos
 
-	#print("players_positions_dict: " + str(players_positions_dict))
+	print("players_positions_dict: " + str(players_positions_dict))
 	return players_positions_dict
 
 
@@ -2649,7 +2651,7 @@ def read_all_players_in_games(all_player_season_logs_dict, all_players_teams, cu
 					for game_idx, row in season_part_game_log.iterrows():
 						
 						print('\n===Game ' + str(game_idx) + '===')
-						print('row: ' + str(row))
+						print('row:\n' + str(row))
 						# season year-1 for first half of season oct-dec bc we say season year is end of season
 						
 						# we cannot tell team until we know the specific game in the specific season bc player may change teams midseason
@@ -3243,7 +3245,8 @@ def read_stat_odds(stat_dict, all_players_odds={}):
 def read_all_lineups(players, player_teams, rosters):
 	print('\n===Read All Lineups===\n')
 
-	all_lineups = {'mia':{'starters':['tyler herro', 'jimmy butler'],'bench':[],'out':[],'probable':[],'question':[],'doubt':[]}}
+	# could add 'stars' as condition as well as level above starters
+	all_lineups = {'den':{'starters':['reggie jackson'],'bench':[],'out':[],'probable':[],'question':[],'doubt':[]}, 'mia':{'starters':['tyler herro', 'jimmy butler'],'bench':[],'out':[],'probable':[],'question':[],'doubt':[]}}
 
 	# read all lineups from source website
 	# do we need to save local? yes and make setting to force new lineups

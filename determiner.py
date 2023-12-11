@@ -1475,14 +1475,14 @@ def determine_player_team_idx(player, player_team_idx, game_idx, row, games_play
         player_team_idx = 0
     # tournament for now assume not traded day before or after 
     # for tourney game check if also greater than next teams gp
-    elif game_type == 'Tournament':
-        player_team_idx = 0 # need to reset bc tournament games are independent out of order but we have idx order
-        total_gp = 0
-        for gp in games_played:
-            total_gp += gp
-            if int(game_idx) < total_gp:
-                break
-            player_team_idx += 1
+    # elif game_type == 'Tournament':
+    #     player_team_idx = 0 # need to reset bc tournament games are independent out of order but we have idx order
+    #     total_gp = 0
+    #     for gp in games_played:
+    #         total_gp += gp
+    #         if int(game_idx) < total_gp:
+    #             break
+    #         player_team_idx += 1
     #     # tourney game not counted in games played
     #     # AND need game log to tell which team they were on at the time
     #     # by seeing if they are past GP when they reach it in the log order
