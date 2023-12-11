@@ -32,6 +32,10 @@ import copy # need to compare init saved data to final data bc only overwrite sa
 # p_string = j brown,...
 # keep position in name bc more info and still sorts alphatebically?
 # no bc we need it to exactly match other games where they played diff positions but same teammates, which is probably rare
+# actually i think position stays same in box score no matter what position they are playing that game 
+# so could include position but does it help or just get in the way?
+# could eventually use combos of positions instead of specific players
+# but then those positions would be a separate title not needed in teammates title
 def generate_players_string(players_list):
     print('\n===Generate Players String===\n')
     print('players_list: ' + str(players_list))
@@ -42,7 +46,10 @@ def generate_players_string(players_list):
 
     for p_idx in range(len(players_list)):
 
-        p = re.sub('\.|[A-Z]+$','',players_list[p_idx]).strip() # j. brown sg
+        # keep position bc we only use first initial to save space
+        # still shorter than full name bc positions only have 2 letters max
+        # if we want to remove positions: [A-Z]+$
+        p = re.sub('\.','',players_list[p_idx]).strip() # j. brown sg
         # last 2 letters are position which we want uppercase
         #n=2
         # pos = p[len(p) - n:]
@@ -53,7 +60,7 @@ def generate_players_string(players_list):
         else:
             p_string += ', ' + p
             
-    p_string = p_string.lower() # lowercase and possibly remove period after first initial?
+    p_string = p_string.title() # or lower? title makes it easier to read and compare. possibly remove period after first initial? yes to save space
     
     print('p_string: ' + p_string)
     return p_string
@@ -495,11 +502,11 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, all_
                     # organize alphabetically regardless of position bc we can get more samples 
                     # where they played together but at different positions they still play like they play?
                     # get both but first favor sample size
-                    starters_str = generate_players_string(starters)
+                    starters_str = generate_players_string(starters) + ' start'
 
                     # condition: bench
                     bench = game_teammates['bench']
-                    bench_str = generate_players_string(bench)
+                    bench_str = generate_players_string(bench) + ' bench'
 
                     # did current player start or come off bench?
                     # condition: player start or team unit/part (start/bench)
@@ -556,7 +563,10 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, all_
 
                         # condition: teammate out
                         for teammate in all_teammates[season_year]:
+                            print('teammate: ' + teammate)
+                            print('game_teammates_list: ' + str(game_teammates_list))
                             if teammate not in game_teammates_list: # teammate out
+                                print('teammate out')
                                 teammate_out_key = teammate + ' out'
 
                                 if not teammate_out_key in stat_dict.keys():
@@ -3455,7 +3465,7 @@ def generate_condition_mean_prob(condition, val_probs_dict, season_years, part, 
         sample_sizes = []
         for p_idx in range(len(probs)):
             cur_conds = all_cur_cond_dicts[p_idx]
-            s_n = determiner.determine_sample_size(player_stat_dict, cur_conds)
+            s_n = determiner.determine_sample_size(player_stat_dict, cur_conds) # for a given yr
             sample_sizes.append(s_n)
         print('sample_sizes: ' + str(sample_sizes))
 
@@ -3518,17 +3528,61 @@ def generate_all_conditions_mean_probs(val_probs_dict, season_years, player_curr
     print('all_conditions_mean_probs: ' + str(all_conditions_mean_probs))
     return all_conditions_mean_probs
 
+# for all cond, cond key = cond val = all
+# cond key = loc, cond val = home
 def generate_condition_sample_weight(player_stat_dict, cond_key, cond_val, part, season_years):
     print('\n===Generate Condition Sample Weights===\n')
     condition_sample_weight = 0 # if sample size 0 then weight 0
 
-    cond_weights = {'all': 1, 'loc':5, 'teammates out': 10, 'dow':1, 'tod':2} 
+    # need to tune these arbitrary weights
+    # when they always start or bench then start=all
+    # so would it still have more weight?
+    # similar if a teammate is almost always out then it makes almost no difference
+    # how it was when out but it matters the few games they were in
+    # that would be covered in game teammates condition
+    # does that mean some conditions dont apply to all players?
+    # from an absolute perspective, starting a game usually means more minutes so higher stats
+    # whereas location barely affects minutes but can affect energy and performance
+    # whereas teammate out/in affects minutes and stat attempts rate
+    # if start=all then all samples condition will overpower every other condition
+    # based on sample size, which would mislead away from important conditions like teammates in/out
+    # if player starts most, but is benched a few how does that affect? 
+    # then those few bench games do prove useful so make it neglect any condition that equals all
+    # if a player is in does it have same opposite weight as if they are out?
+    # with each player accounting for in or out as group, the weight goes up bc more specific but less sample size
+    cond_weights = {'all': 1, 'loc':3, 'start':6, 'in': 10, 'out': 10, 'dow':1, 'tod':2} 
     
-    s_n = determiner.determine_condition_sample_size(player_stat_dict, cond_val, part, season_years) # for all yrs
+    s_n = determiner.determine_condition_sample_size(player_stat_dict, cond_val, part) # for all yrs
+    
+    # if same sample size as all then do we know it is = all? yes bc includes all yrs
+    # if cond != all but same sample size, then cond sample 0 bc only 1 cond same as all and we cannot differentiate from all
+    # if assigned same weight as all if same sample, then it would mislead to give more weight to irrelevant samples
+    # not 'all' condition, but same sample size, so this cond applies to all samples
+    # and so does not differentiate conditions
+    # what if randomly started or benched 1 game?
+    # then other cond will have huge sample size with huge weight even though it is basically the same as 'all' condition
+    # on the other hand, we want to offset other conditions with this condition
+    # bc the condition is still valid even if it applies to all games
+    # by minimizing the effect of sample size with log fcn we can still account for this condition even if it applies to all games
+    # bc it tells us 1 important factor affecting his stats, eg teammate in happens to be all games but still important factor controlling the game
+    # another example is if a teammate is always out then they would not be in teammates list, but if they are always out they have no effect, but if they are always in they have a massive effect but we cant tell what it is bc there is nothing to compare it to
+    # keeping a cond even if it equals all is saying that cond has more weight than if all had no other factors applying to all condition
+    # so we must have all with no other factors less than all with other factors
+    # if cond_key != 'all':
+    #     all_sample_size =  determiner.determine_condition_sample_size(player_stat_dict, cond_val, part) # for all yrs
+    #     if s_n == all_sample_size:
+    #         s_n = 0 
+
     #sample_sizes.append(s_n)
     # log(0)=-inf
+    # if cond != all but same sample size, then cond weight 0
     if s_n > 0:
-        sample_weight = round(math.log(s_n),6) # or log10? need to test both by predicting yrs that already happened so we can give supervised feedback
+        # log10(100)=2, log(100)~=4.6
+        # log10(10)=1
+        # we want sample size to have very little effect
+        # bc we want the condition weights to control the outcome with slight adjustments to account for sample size
+        # bc some conditions have tons of samples of same val while only small number of samples of other val but the condition itself should hold about the same weight
+        sample_weight = round(math.log10(s_n),6) # or log10? need to test both by predicting yrs that already happened so we can give supervised feedback
         print('condition_sample_weight = ' + str(cond_weights[cond_key]) + ' * ' + str(sample_weight))
         condition_sample_weight = round(float(cond_weights[cond_key]) * sample_weight, 2)
     
@@ -3927,7 +3981,7 @@ def generate_player_current_conditions(player, game_teams, player_teams, all_lin
 
         # we know if player is starting bc lineup online shows starters
         # player_start = 'start' or 'bench'
-        player_current_conditions['player start'] = determiner.determine_player_start(player, player_abbrev, player_team_lineup)
+        player_current_conditions['start'] = determiner.determine_player_start(player, player_abbrev, player_team_lineup)
     else:
         print('Warning: player team ' + player_team + ' not in all lineups!')
 

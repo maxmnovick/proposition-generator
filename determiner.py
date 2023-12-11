@@ -1196,7 +1196,7 @@ def determine_probs_sample_size(player_stat_probs_dict, cur_conds):
 
 # all yrs for single condition
 # player_stat_dict: {2023: {'regular': {'pts': {'all': {0: 18, 1: 19...
-def determine_condition_sample_size(player_stat_dict, condition, part, season_years):
+def determine_condition_sample_size(player_stat_dict, condition, part):
     print('\n===Determine Condition Sample Size: ' + condition + '===\n')
 
     sample_size = 0
@@ -1343,10 +1343,13 @@ def determine_game_year(game_mth, season_year):
 
 # {starters:[],out:[],bench:[],unknown:[]}
 # player_start = 'start' or 'bench'
+# player_team_lineup = {'starters':['tyler herro','jimmy butler',...],'bench':[],'out':[],'probable':[],'question':[],'doubt':[]}
+# should have already standardized all lineups before inputting here
 def determine_player_start(player, player_abbrev, player_team_lineup):
     player_start = 'start'
     bench_key = 'bench'
-    if player in player_team_lineup[bench_key] or player_abbrev in player_team_lineup[bench_key]:
+
+    if player in player_team_lineup[bench_key]:# or player_abbrev in player_team_lineup[bench_key]:
         player_start = bench_key
 
     return player_start
@@ -1454,7 +1457,7 @@ def determine_player_team_each_game(player, season_part_game_log, teams, games_p
 # if reg season, game idx starts before playoffs
 # if post or full season, game idx starts at 0
 def determine_player_team_idx(player, player_team_idx, game_idx, row, games_played, teams_reg_and_playoff_games_played):
-    print('\n===Determine Player Team Idx: ' + player + '===\n')
+    print('\n===Determine Player Team Idx: ' + player.title() + '===\n')
 
     # if type == postseason, then player team idx always =0
     game_type = row['Type']

@@ -343,8 +343,10 @@ def read_players_in_box_score(game_box_scores_dict):
 		print('players:' + str(players))
 
 		# remove periods and positions from player names
+		final_players = []
 		for player in players:
-			player = re.sub('\.','',player)
+			player = re.sub('\.','',player)#.lower() # easier to read if titled but ust match comparisons with all teammates. all teammates comes from all players in games so they auto match format
+			final_players.append(player)
 			# the problem with removing position is if we have 2 players with
 			# same first initial and last name on same team
 			# but that is rare enough that we could make function to check for 2 players with same name on same team
@@ -358,12 +360,12 @@ def read_players_in_box_score(game_box_scores_dict):
 			# first initial, last name, and position match but not team
 			#player = re.sub('[A-Z]+$','',player).strip()
 
-		print('players:' + str(players))
+		print('final_players:' + str(final_players))
 
 		# split list into starters and bench
 		bench_idx = 5 # bc always 5 starters
-		starters = players[:bench_idx]
-		bench = players[bench_idx+1:]
+		starters = final_players[:bench_idx]
+		bench = final_players[bench_idx+1:]
 
 		team_part = 'starters'
 		players_dict[team_part] = starters
@@ -2685,7 +2687,7 @@ def read_all_players_in_games(all_player_season_logs_dict, all_players_teams, cu
 							
 							all_players_in_games_dict[season_year][game_key] = players_in_box_score_dict
 					
-						break # test
+						#break # test
 
 					# save cur yr box scores
 					# if read new box scores from internet
@@ -2700,9 +2702,9 @@ def read_all_players_in_games(all_player_season_logs_dict, all_players_teams, cu
 
 					# test first game
 					#break
-				break # test
+				#break # test
 
-			break # test
+			#break # test
 			#season_year -= 1
 			#year_idx += 1
 		
@@ -2726,6 +2728,7 @@ def read_all_players_in_games(all_player_season_logs_dict, all_players_teams, cu
 # if you pass the game log here 
 # then you know the players team is the team in the game key but not in the game log entry for this date!
 # player_game_logs = {year:{field:...}}
+# all_teammates: {'2024': ['A. Davis PF', ...
 def read_all_teammates(player_name, all_players_in_games_dict, player_teams={}, player_game_logs={}):
 	print('\n===Read All Teammates for ' + player_name.title() + '===\n')
 
@@ -2794,7 +2797,7 @@ def read_all_teammates(player_name, all_players_in_games_dict, player_teams={}, 
 				for teammates in game_teammates.values():
 					for teammate in teammates:
 						if teammate not in all_teammates:
-							year_teammates.append(teammate)
+							year_teammates.append(teammate) # prefer not to lower bc comes with position already uppercase like J Brown SG
 
 
 			all_teammates[year] = year_teammates
@@ -2802,6 +2805,7 @@ def read_all_teammates(player_name, all_players_in_games_dict, player_teams={}, 
 	else:
 		print('Warning: all_players_in_games_dict is empty! ' + str(all_players_in_games_dict))
 
+	# all_teammates: {'2024': ['A. Davis PF', ...
 	print('all_teammates: ' + str(all_teammates))
 	return all_teammates
 
@@ -3212,7 +3216,7 @@ def read_stat_odds(stat_dict, all_players_odds={}):
 def read_all_lineups(players, player_teams, rosters):
 	print('\n===Read All Lineups===\n')
 
-	all_lineups = {}
+	all_lineups = {'mia':{'starters':['tyler herro', 'jimmy butler'],'bench':[],'out':[],'probable':[],'question':[],'doubt':[]}}
 
 	# read all lineups from source website
 	# do we need to save local? yes and make setting to force new lineups
@@ -3227,11 +3231,15 @@ def read_all_lineups(players, player_teams, rosters):
 		for lineup in soup.find_all('div', {'class': 'lineup'}):
 			print('lineup: ' + str(lineup))
 
+			team = ''
+			# all_lineups[team] = lineup
 
+	print('all_lineups: ' + str(all_lineups))
 	return all_lineups
 
 # init_player_stat_dicts = {player: {"2023": {"regular": {"pts": {"all": {"0": 14,...
 def read_all_players_stat_dicts(players_names, current_year_str, todays_date):
+
 	print('\n===Read All Players Stat Dicts===\n')
 	init_player_stat_dicts = {}
 	for player_name in players_names:
