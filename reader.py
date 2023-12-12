@@ -782,14 +782,14 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 				parts_of_season = [] # pre season, regular season, post season
 
 				len_html_results = len(html_results) # each element is a dataframe/table so we loop thru each table
-				print('len_html_results: ' + str(len_html_results))
+				#print('len_html_results: ' + str(len_html_results))
 				for order in range(len_html_results):
-					print("order: " + str(order))
+					#print("order: " + str(order))
 
 					# see if we can find header to differntiate preseason and regseason
 					# what if only 1 table is preseason?
 					# what if only 1 table is reg or postseason?
-					print('html_results[order]: ' + str(html_results[order]))
+					#print('html_results[order]: ' + str(html_results[order]))
 
 					# need to get date player switched teams if traded
 					# first game on new team so we can see if game key date on or after that date
@@ -801,7 +801,7 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 					if len(html_results[order].columns.tolist()) == 17:
 
 						part_of_season = html_results[order]
-						print('\npart_of_season:\n' + str(part_of_season))
+						#print('\npart_of_season:\n' + str(part_of_season))
 
 						# look at the formatting to figure out how to separate table and elements in table
 						# when only preseason, len html results = 2
@@ -840,23 +840,23 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 					# row 2: game stats
 					# row 3: ...CHAMPIONSHIP
 					# so row 2 is type=post
-					print('part_of_season before: ' + str(part_of_season))
+					#print('part_of_season before: ' + str(part_of_season))
 					for game_idx, row in part_of_season.iterrows():
-						print('game_idx: ' + str(game_idx))
-						print('row before:\n' + str(row))
+						#print('game_idx: ' + str(game_idx))
+						#print('row before:\n' + str(row))
 						# last_cell = part_of_season.iloc[-1,0]
 						# list from recent to distant so next row shows label for current game
 						next_idx = game_idx + 1
 						if len(part_of_season.index) > next_idx:
 							next_row = part_of_season.iloc[next_idx,0] # could use any field in label row
-							print('next_row: ' + str(next_row))
+							#print('next_row: ' + str(next_row))
 							if re.search('championship',next_row.lower()):
-								print('found champ label')
+								#print('found champ label')
 								row['Type'] = 'Tournament'
 
-								print('row after:\n' + str(row))
+								#print('row after:\n' + str(row))
 
-					print('part_of_season after: ' + str(part_of_season))
+					#print('part_of_season after: ' + str(part_of_season))
 
 				if len(parts_of_season) > 0:
 
@@ -889,7 +889,7 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 				# display player game log in readable format
 				#pd.set_option('display.max_columns', 100)
 				pd.set_option('display.max_columns', None)
-				print("player_game_log_df before reset index:\n" + str(player_game_log_df))
+				#print("player_game_log_df before reset index:\n" + str(player_game_log_df))
 
 				# save each game log to a file
 				# filename: <player> <season> game log <todays d/m/y>
@@ -904,7 +904,7 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 				# all_game_logs = all_game_logs
 				# writer.write_json_to_file(all_game_logs, all_l)
 				player_game_log_df = player_game_log_df.reset_index(drop=True)
-				print("player_game_log_df after reset index:\n" + str(player_game_log_df))
+				#print("player_game_log_df after reset index:\n" + str(player_game_log_df))
 				init_player_game_log_dict = player_game_log_df.to_dict()
 				# change id ints to strings to compare to json
 				#print('change keys to strings')
@@ -933,8 +933,8 @@ def read_player_season_log(player_name, season_year=2024, player_url='', player_
 	# print("\n===" + player_name + "===\n")
 	# print(tabulate(table))
 	#print(player_name + " player_game_log returned")# + str(player_game_log_df))
-	print('player_game_log_df:\n' + str(player_game_log_df))
-	print('player_game_log_dict: ' + str(player_game_log_dict))
+	#print('player_game_log_df:\n' + str(player_game_log_df))
+	#print('player_game_log_dict: ' + str(player_game_log_dict))
 	return player_game_log_dict#player_game_log_df # can return this df directly or first arrange into list but seems simpler and more intuitive to keep df so we can access elements by keyword
 
 # in this format 1 file has current year and other file has prev yrs
@@ -975,8 +975,8 @@ def read_cur_and_prev_json(cur_file,prev_file,current_year_str=''):
 	return cur_and_prev
 
 # here we decide default season year, so make input variable parameter
-def read_player_season_logs(player_name, read_x_seasons=1, player_espn_ids={}, season_year=2024, all_game_logs={}, todays_date=datetime.today().strftime('%m-%d-%y'), current_year_str=''):
-	print('\n===Read Player Season Logs: ' + player_name.title() + '===\n')
+def read_player_season_logs(player_name, read_x_seasons=1, player_espn_ids={}, season_year=2024, all_game_logs={}, todays_date=datetime.today().strftime('%m-%d-%y'), current_year_str='', player_teams={}):
+	print('\n===Read Player Season Logs: ' + player_name.title() + ', ' + str(season_year) + '===\n')
 
 	player_name = player_name.lower()
 
@@ -1039,45 +1039,51 @@ def read_player_season_logs(player_name, read_x_seasons=1, player_espn_ids={}, s
 	#season_year = 2023 # here we decide default season year, so make input variable parameter
 	player_url = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_espn_id + '/type/nba/year/' + str(season_year) #.format(df_Players_Drafted_2000.loc[INDEX, 'ESPN_GAMELOG_ID'])
 	
-	if read_x_seasons == 0:
-		while determiner.determine_played_season(player_url, player_name, season_year, all_game_logs, player_game_logs):
+	try:
+	
+		if read_x_seasons == 0:
+			while determiner.determine_played_season(player_url, player_name, season_year, all_game_logs, player_game_logs, player_teams):
 
-			#print("player_url: " + player_url)
-			game_log_dict = read_player_season_log(player_name, season_year, player_url, all_game_logs=all_game_logs, todays_date=todays_date, player_game_logs=player_game_logs)
-			player_season_logs[str(season_year)] = game_log_dict
-			# if not game_log_df.empty:
-			# 	player_game_logs.append(game_log_df)
-			# 	player_season_logs[season_year] = game_log_df.to_dict()
+				#print("player_url: " + player_url)
+				game_log_dict = read_player_season_log(player_name, season_year, player_url, all_game_logs=all_game_logs, todays_date=todays_date, player_game_logs=player_game_logs)
+				player_season_logs[str(season_year)] = game_log_dict
+				# if not game_log_df.empty:
+				# 	player_game_logs.append(game_log_df)
+				# 	player_season_logs[season_year] = game_log_df.to_dict()
 
-			# if not read_all_seasons:
+				# if not read_all_seasons:
+				# 	break
+
+				player_game_logs[str(season_year)] = game_log_dict # includes all players saved before not just players input this run
+
+				season_year -= 1
+				player_url = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_espn_id + '/type/nba/year/' + str(season_year) #.format(df_Players_Drafted_2000.loc[INDEX, 'ESPN_GAMELOG_ID'])
+
+		for season_idx in range(read_x_seasons):
+			if determiner.determine_played_season(player_url, player_name, season_year, all_game_logs, player_game_logs, player_teams):
+
+				#print("player_url: " + player_url)
+				game_log_dict = read_player_season_log(player_name, season_year, player_url, all_game_logs=all_game_logs, todays_date=todays_date, player_game_logs=player_game_logs)
+				player_season_logs[str(season_year)] = game_log_dict
+				# if not game_log_df.empty:
+				# 	player_game_logs.append(game_log_df)
+				# 	player_season_logs[season_year] = game_log_df.to_dict()
+
+				player_game_logs[str(season_year)] = game_log_dict # includes all players saved before not just players input this run
+
+				season_year -= 1
+				player_url = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_espn_id + '/type/nba/year/' + str(season_year)
+			# after we reach season they did not play it is possible they may have played before but taken break
+			# so keep checking prev 5 years before breaking
+			# else:
 			# 	break
-
-			player_game_logs[str(season_year)] = game_log_dict # includes all players saved before not just players input this run
-
-			season_year -= 1
-			player_url = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_espn_id + '/type/nba/year/' + str(season_year) #.format(df_Players_Drafted_2000.loc[INDEX, 'ESPN_GAMELOG_ID'])
-
-	for season_idx in range(read_x_seasons):
-		if determiner.determine_played_season(player_url, player_name, season_year, all_game_logs, player_game_logs):
-
-			#print("player_url: " + player_url)
-			game_log_dict = read_player_season_log(player_name, season_year, player_url, all_game_logs=all_game_logs, todays_date=todays_date, player_game_logs=player_game_logs)
-			player_season_logs[str(season_year)] = game_log_dict
-			# if not game_log_df.empty:
-			# 	player_game_logs.append(game_log_df)
-			# 	player_season_logs[season_year] = game_log_df.to_dict()
-
-			player_game_logs[str(season_year)] = game_log_dict # includes all players saved before not just players input this run
-
-			season_year -= 1
-			player_url = 'https://www.espn.com/nba/player/gamelog/_/id/' + player_espn_id + '/type/nba/year/' + str(season_year)
-		# after we reach season they did not play it is possible they may have played before but taken break
-		# so keep checking prev 5 years before breaking
-		# else:
-		# 	break
-
-	print('final player_game_logs: ' + str(player_game_logs))
-	writer.write_cur_and_prev(init_player_game_logs, player_game_logs, player_cur_season_log_filename, player_prev_logs_filename, current_year_str, player_name)
+	except Exception as e:
+		print('Exception while reading game logs: ' + e)
+	
+	
+	#print('final player_game_logs: ' + str(player_game_logs))
+	if not init_player_game_logs == player_game_logs:
+		writer.write_cur_and_prev(init_player_game_logs, player_game_logs, player_cur_season_log_filename, player_prev_logs_filename, current_year_str, player_name)
 	# divide player game logs into cur yr and prev yrs
 	# cur_yr_game_log = {} #player_game_logs[current_year_str]
 	# prev_yr_game_logs = {}
@@ -1111,7 +1117,7 @@ def read_player_season_logs(player_name, read_x_seasons=1, player_espn_ids={}, s
 	#print('player_season_logs: ' + str(player_season_logs))
 	return player_season_logs#player_game_logs
 
-def read_all_players_season_logs(player_names, read_x_seasons=1, player_espn_ids={}, season_year=2024):
+def read_all_players_season_logs(player_names, read_x_seasons=1, player_espn_ids={}, season_year=2024, all_players_teams={}):
 
 	print('\n===Read All Players Season Logs===\n')
 
@@ -1134,7 +1140,8 @@ def read_all_players_season_logs(player_names, read_x_seasons=1, player_espn_ids
 
 	for player_name in player_names:
 		# {player:season:log}
-		players_season_logs = read_player_season_logs(player_name, read_x_seasons, player_espn_ids, season_year, all_players_season_logs, current_year_str=cur_yr_str)
+		player_teams = all_players_teams[player_name]
+		players_season_logs = read_player_season_logs(player_name, read_x_seasons, player_espn_ids, season_year, all_players_season_logs, current_year_str=cur_yr_str, player_teams=player_teams)
 		
 		all_players_season_logs[player_name] = players_season_logs
 
@@ -1152,7 +1159,7 @@ def read_all_players_season_logs(player_names, read_x_seasons=1, player_espn_ids
 		# 	print('all game logs changed so write to file for player ' + player_name)
 		# 	writer.write_json_to_file(all_game_logs, all_logs_filename, 'w')
 	
-	#print('all_players_season_logs: ' + str(all_players_season_logs))
+	print('all_players_season_logs: ' + str(all_players_season_logs))
 	return all_players_season_logs
 
 
@@ -1504,12 +1511,12 @@ def read_teams_from_internet(player_name, player_id):
 		team_years_df = web_data[0]
 		# drop last row bc career stats not 1 yr
 		team_years_df.drop(team_years_df.tail(1).index, inplace=True)
-		print('\nteam_years_df:\n' + str(team_years_df))
+		#print('\nteam_years_df:\n' + str(team_years_df))
 		raw_years = team_years_df.loc[:,'season'].tolist() # 2023-24
 		raw_teams = team_years_df.loc[:,'Team'].tolist()
 		stats_df = web_data[1]
 		stats_df.drop(stats_df.tail(1).index, inplace=True)
-		print('\nstats_df:\n' + str(stats_df))
+		#print('\nstats_df:\n' + str(stats_df))
 		raw_gp = stats_df.loc[:,'GP'].tolist() # games played
 
 		# if repeat same year that means 2 teams in same year
@@ -1560,30 +1567,37 @@ def read_all_players_teams(player_espn_ids_dict, read_new_teams=False):
 
 	all_players_teams = copy.deepcopy(init_all_players_teams) # need to init as saved teams so we can see difference at end
 
-	for player_name, player_id in player_espn_ids_dict.items():
-		# read player teams
-		print('\n===Player: ' + player_name.title() + '===\n')
-		# bc if read new teams then no need to read saved teams?
-		# no, we still need to read prev teams saved, and only get new team from internet
-		# but they all come from same page so it saves no time
-		if read_new_teams:
-			print('READ NEW TEAMS')
-			player_teams = read_teams_from_internet(player_name, player_id)
-
-		else:
-			if player_name in init_all_players_teams.keys():
-				player_teams = init_all_players_teams[player_name]
-			else:
+	try:
+		for player_name, player_id in player_espn_ids_dict.items():
+			# read player teams
+			#print('\n===Player: ' + player_name.title() + '===\n')
+			# bc if read new teams then no need to read saved teams?
+			# no, we still need to read prev teams saved, and only get new team from internet
+			# but they all come from same page so it saves no time
+			if read_new_teams:
+				#print('READ NEW TEAMS')
 				player_teams = read_teams_from_internet(player_name, player_id)
 
-		# teams = {year:team,...}
-		print("player_teams: " + str(player_teams))
-		all_players_teams[player_name] = player_teams
+			else:
+				if player_name in init_all_players_teams.keys():
+					player_teams = init_all_players_teams[player_name]
+				else:
+					player_teams = read_teams_from_internet(player_name, player_id)
 
+			# teams = {year:team,...}
+			#print("player_teams: " + str(player_teams))
+			all_players_teams[player_name] = player_teams
+
+	except Exception as e:
+		print('Exception while reading all players teams: ', e)
+
+	# need to add to file after each player bc if hangs halfway through then will lose all work
+	# or if that is too inefficient then make sure never hangs
+	# by retrying same player if hit cancel instead of skipping player
 	if not init_all_players_teams == all_players_teams:
 		writer.write_json_to_file(all_players_teams, all_players_teams_file, 'w')
 
-	#print("all_players_teams: " + str(all_players_teams))
+	print("all_players_teams: " + str(all_players_teams))
 	return all_players_teams
 
 # for all given players, read their teams
@@ -1652,7 +1666,18 @@ def read_roster_from_internet(team_abbrev, read_new_teams=False):
 	team_name = determiner.determine_team_name(team_abbrev)
 	team_name = re.sub(r'\s+','-',team_name)
 
-	irregular_abbrevs = {'bro':'bkn', 'okl':'okc', 'nop':'no', 'nor':'no', 'pho':'phx', 'was':'wsh', 'uth': 'utah', 'uta': 'utah' }
+	irregular_abbrevs = {'bro':'bkn', 
+					  	'gs':'gsw',
+						'okl':'okc', 
+						'no':'nop',
+						'nor':'nop', 
+						'pho':'phx', 
+						'was':'wsh', 
+						'uth': 'uta', 
+						'utah': 'uta', 
+						'sa':'sas',
+						'ny':'nyk'  } # for these match the first 3 letters of team name instead
+
 	if team_abbrev in irregular_abbrevs.keys():
 		team_abbrev = irregular_abbrevs[team_abbrev]
 
@@ -2371,7 +2396,17 @@ def read_projected_lines(raw_projected_lines, all_player_teams, player_of_intere
 			print("away_team: " + str(away_team))
 			print("home_team: " + str(home_team))
 
-			irregular_abbrevs = {'bro':'bkn', 'okl':'okc', 'nor':'nop', 'pho':'phx', 'was':'wsh', 'uth': 'uta', 'utah': 'uta' } # for these match the first 3 letters of team name instead
+			irregular_abbrevs = {'bro':'bkn', 
+					  	'gs':'gsw',
+						'okl':'okc', 
+						'no':'nop',
+						'nor':'nop', 
+						'pho':'phx', 
+						'was':'wsh', 
+						'uth': 'uta', 
+						'utah': 'uta', 
+						'sa':'sas',
+						'ny':'nyk'  } # for these match the first 3 letters of team name instead
 
 			away_abbrev = away_team.split()[0].lower()
 			if len(away_abbrev) == 2:
@@ -2479,7 +2514,19 @@ def read_projected_lines(raw_projected_lines, all_player_teams, player_of_intere
 def read_team_abbrev(team_str):
 
 	abbrev = re.sub('@|vs','',team_str.lower())
-	irregular_abbrevs = {'no':'nop', 'ny':'nyk', 'sa': 'sas', 'gs':'gsw' } # for these match the first 3 letters of team name instead
+	
+	irregular_abbrevs = {'bro':'bkn', 
+					  	'gs':'gsw',
+						'okl':'okc', 
+						'no':'nop',
+						'nor':'nop', 
+						'pho':'phx', 
+						'was':'wsh', 
+						'uth': 'uta', 
+						'utah': 'uta', 
+						'sa':'sas',
+						'ny':'nyk'  } # for these match the first 3 letters of team name instead
+
 	if abbrev in irregular_abbrevs.keys():
 		abbrev = irregular_abbrevs[abbrev]
 	#print('abbrev: ' + abbrev)
@@ -2772,6 +2819,7 @@ def read_all_teammates(player_name, all_players_in_games_dict, player_teams={}, 
 			print('\n===Year: ' + str(year) + '===\n')
 
 			# player_season_log = {field:...}
+			print('player_game_logs: ' + str(player_game_logs))
 			player_season_log = player_game_logs[year]
 
 			year_teammates = []
@@ -3242,11 +3290,11 @@ def read_stat_odds(stat_dict, all_players_odds={}):
 # get all_lineups = {team:{starters:[],bench:[],out:[],probable:[],question:[],doubt:[]},...}
 # all lineups has random combo of full names and abbrevs so check both
 # all_lineups = {team:{starters:[Klay Thompson, D. Green,...],out:[],bench:[],unknown:[]},...}
-def read_all_lineups(players, player_teams, rosters):
+def read_all_lineups(players, all_players_teams, rosters):
 	print('\n===Read All Lineups===\n')
 
 	# could add 'stars' as condition as well as level above starters
-	all_lineups = {'den':{'starters':['reggie jackson'],'bench':[],'out':[],'probable':[],'question':[],'doubt':[]}, 'mia':{'starters':['tyler herro', 'jimmy butler'],'bench':[],'out':[],'probable':[],'question':[],'doubt':[]}}
+	all_lineups = {}#{'den':{'starters':['reggie jackson'],'bench':[],'out':[],'probable':[],'question':[],'doubt':[]}, 'mia':{'starters':['tyler herro', 'jimmy butler'],'bench':[],'out':[],'probable':[],'question':[],'doubt':[]}}
 
 	# read all lineups from source website
 	# do we need to save local? yes and make setting to force new lineups
@@ -3261,8 +3309,77 @@ def read_all_lineups(players, player_teams, rosters):
 		for lineup in soup.find_all('div', {'class': 'lineup'}):
 			print('lineup: ' + str(lineup))
 
+			lineup_teams = []
+			for lineup_team in lineup.find_all('div', {'class': 'lineup__abbr'}):
+				print('lineup_team: ' + str(lineup_team))
+				team_abbrev = converter.convert_irregular_team_abbrev(lineup_team.decode_contents())#str(list(lineup_team.descendants)[0])
+				print('team_abbrev: ' + str(team_abbrev))
+				lineup_teams.append(team_abbrev)
+			print('lineup_teams: ' + str(lineup_teams))
+
+			lineup_statuses = []
+			for lineup_status in lineup.find_all('li', {'class': 'lineup__status'}):
+				print('lineup_status: ' + str(lineup_status))
+				status_text = 'expected'#lineup_status.decode_contents()#str(list(lineup_team.descendants)[0])
+				if re.search('confirmed',str(lineup_status)):
+					status_text = 'confirmed'
+				print('status_text: ' + str(status_text))
+				lineup_statuses.append(status_text)
+			print('lineup_statuses: ' + str(lineup_statuses))
+
+			# 1 for each team, so 2 per list
+			lineups_lists = lineup.find_all('ul', {'class': 'lineup__list'})
+			for team_idx in range(len(lineups_lists)):
+				lineup_list = lineups_lists[team_idx]
+				print('lineup_list: ' + str(lineup_list))
+
+				team = lineup_teams[team_idx]
+				print('team: ' + str(team))
+
+				starters = []
+				out = []
+				probable = []
+				questionable = []
+				doubtful = []
+				for player_element in lineup_list.find_all('li', {'class': 'lineup__player'}):
+					print('\nplayer_element: ' + str(player_element))
+					player_name = player_element.find('a').decode_contents()
+					print('player_name: ' + str(player_name))
+					player_name = determiner.determine_player_full_name(player_name, team, all_players_teams)
+					print('player_name: ' + str(player_name))
+					
+					# if player on team but not yet played for them 
+					# then no need to mark as out bc not a factor
+					if player_name != '':
+						if re.search('injury',str(player_element)):
+							out.append(player_name)
+						else:
+							starters.append(player_name)
+
+				print('starters: ' + str(starters))
+				print('out: ' + str(out))
+				print('probable: ' + str(probable))
+				print('questionable: ' + str(questionable))
+				print('doubtful: ' + str(doubtful))
+
+
+
 			team = ''
 			# all_lineups[team] = lineup
+
+	# standardize format to unique player id
+	# should we have actual player espn id?
+	# not ideal bc not readable and we would need to get unique player first to get id
+	# init [Klay Thompson, D. Green,...]
+	# convert to full name bc that is good enough as unique id
+	# final [klay thompson, draymond green]
+	# for team, lineup in all_lineups.items():
+	# 	for players in lineup.values():
+	# 		for player in players:
+	# 			# if given abbrev like D. Green need to know team or position to get full name
+	# 			# already given team so use that
+	# 			# check which player in all players teams list with this team has this abbrev
+	# 			player = determiner.determine_player_full_name(player, team, all_players_teams)
 
 	print('all_lineups: ' + str(all_lineups))
 	return all_lineups

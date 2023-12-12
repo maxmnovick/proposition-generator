@@ -80,7 +80,7 @@ def generate_player_abbrev(player_name, player_position):
 
     #player_abbrev = player_initital + last_name
     player_names = player_name.split()
-    player_abbrev = player_names[0][0].upper()
+    player_abbrev = re.sub('\.','',player_names[0][0]).upper()
     #last_name = ''
     for name in player_names[1:]:
         player_abbrev += ' ' + name.title()
@@ -173,11 +173,13 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, all_
         #     num_post_games = num_season_part_games # playoff + playin
         if season_part == 'regular':
             # easier to get num playoff games by type so change from postseason to playoff and playin
-            num_playoff_games = int(season_part_game_log.index[0]) # num playoff games not counting playin bc playn listed after 
+            if len(season_part_game_log.index) > 0:
+                num_playoff_games = int(season_part_game_log.index[0]) # num playoff games not counting playin bc playn listed after 
             #num_post_games = num_playoff_games # + playin
         else: # full
             regseason_game_log = determiner.determine_season_part_games(player_game_log, 'regular')
-            num_playoff_games = int(regseason_game_log.index[0])
+            if len(regseason_game_log.index) > 0:
+                num_playoff_games = int(regseason_game_log.index[0])
             #num_post_games = num_playoff_games # + playin
             #reg_season_idx = # num playoff games not counting playin bc playn listed after 
 
@@ -259,6 +261,7 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, all_
 
             # determine player team for game
             player_team_idx = determiner.determine_player_team_idx(player_name, player_team_idx, game_idx, row, games_played, teams_reg_and_playoff_games_played)
+            player_team = ''
             if len(teams) > player_team_idx:
                 player_team = teams[player_team_idx]
 
@@ -720,6 +723,7 @@ def generate_player_stat_dict(player_name, player_season_logs, todays_games_date
 
     print('\n===Generate Player Stat Dict: ' + player_name.title() + '===\n')
     #print('===' + player_team.upper() + '===\n')
+    print('player_season_logs: ' + str(player_season_logs))
 
     player_stat_dict = {}
 
@@ -3348,7 +3352,12 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams={}, all_curre
             condition = 'all' # all conds match all
             part = 'regular' # get current part from time of year mth
             # player_stat_dict: {2023: {'regular': {'pts': {'all': {0: 18, 1: 19...
-            prev_val = player_stat_dict[cur_yr][part][stat_name][condition]['0']
+            condition_dict = player_stat_dict[cur_yr][part][stat_name][condition]
+            prev_val = 0
+            if '0' in condition_dict.keys():
+                prev_val = condition_dict['0']
+            else:
+                print('Warning: no games in stat dict!\n' + player + ':\n' + str(player_stat_dict))
             #print('prev_val: ' + str(prev_val))
             # is it useful to get prev val under current conditions? possibly but could be misleading unless looking at larger sample
             
@@ -3784,6 +3793,7 @@ def generate_all_true_probs(all_stat_probs_dict, all_player_stat_dicts, season_y
     #print('all_stat_probs_dict: ' + str(all_stat_probs_dict))
     return all_stat_probs_dict
 
+# make logs dicts sorted by yr
 def generate_reg_season_logs(player_season_logs):
     reg_season_logs = {}
 
@@ -3846,10 +3856,12 @@ def generate_player_unit_stat_records(player_name, player_stat_dict, player_seas
         #print('cur_yr: ' + cur_yr)
         cur_season_log = reg_season_logs[cur_yr]#list(player_season_logs.values())[0]
         #print('cur_season_log: ' + str(cur_season_log))
-        cur_minutes_log = list(cur_season_log['MIN'].values())
-        #print('cur_minutes_log: ' + str(cur_minutes_log))
-        cur_mean_minutes = round(np.mean(np.array(cur_minutes_log)))
-        #print('cur_mean_minutes: ' + str(cur_mean_minutes))
+        cur_mean_minutes = 0
+        if 'MIN' in cur_season_log.keys():
+            cur_minutes_log = list(cur_season_log['MIN'].values())
+            #print('cur_minutes_log: ' + str(cur_minutes_log))
+            cur_mean_minutes = round(np.mean(np.array(cur_minutes_log)))
+            #print('cur_mean_minutes: ' + str(cur_mean_minutes))
 
         stats_of_interest = ['pts','reb','ast','3pm']
 
@@ -3980,6 +3992,7 @@ def generate_player_unit_stat_probs(player_stat_dict, player_name, player_season
 # p1:{loc:l1, city:c1, dow:d1, tod:t1,...}
 # all lineups has random combo of full names and abbrevs so check both
 # all_lineups = {team:{starters:[Klay Thompson, D. Green,...],out:[],bench:[],unknown:[]},...}
+# player_teams = {year:team:gp}
 def generate_player_current_conditions(player, game_teams, player_teams, all_lineups={}, player_abbrev='', cur_yr=''):
     print('\n===Generate Player Current Conditions: ' + player + '===\n')
 
@@ -4022,7 +4035,7 @@ def generate_player_current_conditions(player, game_teams, player_teams, all_lin
 
 # make dict of all current conditions for each player so we can use to compute true prob
 # all_current_conditions = {p1:{loc:l1, city:c1, dow:d1, tod:t1,...}, p2:{},...} OR {player1:[c1,c2,...], p2:[],...}
-def generate_all_current_conditions(players, game_teams, player_teams, rosters, find_players, cur_yr):
+def generate_all_current_conditions(players, game_teams, all_players_teams, rosters, find_players, cur_yr):
     print('\n===Generate All Current Conditions===\n')
 
     all_current_conditions = {}
@@ -4048,7 +4061,7 @@ def generate_all_current_conditions(players, game_teams, player_teams, rosters, 
     #all_lineups = {confirmed:{team:{starters:[],out:[],bench:[],unknown:[]},...}, expected:{team:{starters:[],bench:[],out:[]},...}}
     all_lineups = {}
     if find_players:
-        all_lineups = reader.read_all_lineups(players, player_teams, rosters)
+        all_lineups = reader.read_all_lineups(players, all_players_teams, rosters)
     # if questionable then it is very hard to say how teammates will perform so can only go with safest options
     # we could figure out how likely it is for player to play based on injury reports
     # and adjust teammates true probs accordingly
@@ -4062,7 +4075,7 @@ def generate_all_current_conditions(players, game_teams, player_teams, rosters, 
 
 
     for player in players:
-
+        player_teams = all_players_teams[player]
         # need to pass all lineups bc opponent lineups matter too
         player_curr_conds = generate_player_current_conditions(player, game_teams, player_teams, all_lineups, cur_yr=cur_yr)
 
@@ -4150,7 +4163,7 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
     if 'read new teams' in settings.keys():
         read_new_teams = settings['read new teams']
     # player_teams = {player:{year:{team:gp,...},...}}
-    player_teams = reader.read_all_players_teams(player_espn_ids_dict, read_new_teams) # only read team from internet if not saved
+    all_players_teams = reader.read_all_players_teams(player_espn_ids_dict, read_new_teams) # only read team from internet if not saved
 
     # if we gave player lines, then format them in dict
     # projected_lines_dict = {}
@@ -4163,7 +4176,7 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
     # what if we want to read previous season? make int so large int will read all seasons
     if 'read x seasons' in settings.keys():
         read_x_seasons = settings['read x seasons']
-    all_player_season_logs_dict = reader.read_all_players_season_logs(players_names, read_x_seasons, player_espn_ids_dict, season_year)
+    all_player_season_logs_dict = reader.read_all_players_season_logs(players_names, read_x_seasons, player_espn_ids_dict, season_year, all_players_teams)
     
     #print('projected_lines_dict after read season logs: ' + str(projected_lines_dict))
 
@@ -4232,7 +4245,7 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
     if find_players == True:
         print('FIND PLAYERS')
         # if we already have saved prev seasons then will only return this season games
-        all_players_in_games_dict = reader.read_all_players_in_games(all_player_season_logs_dict, player_teams, current_year_str, init_player_stat_dicts)#, season_year) # go thru players in all_player_season_logs_dict to get game ids
+        all_players_in_games_dict = reader.read_all_players_in_games(all_player_season_logs_dict, all_players_teams, current_year_str, init_player_stat_dicts)#, season_year) # go thru players in all_player_season_logs_dict to get game ids
 
 
     irreg_play_time = settings['irreg play time']
@@ -4285,7 +4298,7 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
 
         #print('projected_lines_dict passed to generate stat dict: ' + str(projected_lines_dict))
         init_player_stat_dict = init_player_stat_dicts[player_name]
-        player_stat_dict = generate_player_stat_dict(player_name, player_season_logs, todays_games_date_obj, all_players_in_games_dict, player_teams, current_year_str, game_teams=game_teams, init_player_stat_dict=init_player_stat_dict, find_players=find_players, player_position=player_position)
+        player_stat_dict = generate_player_stat_dict(player_name, player_season_logs, todays_games_date_obj, all_players_in_games_dict, all_players_teams, current_year_str, game_teams=game_teams, init_player_stat_dict=init_player_stat_dict, find_players=find_players, player_position=player_position)
 
         # gen all outcomes shows streaks
         # produces list of features to assess
@@ -4360,12 +4373,12 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
     # and also later we order spreadsheet based on current conditions used to get true prob
     # conditions such as prev val are player specific but most conditions are team specific
     # all_current_conditions = {p1:{loc:l1, city:c1, dow:d1, tod:t1,...}, p2:{},...} OR {player1:[c1,c2,...], p2:[],...}
-    all_current_conditions = generate_all_current_conditions(players_names, game_teams, player_teams, rosters, find_players, current_year_str) #determiner.determine_current_conditions() # [all, regular, home, ...]
+    all_current_conditions = generate_all_current_conditions(players_names, game_teams, all_players_teams, rosters, find_players, current_year_str) #determiner.determine_current_conditions() # [all, regular, home, ...]
     all_stat_probs_dict = generate_all_true_probs(all_stat_probs_dict, all_player_stat_dicts, season_years, all_current_conditions)
     
     # flatten nested dicts into one level and list them
     # all_stat_prob_dicts = [{player:player, stat:stat, val:val, conditions prob:prob,...},...]
-    all_stat_prob_dicts = generate_all_stat_prob_dicts(all_stat_probs_dict, player_teams, all_current_conditions, all_player_stat_dicts, season_years, game_teams)
+    all_stat_prob_dicts = generate_all_stat_prob_dicts(all_stat_probs_dict, all_players_teams, all_current_conditions, all_player_stat_dicts, season_years, game_teams)
     desired_order = ['player', 'game', 'team', 'stat','val']
     writer.list_dicts(all_stat_prob_dicts, desired_order)
 
@@ -4384,7 +4397,7 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
     if 'read odds' in settings.keys():
         read_odds = settings['read odds']
     if read_odds:
-        available_prop_dicts = generate_available_prop_dicts(all_stat_prob_dicts, game_teams, player_teams, current_year_str)
+        available_prop_dicts = generate_available_prop_dicts(all_stat_prob_dicts, game_teams, all_players_teams, current_year_str)
         desired_order.extend(['odds','ev']) # is there another way to ensure odds comes after true prob
 
     #desired_order = ['player', 'team', 'stat','ok val','ok val prob','odds','ok val post prob', 'ok val min margin', 'ok val post min margin', 'ok val mean margin', 'ok val post mean margin']
@@ -4395,7 +4408,7 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
 
     sort_keys = ['true prob']
     available_prop_dicts = sorter.sort_dicts_by_keys(available_prop_dicts, sort_keys)
-    print('available_prop_dicts: ' + str(available_prop_dicts))
+    #print('available_prop_dicts: ' + str(available_prop_dicts))
 
     # after odds and ev columns if included
     # prev val is unique type of condition
@@ -4434,13 +4447,13 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
     prop_tables = [available_prop_dicts]
     sheet_names = ['All']
 
-    print('prop_tables: ' + str(prop_tables))
+    #print('prop_tables: ' + str(prop_tables))
 
     # 1. iso tru prob >= 90
     # define high prob eg >=90
     # we use isolator for strictly isolating parts of existing data when there is no processing or computation between input output
     high_prob_props = isolator.isolate_high_prob_props(available_prop_dicts)
-    print('high_prob_props: ' + str(high_prob_props))
+    #print('high_prob_props: ' + str(high_prob_props))
     if len(high_prob_props) > 0:
         prop_tables.append(high_prob_props)
         sheet_names.append('High Prob')
@@ -4458,7 +4471,7 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
     if len(high_prob_props) > 0:
         final_prop_dicts = high_prob_props
     if 'ev' in final_prop_dicts[0].keys():
-        print('ev found')
+        #print('ev found')
         plus_ev_props = isolator.isolate_plus_ev_props(final_prop_dicts)
         
         # 3. out of remaining options, sort by ev
@@ -4472,7 +4485,7 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
         fd_max_allowed = 25
         # ideal max depends on cumulative ev
         top_options = plus_ev_props[0:dk_max_allowed]
-        print('top_options: ' + str(top_options))
+        #print('top_options: ' + str(top_options))
 
         # 5. sort by game and team and stat
         sort_keys = ['game', 'team', 'stat']
@@ -4483,7 +4496,7 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
 
         s1_props = top_options
 
-        print('prop_tables before reverse: ' + str(prop_tables))
+        #print('prop_tables before reverse: ' + str(prop_tables))
 
         prop_tables = list(reversed(prop_tables))#.reverse() #[top_options, plus_ev_props, high_prob_props, available_prop_dicts]
         sheet_names = list(reversed(sheet_names))#.reverse() #['Top', '+EV', 'High Prob', 'All'] #, 'Rare' # rare shows those where prev val is anomalous so unlikely to repeat anomaly (eg player falls in bottom 10% game)
@@ -4499,8 +4512,8 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
 
     # todo: make fcn to classify recently broken streaks bc that recent game may be anomaly and they may revert back to streak
     # todo: to fully predict current player stats, must predict teammate and opponent stats and prioritize and align with totals
-    print('final prop_tables: ' + str(prop_tables))
-    print('sheet_names: ' + str(sheet_names))
+    #print('final prop_tables: ' + str(prop_tables))
+    #print('sheet_names: ' + str(sheet_names))
     writer.write_prop_tables(prop_tables, sheet_names, desired_order)
 
     # pass player outcomes to another fcn to compute cumulative joint prob and ev?

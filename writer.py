@@ -981,10 +981,10 @@ def write_cur_and_prev(init_dict, final_dict, cur_file, prev_file, cur_yr, playe
     if cur_yr == '':
         cur_yr = determiner.determine_current_season_year()
 
-    print('init_dict: ' + str(init_dict))
-    print('final_dict: ' + str(final_dict))
-    print('cur_file: ' + str(cur_file))
-    print('prev_file: ' + str(prev_file) + '\n')
+    # print('init_dict: ' + str(init_dict))
+    # print('final_dict: ' + str(final_dict))
+    # print('cur_file: ' + str(cur_file))
+    # print('prev_file: ' + str(prev_file) + '\n')
     
     # take first year as cur yr
     init_cur_dict = {} #list(init_dict.values)[0]
@@ -1020,10 +1020,10 @@ def write_cur_and_prev(init_dict, final_dict, cur_file, prev_file, cur_yr, playe
 
         #year_idx += 1
 
-    print('init_cur_dict: ' + str(init_cur_dict))
-    print('final_cur_dict: ' + str(final_cur_dict))
-    print('init_prev_dict: ' + str(init_prev_dict))
-    print('final_prev_dict: ' + str(final_prev_dict))
+    #print('init_cur_dict: ' + str(init_cur_dict))
+    #print('final_cur_dict: ' + str(final_cur_dict))
+    #print('init_prev_dict: ' + str(init_prev_dict))
+    #print('final_prev_dict: ' + str(final_prev_dict))
     if not init_cur_dict == final_cur_dict:
         print(player_name + ' CURRENT year data changed so write to file')
         write_json_to_file(final_cur_dict, cur_file, 'w')
