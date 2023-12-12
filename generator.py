@@ -4467,6 +4467,11 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
         s1_props = high_prob_props
 
     # 2. iso +ev
+    # the only time when -ev picks are used is when they must be paired with high +ev pick
+    # then they will bring down the ev of the group but the joint prob may still be +ev
+    # really only use if only 1 +ev pick per game happens to be high ev and the other -ev is only slightly low
+    # also in reality the ev calculation is imperfect 
+    # so we must take a range including some -ev that might be miscalculated and are truly +ev
     final_prop_dicts = available_prop_dicts
     if len(high_prob_props) > 0:
         final_prop_dicts = high_prob_props

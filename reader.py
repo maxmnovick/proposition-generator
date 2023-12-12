@@ -139,7 +139,7 @@ def read_website(url, timeout=10, max_retries=3):
             # If any other exception occurs, raise it
 			#raise
 			retries += 1
-			print(f"Exception error occurred. Retrying {retries}/{max_retries}...", e, e.getheaders(), e.gettext(), e.getcode())
+			print(f"Exception error occurred. Retrying {retries}/{max_retries}...", e)#, e.getheaders(), e.gettext(), e.getcode())
 			time.sleep(10)
 		except:
 			print(f"server not found?")
@@ -671,7 +671,7 @@ def read_web_data(url, timeout=10, max_retries=3):
 			#response.raise_for_status()  # Will raise an HTTPError if the HTTP request returned an unsuccessful status code
 
 			#list_of_dataframes = pd.read_html(url)
-			headers = {'User-Agent': random.choice(user_agents)}#'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+			headers = {'User-Agent': 'Mozilla/5.0'}#headers = {'User-Agent': random.choice(user_agents)}#'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
 			r = requests.get(url, headers=headers, timeout=timeout)
 			#r.raise_for_status(headers=headers)
 			#print('r: ' + str(r))
@@ -684,7 +684,7 @@ def read_web_data(url, timeout=10, max_retries=3):
 
 			return list_of_dataframes
 
-		except requests.exceptions.Timeout:
+		except requests.exceptions.Timeout as e:
 			print(f"Timeout error occurred. Retrying {retries + 1}/{max_retries}...", e, e.getheaders(), e.gettext(), e.getcode())
 			retries += 1
 			time.sleep(10)
@@ -694,7 +694,7 @@ def read_web_data(url, timeout=10, max_retries=3):
 			retries += 1
 			time.sleep(10)
 		except requests.exceptions.RequestException as e:
-			print(f"Request failed: {e}", e.getheaders(), e.gettext(), e.getcode())
+			print(f"Request failed: {e}")#, e.get_headers(), e.get_text(), e.get_code())
 			#raise
 			retries += 1
 			time.sleep(10)

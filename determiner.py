@@ -446,19 +446,10 @@ def determine_played_season(player_url, player_name='', season_year=0, all_game_
             #     played_season = True
             #     print('played season')
 
-            h = httplib2.Http()
-            resp = h.request(player_url, 'HEAD')
-            status_code = resp[0]['status']
-            
-            if int(status_code) < 400:
-                # some websites will simply not have the webpage but espn still has the webpage for all years prior to playing with blank game logs
-                #if len(game_log) > 0:
+            try:
 
-                try:
-
-                    html_results = pd.read_html(player_url)
-                    #print("html_results: " + str(html_results))
-
+                html_results = reader.read_web_data(player_url)
+                if html_results is not None:
                     len_html_results = len(html_results) # each element is a dataframe/table so we loop thru each table
 
                     for order in range(len_html_results):
@@ -469,11 +460,38 @@ def determine_played_season(player_url, player_name='', season_year=0, all_game_
                             played_season = True
                             break
 
-                except Exception as e:
-                    print('page exists but no tables: ', e)
+                # h = httplib2.Http()
+                # resp = h.request(player_url, 'HEAD')
+                # status_code = resp[0]['status']
                 
-            else:
-                print('\nstatus_code: ' + str(status_code))
+                # if int(status_code) < 400:
+                #     # some websites will simply not have the webpage but espn still has the webpage for all years prior to playing with blank game logs
+                #     #if len(game_log) > 0:
+
+                #     try:
+
+                #         html_results = pd.read_html(player_url)
+                #         #print("html_results: " + str(html_results))
+
+                #         len_html_results = len(html_results) # each element is a dataframe/table so we loop thru each table
+
+                #         for order in range(len_html_results):
+                #             #print("order: " + str(order))
+
+                #             if len(html_results[order].columns.tolist()) == 17:
+
+                #                 played_season = True
+                #                 break
+
+                #     except Exception as e:
+                #         print('page exists but no tables: ', e)
+                    
+                # else:
+                #     print('\nstatus_code: ' + str(status_code))
+
+            except Exception as e:
+                print('Page exists but no tables: ', e)
+                #print('Exception could not get url: ' + e)
 
     if not played_season:
         print('\nWarning: ' + player_name.title() + ' did NOT play season ' + str(season_year) + '!\n')
