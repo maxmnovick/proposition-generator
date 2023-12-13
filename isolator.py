@@ -141,13 +141,13 @@ def isolate_high_prob_props(prop_dicts):
     high_prob_props = []
 
     for prop in prop_dicts:
-        print('prop: ' + str(prop))
+        #print('prop: ' + str(prop))
         true_prob = int(prop['true prob'])
-        print('true_prob: ' + str(true_prob))
+        #print('true_prob: ' + str(true_prob))
         if true_prob >= 90:
             high_prob_props.append(prop)
 
-    print('high_prob_props: ' + str(high_prob_props))
+    #print('high_prob_props: ' + str(high_prob_props))
     return high_prob_props
 
 def isolate_plus_ev_props(prop_dicts):
@@ -159,5 +159,5 @@ def isolate_plus_ev_props(prop_dicts):
         if float(prop['ev']) > 0.0:
             plus_ev_props.append(prop)
 
-    print('plus_ev_props: ' + str(plus_ev_props))
+    #print('plus_ev_props: ' + str(plus_ev_props))
     return plus_ev_props

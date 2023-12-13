@@ -1347,12 +1347,19 @@ def determine_game_year(game_mth, season_year):
 # player_team_lineup = {'starters':['tyler herro','jimmy butler',...],'bench':[],'out':[],'probable':[],'question':[],'doubt':[]}
 # should have already standardized all lineups before inputting here
 def determine_player_start(player, player_abbrev, player_team_lineup):
-    player_start = 'start'
-    bench_key = 'bench'
+    print('\n===Determine Player Start===\n')
+    print('player_team_lineup: ' + str(player_team_lineup))
+    
+    # given starters not bench so only make starter if shown in list?
+    # problem is questionable players are still listed as starters
+    # if they are expected to start then still consider them a starter
+    player_start = 'bench'
+    start_key = 'start'
 
-    if player in player_team_lineup[bench_key]:# or player_abbrev in player_team_lineup[bench_key]:
-        player_start = bench_key
+    if player in player_team_lineup[start_key]:# or player_abbrev in player_team_lineup[bench_key]:
+        player_start = start_key
 
+    print('player_start: ' + str(player_start))
     return player_start
 
 # see if any of desired keys in stat dict already
@@ -1521,7 +1528,7 @@ def determine_player_team_by_date(player, player_teams, row):
 # player_teams = {year:{team:gp,...},...
 def determine_player_current_team(player, player_teams, cur_yr=''):
     print('\n===Determine Player Current Team: ' + player.title() + '===\n')
-    print('player_teams: ' + str(player_teams))
+    #print('player_teams: ' + str(player_teams))
     cur_team = ''
 
     if len(player_teams.keys()) > 0:
