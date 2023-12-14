@@ -4936,18 +4936,66 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
         individual_props = [] 
         replacement_props = []
         # max_picks_top_ev_props = [{},...]
-        for main_prop in max_picks_top_ev_props:
+        for main_prop_idx in range(len(max_picks_top_ev_props)):
+            main_prop = max_picks_top_ev_props[main_prop_idx]
+            top_ev_remaining_prop = {}
+            if len(remaining_top_ev_props) > 0:
+                top_ev_remaining_prop = remaining_top_ev_props[0]
+
             # if only prop in game, individual prop
             if not determiner.determine_multiple_dicts_with_val(main_prop, 'game', max_picks_top_ev_props):
                 individual_props.append(main_prop)
                 # replace with next highest ev
-                for remaining_prop in remaining_top_ev_props:
-                    # if already other picks from this game in top picks, 
-                    # then consider replace in max_picks_top_ev_props
-                    # OR if this individ prop is very high ev, 
-                    # consider replacing a lower ev prop in a game with >2 props
-                    if determiner.determine_val_in_dicts(remaining_prop, 'game', max_picks_top_ev_props):
-                        replacement_props.append(remaining_prop)
+                # first look in remaining props to see if same game prop available
+                # if not, replace with highest ev in remaining props (idx=0)
+                #if determiner.determine_same_game_prop(main_prop, remaining_top_ev_props):
+                if determiner.determine_val_in_dicts(main_prop, 'game', remaining_top_ev_props):
+                    # consider next highest evs
+                    # get joint ev and compare to other option
+                    sg_props = isolator.isolate_sg_props(main_prop)
+                    sg_prop = isolator.isolate_highest_ev_prop(sg_props) # next highest same game prop if available
+                    main_prop_joint_ev = main_prop['ev'] * sg_prop['ev']
+                    print('main_prop_joint_ev: ' + str(main_prop_joint_ev))
+
+                    # find lowest available to take out from a game with >2 picks
+                    # if next highest sg prop +*? main prop > sum/product? of 2 lowest top ev props
+                    # then use sg prop instead of overall prop
+                    low_ev_top_prop = max_picks_top_ev_props[-1]
+                    replacement_prop_joint_ev = low_ev_top_prop['ev'] * top_ev_remaining_prop['ev']
+                    print('replacement_prop_joint_ev: ' + str(replacement_prop_joint_ev))
+
+                    if main_prop_joint_ev > replacement_prop_joint_ev:
+                        # keep main prop and sgp
+                        # remove bottom of max picks
+                        max_picks_top_ev_props.pop()
+                        max_picks_top_ev_props.append(sg_prop)
+                    else: #
+                        #replacement_prop = remaining_top_ev_props[0]
+                        max_picks_top_ev_props.pop(main_prop_idx)
+                        max_picks_top_ev_props.append(top_ev_remaining_prop)
+
+                else: # no sg props available so replace with top of remaining props
+                    max_picks_top_ev_props.pop(main_prop_idx)
+                    max_picks_top_ev_props.append(top_ev_remaining_prop)
+
+                # for remaining_prop in remaining_top_ev_props:
+                #     # if a remaining prop is from the same game as a prop in max picks
+                #     # then consider replacing the individual prop in max_picks_top_ev_props
+                #     # with this remaining prop
+                #     # OR if the main individ prop is very high ev, 
+                #     # consider replacing a lower ev prop in a game with >2 props
+                #     if determiner.determine_val_in_dicts(remaining_prop, 'game', max_picks_top_ev_props):
+                #         replacement_props.append(remaining_prop)
+
+                #         # get joint ev and compare to other option
+                #         sg_props = isolator.isolate_sg_props(main_prop)
+                #         sg_prop = isolator.isolate_highest_ev_prop(sg_props)# next highest same game prop if available
+                #         main_prop_joint_ev = main_prop['ev'] * sg_prop['ev']
+
+                #         # find lowest available to take out from a game with >2 picks
+                #         # if next highest sg prop +*? main prop > sum/product? of 2 lowest top ev props
+                #         # then use sg prop instead of overall prop
+                #         max_picks_top_ev_props[-1]['ev'] * remaining_prop['ev']
 
                     # compare same game next highest if available to next highest remaining overall
                     # if next highest in game = next highest overall, replace
