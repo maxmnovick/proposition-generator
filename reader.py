@@ -987,7 +987,7 @@ def read_cur_and_prev_json(cur_file,prev_file,current_year_str=''):
 
 # here we decide default season year, so make input variable parameter
 def read_player_season_logs(player_name, read_x_seasons=1, player_espn_ids={}, season_year=2024, all_game_logs={}, todays_date=datetime.today().strftime('%m-%d-%y'), current_year_str='', player_teams={}):
-	print('\n===Read Player Season Logs: ' + player_name.title() + ', ' + str(season_year) + '===\n')
+	print('\n===Read Player Season Logs: ' + player_name.title() + '===\n')
 
 	player_name = player_name.lower()
 
@@ -2629,7 +2629,7 @@ def read_all_players_in_games(all_player_season_logs_dict, all_players_teams, cu
 	
 
 	for player_name, player_season_logs in all_player_season_logs_dict.items():
-		print('\nplayer_name: ' + player_name)
+		print('\n===Read Players in Games for: ' + player_name.title() + '===\n')
 
 		# init_player_stat_dict = {"2023": {"regular": {"pts": {"all": {"0": 14,...
 		init_player_stat_dict = init_player_stat_dicts[player_name]
@@ -2887,67 +2887,74 @@ def read_season_teammates(player, year, player_season_log, all_players_in_games_
 		# use date and opp team in game log to get game players
 		# num games = len(field vals) so take first field
 		# idx_dict: {'0': 'james harden', ...
-		idx_dict = list(player_season_log.values())[0]
-		for game_idx in range(len(idx_dict.keys())):
-			game_idx_str = str(game_idx)
-			print('\n===Game: ' + game_idx_str + '===\n')
+		stat_dicts = list(player_season_log.values())
+		if len(stat_dicts) > 0:
+			idx_dict = stat_dicts[0]
+			for game_idx in range(len(idx_dict.keys())):
+				game_idx_str = str(game_idx)
+				print('\n===Game: ' + game_idx_str + '===\n')
 
-			if 'Date' in player_season_log.keys():
+				if 'Date' in player_season_log.keys():
 
-				game_date = player_season_log['Date'][game_idx_str]
-				print('game_date: ' + str(game_date)) # wed 11/18
-				game_opp = player_season_log['OPP'][game_idx_str].lower()
-				print('game_opp: ' + str(game_opp))  # vsind
+					game_date = player_season_log['Date'][game_idx_str]
+					print('game_date: ' + str(game_date)) # wed 11/18
+					game_opp = player_season_log['OPP'][game_idx_str].lower()
+					print('game_opp: ' + str(game_opp))  # vsind
 
-				# find matching game in list of all players in games
-				# still unique bc team only plays once per day
-				# need to iso date and team separately bc string not always in order of team date bc they maybe home/away
-				# all_players_in_games_dict = {year:{game:{away:{starters:[],bench:[]},home:{starters:[],bench:[]}}
-				# game_players = {away:{starters:[],bench:[]},home:{starters:[],bench:[]}
-				# game_teammates_dict = {starters:[],bench:[]}
-				player_team = ''
-				game_teammates_dict = {}
-				for game_key, game_players in year_players_in_games.items():
-					print('game_key: ' + str(game_key))
-
-					# first look for matching date
-					game_key_date = re.sub('/\d+$','',game_key.split()[2]) # 11/11/2024 -> 11/11
-					print('game_key_date: ' + str(game_key_date))
-					# game_key_date = 11/18
-					# game_date = wed 11/18
-					if re.search(game_key_date, game_date):
-						# look for matching team
-						# game_key_teams = re.sub('\s\d+.+$','',) #'away home 11/11/2024'
-						# print('game_key_teams: ' + str(game_key_teams))
-
-						# game_opp = vsind
-						game_data = game_key.split() # away,home,date
-
-						if len(game_data) > 2:
-							away_team = game_data[0]
-							home_team = game_data[1]
-
-							# find game
-							if re.search(away_team, game_opp):
-								player_team = home_team
-								game_teammates_dict = game_players['home']
-								break
-							elif re.search(home_team, game_opp):
-								player_team = away_team
-								game_teammates_dict = game_players['away']
-								break
-
-				if player_team != '':
-					print('player_team: ' + str(player_team))
-					print('game_teammates_dict: ' + str(game_teammates_dict))
-
-					# loop thru games to see if we encounter new teammates
+					# find matching game in list of all players in games
+					# still unique bc team only plays once per day
+					# need to iso date and team separately bc string not always in order of team date bc they maybe home/away
+					# all_players_in_games_dict = {year:{game:{away:{starters:[],bench:[]},home:{starters:[],bench:[]}}
+					# game_players = {away:{starters:[],bench:[]},home:{starters:[],bench:[]}
 					# game_teammates_dict = {starters:[],bench:[]}
-					for teammates in game_teammates_dict.values():
-						for teammate in teammates:
-							if teammate not in season_teammates:
-								season_teammates.append(teammate) # prefer not to lower bc comes with position already uppercase like J Brown SG
+					player_team = ''
+					game_teammates_dict = {}
+					for game_key, game_players in year_players_in_games.items():
+						print('game_key: ' + str(game_key))
 
+						# first look for matching date
+						game_key_data = game_key.split()
+						date_idx = 2
+						if len(game_key_data) > date_idx:
+							game_key_date = re.sub('/\d+$','',game_key_data[date_idx]) # 11/11/2024 -> 11/11
+							print('game_key_date: ' + str(game_key_date))
+							# game_key_date = 11/18
+							# game_date = wed 11/18
+							if re.search(game_key_date, game_date):
+								# look for matching team
+								# game_key_teams = re.sub('\s\d+.+$','',) #'away home 11/11/2024'
+								# print('game_key_teams: ' + str(game_key_teams))
+
+								# game_opp = vsind
+								game_data = game_key.split() # away,home,date
+
+								if len(game_data) > 2:
+									away_team = game_data[0]
+									home_team = game_data[1]
+
+									# find game
+									if re.search(away_team, game_opp):
+										player_team = home_team
+										game_teammates_dict = game_players['home']
+										break
+									elif re.search(home_team, game_opp):
+										player_team = away_team
+										game_teammates_dict = game_players['away']
+										break
+
+					if player_team != '':
+						print('player_team: ' + str(player_team))
+						print('game_teammates_dict: ' + str(game_teammates_dict))
+
+						# loop thru games to see if we encounter new teammates
+						# game_teammates_dict = {starters:[],bench:[]}
+						for teammates in game_teammates_dict.values():
+							for teammate in teammates:
+								if teammate not in season_teammates:
+									season_teammates.append(teammate) # prefer not to lower bc comes with position already uppercase like J Brown SG
+
+		else:
+			print('Warning: player has no stat dicts! ' + player.title())
 	else:
 		print('Warning: all_players_in_games_dict is empty! ' + str(all_players_in_games_dict))
 

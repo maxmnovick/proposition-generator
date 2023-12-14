@@ -1176,12 +1176,26 @@ def determine_stat_available(stat_dict):
 # so table lines up if players did not all play in same conditions
 #all_stat_probs_dict: {'luka doncic': {'pts': {0: {'all 2023 regular prob': 0.02, 'all 2023 full prob': 0.02...
 def determine_all_conditions(all_stat_probs_dict):
+    print('\n===Determine All Conditions===\n')
+
     all_conditions = []
 
+    # player_stat_probs_dict: {'pts': {0: {'all 2023 regular prob': 0.02, 'all 2023 full prob': 0.02...
     for player_stat_probs_dict in all_stat_probs_dict.values():
-        for stat_probs_dict in player_stat_probs_dict.values():
+        # all stats should have same conditions bc stat recorded at every value
+        # so we can take first stat probs dict
+        # bc it is for a single player, we know they got at least 1 stat (even 0s) under every condition they played in by definition
+        
+        # stat_probs_dict: {0: {'all 2023 regular prob': 0.02, 'all 2023 full prob': 0.02...
+        #for stat_probs_dict in player_stat_probs_dict.values():
+        stat_prob_dicts = list(player_stat_probs_dict.values())
+        if len(stat_prob_dicts) > 0:
+            stat_probs_dict = stat_prob_dicts[0]
+            
+            # we need to loop thru all val probs dicts bc not all vals reached in all conditions
+            # and we need to see all conds reached by any val
+            # val_probs_dict: {'all 2023 regular prob': 0.02, 'all 2023 full prob': 0.02...
             for val_probs_dict in stat_probs_dict.values():
-
                 for conditions in val_probs_dict.keys():
                     if conditions not in all_conditions:
                         all_conditions.append(conditions)

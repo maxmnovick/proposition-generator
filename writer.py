@@ -16,6 +16,8 @@ import json # for team players
 
 import pandas as pd # write spreadsheets from lists to dataframes
 
+from datetime import datetime # add date to filename
+
 def display_game_data(all_valid_streaks_list):
     print("\n===Game Data===\n")
     # all_player_pre_dicts = [{'prediction':val,'overall record':[],..},{},..]
@@ -949,12 +951,12 @@ def write_all_player_stat_probs(all_player_stat_probs):
 # AND write 1 sheet for all 0 ev props, sorted by true prob
 # AND write 1 sheet for all -ev props, sorted by true prob
 # AND write 1 sheet for each strategy
-def write_prop_tables(prop_dicts, sheet_names, desired_order):
+def write_prop_tables(prop_dicts, sheet_names, desired_order, todays_date=datetime.today().strftime('%m-%d-%y')):
     print('\n===Write Prop Tables===\n')
     print('prop_dicts: ' + str(prop_dicts))
 
     # book name = prop tables
-    book_name = 'data/prop tables.xlsx'
+    book_name = 'data/prop tables - ' + todays_date + '.xlsx'
     print('book_name: ' + str(book_name))
     writer = pd.ExcelWriter(book_name)
 

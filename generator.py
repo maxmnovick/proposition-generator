@@ -93,7 +93,7 @@ def generate_player_abbrev(player_name, player_position):
 # run separately for each part of each season
 def generate_player_all_stats_dicts(player_name, player_game_log, opponent, all_players_teams, season_year, todays_games_date_obj, all_players_in_games_dict, player_teammates, all_seasons_stats_dicts, season_part, player_position):
 
-    print('\n===Generate Player All Stats Dicts===\n')
+    print('\n===Generate Player All Stats Dicts: ' + player_name.title() + '===\n')
     print('season_year: ' + str(season_year))
     print('season_part: ' + str(season_part))
     #print('player_game_log:\n' + str(player_game_log))
@@ -296,279 +296,265 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, all_
 
             # now that we have game stats add them to dict by condition
 
-            # condition: all
+            # all conditions
             # values is list of dicts
             for stat_idx in range(len(all_stats_dicts.values())):
                 stat_dict = list(all_stats_dicts.values())[stat_idx]
                 stat = game_stats[stat_idx]
+
+
+
+                # condition: all
                 stat_dict['all'][game_idx] = stat
 
-            # todo: condition: tv coverage
-            # bc some players play better or worse with more ppl watching more attention
 
-            # condition: location
-            # todo: condition: city. use 'team abbrev city'? some games are not in either city like international games
-            # default can use 'team abbrev city' and then neutral games will have specific '<city>' and 'neutral' tags
-            # classify all neutral games as well as international. some neutral tournament games but are there any neutral season games that are domestic? no it seems all neutral would be international except for in season tournament
-            # could also avoid this extra condition unless neutral specific city
-            # instead if default away/home game, combine opponent and loc conditions to get city so we only need extra condition if neutral
-            
-            # define away/home team so we can determine teammates/opponents in players in game
-            # player team for this game
-            #player_team = list(player_teams[player_name][season_year].keys())[-1]# current team
-            away_abbrev = player_team
 
-            game_opp_str = row['OPP'] #player_game_log.loc[game_idx, 'OPP']
-            game_opp_abbrev = reader.read_team_abbrev(game_opp_str) # remove leading characters and change irregular abbrevs
-            home_abbrev = game_opp_abbrev
 
-            if re.search('vs',game_opp_str):
+                # todo: condition: tv coverage
+                # bc some players play better or worse with more ppl watching more attention
 
-                # values is list of dicts
-                for stat_idx in range(len(all_stats_dicts.values())):
-                    stat_dict = list(all_stats_dicts.values())[stat_idx]
-                    stat = game_stats[stat_idx]
+                # condition: location
+                # todo: condition: city. use 'team abbrev city'? some games are not in either city like international games
+                # default can use 'team abbrev city' and then neutral games will have specific '<city>' and 'neutral' tags
+                # classify all neutral games as well as international. some neutral tournament games but are there any neutral season games that are domestic? no it seems all neutral would be international except for in season tournament
+                # could also avoid this extra condition unless neutral specific city
+                # instead if default away/home game, combine opponent and loc conditions to get city so we only need extra condition if neutral
+                # define away/home team so we can determine teammates/opponents in players in game
+                # player team for this game
+                #player_team = list(player_teams[player_name][season_year].keys())[-1]# current team
+                away_abbrev = player_team
+
+                game_opp_str = row['OPP'] #player_game_log.loc[game_idx, 'OPP']
+                game_opp_abbrev = reader.read_team_abbrev(game_opp_str) # remove leading characters and change irregular abbrevs
+                home_abbrev = game_opp_abbrev
+
+                if re.search('vs',game_opp_str):
 
                     stat_dict['home'][game_idx] = stat
+                    
+                    away_abbrev = game_opp_abbrev
+                    home_abbrev = player_team
 
-                
-                away_abbrev = game_opp_abbrev
-                home_abbrev = player_team
-
-                
-            else: # if not home then away
-                for stat_idx in range(len(all_stats_dicts.values())):
-                    stat_dict = list(all_stats_dicts.values())[stat_idx]
-                    stat = game_stats[stat_idx]
+                    
+                else: # if not home then away
                     stat_dict['away'][game_idx] = stat
 
-                
-            #print('away_abbrev: ' + away_abbrev)
-            #print('home_abbrev: ' + home_abbrev)
+                    
+                #print('away_abbrev: ' + away_abbrev)
+                #print('home_abbrev: ' + home_abbrev)
 
-            # matchup against opponent
-            # only add key for current opp bc we dont need to see all opps here
-            # look for irregular abbrevs like NO and NY
-            # opponent in form 'gsw' but game log in form 'gs'
-            # if we do not know the current opponent then show all opps
-            #game_log_team_abbrev = re.sub('vs|@','',player_game_log.loc[game_idx, 'OPP'].lower()) # eg 'gs'
-            game_log_team_abbrev = reader.read_team_abbrev(row['OPP'])#(player_game_log.loc[game_idx, 'OPP'])
-            #print('game_log_team_abbrev: ' + game_log_team_abbrev)
-            #opp_abbrev = opponent # default if regular
-            #print('opp_abbrev: ' + opp_abbrev)
 
-            # irregular_abbrevs = {'nop':'no', 'nyk':'ny', 'sas': 'sa', 'gsw':'gs' } # for these match the first 3 letters of team name instead
-            # if opp_abbrev in irregular_abbrevs.keys():
-            #     #print("irregular abbrev: " + team_abbrev)
-            #     opp_abbrev = irregular_abbrevs[opp_abbrev]
+                # condition: matchup against opponent
+                # only add key for current opp bc we dont need to see all opps here
+                # look for irregular abbrevs like NO and NY
+                # opponent in form 'gsw' but game log in form 'gs'
+                # if we do not know the current opponent then show all opps
+                #game_log_team_abbrev = re.sub('vs|@','',player_game_log.loc[game_idx, 'OPP'].lower()) # eg 'gs'
+                game_log_team_abbrev = reader.read_team_abbrev(row['OPP'])#(player_game_log.loc[game_idx, 'OPP'])
+                #print('game_log_team_abbrev: ' + game_log_team_abbrev)
+                #opp_abbrev = opponent # default if regular
+                #print('opp_abbrev: ' + opp_abbrev)
 
-            # if we do not know the current opponent 
-            # or if we are not given a specific opponent (bc we may want to compare opps)
-            # then show all opps
-            if opponent == game_log_team_abbrev or opponent == '':
-                #print('opp_abbrev == game_log_team_abbrev')
-                for stat_idx in range(len(all_stats_dicts.values())):
-                    stat_dict = list(all_stats_dicts.values())[stat_idx]
-                    stat = game_stats[stat_idx]
+                # irregular_abbrevs = {'nop':'no', 'nyk':'ny', 'sas': 'sa', 'gsw':'gs' } # for these match the first 3 letters of team name instead
+                # if opp_abbrev in irregular_abbrevs.keys():
+                #     #print("irregular abbrev: " + team_abbrev)
+                #     opp_abbrev = irregular_abbrevs[opp_abbrev]
+
+                # if we do not know the current opponent 
+                # or if we are not given a specific opponent (bc we may want to compare opps)
+                # then show all opps
+                if opponent == game_log_team_abbrev or opponent == '':
+                    #print('opp_abbrev == game_log_team_abbrev')
+
                     if not game_log_team_abbrev in stat_dict.keys():
                         stat_dict[game_log_team_abbrev] = {}
+                    
                     stat_dict[game_log_team_abbrev][game_idx] = stat
 
-                
-            # condition: time before
-            # condition: time after
-            # see if this game is 1st or 2nd night of back to back bc we want to see if pattern for those conditions
-            init_game_date_string = row['Date'].lower().split()[1] # 'wed 2/15'[1]='2/15'
-            game_mth = init_game_date_string.split('/')[0]
-            final_season_year = season_year
-            if int(game_mth) > 9:
-                final_season_year = str(int(season_year) - 1)
-            game_date_string = init_game_date_string + "/" + final_season_year
-            #print("game_date_string: " + str(game_date_string))
-            game_date_obj = datetime.strptime(game_date_string, '%m/%d/%Y')
-            #print("game_date_obj: " + str(game_date_obj))
+                    
+                # condition: time before
+                # condition: time after
+                # see if this game is 1st or 2nd night of back to back bc we want to see if pattern for those conditions
+                init_game_date_string = row['Date'].lower().split()[1] # 'wed 2/15'[1]='2/15'
+                game_mth = init_game_date_string.split('/')[0]
+                final_season_year = season_year
+                if int(game_mth) > 9:
+                    final_season_year = str(int(season_year) - 1)
+                game_date_string = init_game_date_string + "/" + final_season_year
+                #print("game_date_string: " + str(game_date_string))
+                game_date_obj = datetime.strptime(game_date_string, '%m/%d/%Y')
+                #print("game_date_obj: " + str(game_date_obj))
 
-            # if current loop is most recent game (idx 0) then today's game is the next game, if current season
-            # if last game of prev season then next game after idx 0 (bc from recent to distant) is next season game 1
-            if game_idx == '0': # see how many days after prev game is date of today's projected lines
-                # already defined or passed todays_games_date_obj
-                # todays_games_date_obj = datetime.strptime(todays_games_date, '%m/%d/%y')
-                # print("todays_games_date_obj: " + str(todays_games_date_obj))
-                current_year = datetime.today().year
-                current_mth = datetime.today().month
-                if int(current_mth) in range(10,13):
-                    current_year += 1
-                if season_year == current_year: # current year
-                    # change to get from team schedule page
-                    # instead of assuming they play today
-                    next_game_date_obj = todays_games_date_obj # today's game is the next game relative to the previous game
-                else:
-                    next_game_date_obj = game_date_obj # should be 0 unless we want to get date of next season game
-            #print("next_game_date_obj: " + str(next_game_date_obj))
-            # no need to get next game date like this bc we can see last loop
-            # else: # if not most recent game then we can see the following game in the game log at prev idx
-            #     next_game_date_string = player_game_log.loc[game_idx-1, 'Date'].lower().split()[1] + "/" + season_year
-            #     print("next_game_date_string: " + str(next_game_date_string))
-            #     next_game_date_obj = datetime.strptime(next_game_date_string, '%m/%d/%y')
-            #     print("next_game_date_obj: " + str(next_game_date_obj))
+                # if current loop is most recent game (idx 0) then today's game is the next game, if current season
+                # if last game of prev season then next game after idx 0 (bc from recent to distant) is next season game 1
+                if game_idx == '0': # see how many days after prev game is date of today's projected lines
+                    # already defined or passed todays_games_date_obj
+                    # todays_games_date_obj = datetime.strptime(todays_games_date, '%m/%d/%y')
+                    # print("todays_games_date_obj: " + str(todays_games_date_obj))
+                    current_year = datetime.today().year
+                    current_mth = datetime.today().month
+                    if int(current_mth) in range(10,13):
+                        current_year += 1
+                    if season_year == current_year: # current year
+                        # change to get from team schedule page
+                        # instead of assuming they play today
+                        next_game_date_obj = todays_games_date_obj # today's game is the next game relative to the previous game
+                    else:
+                        next_game_date_obj = game_date_obj # should be 0 unless we want to get date of next season game
+                #print("next_game_date_obj: " + str(next_game_date_obj))
+                # no need to get next game date like this bc we can see last loop
+                # else: # if not most recent game then we can see the following game in the game log at prev idx
+                #     next_game_date_string = player_game_log.loc[game_idx-1, 'Date'].lower().split()[1] + "/" + season_year
+                #     print("next_game_date_string: " + str(next_game_date_string))
+                #     next_game_date_obj = datetime.strptime(next_game_date_string, '%m/%d/%y')
+                #     print("next_game_date_obj: " + str(next_game_date_obj))
 
-            days_before_next_game_int = (next_game_date_obj - game_date_obj).days
-            days_before_next_game = str(days_before_next_game_int) + ' before'
-            #print("days_before_next_game: " + days_before_next_game)
+                days_before_next_game_int = (next_game_date_obj - game_date_obj).days
+                days_before_next_game = str(days_before_next_game_int) + ' before'
+                #print("days_before_next_game: " + days_before_next_game)
 
-            for stat_idx in range(len(all_stats_dicts.values())):
-                stat_dict = list(all_stats_dicts.values())[stat_idx]
-                stat = game_stats[stat_idx]
                 if not days_before_next_game in stat_dict.keys():
                     stat_dict[days_before_next_game] = {}
                 stat_dict[days_before_next_game][game_idx] = stat
 
-            init_prev_game_date_string = ''
-            prev_game_idx = int(game_idx) + 1
-            if len(player_game_log.index) > prev_game_idx:
-                init_prev_game_date_string = player_game_log.loc[str(prev_game_idx), 'Date'].lower().split()[1]
-            
-                prev_game_mth = init_prev_game_date_string.split('/')[0]
-                final_season_year = season_year
-                if int(prev_game_mth) > 9:
-                    final_season_year = str(int(season_year) - 1)
-                prev_game_date_string = init_prev_game_date_string + "/" + final_season_year
-                #print("prev_game_date_string: " + str(prev_game_date_string))
-                prev_game_date_obj = datetime.strptime(prev_game_date_string, '%m/%d/%Y')
-                #print("prev_game_date_obj: " + str(prev_game_date_obj))
+                init_prev_game_date_string = ''
+                prev_game_idx = int(game_idx) + 1
+                if len(player_game_log.index) > prev_game_idx:
+                    init_prev_game_date_string = player_game_log.loc[str(prev_game_idx), 'Date'].lower().split()[1]
+                
+                    prev_game_mth = init_prev_game_date_string.split('/')[0]
+                    final_season_year = season_year
+                    if int(prev_game_mth) > 9:
+                        final_season_year = str(int(season_year) - 1)
+                    prev_game_date_string = init_prev_game_date_string + "/" + final_season_year
+                    #print("prev_game_date_string: " + str(prev_game_date_string))
+                    prev_game_date_obj = datetime.strptime(prev_game_date_string, '%m/%d/%Y')
+                    #print("prev_game_date_obj: " + str(prev_game_date_obj))
 
-                days_after_prev_game_int = (game_date_obj - prev_game_date_obj).days
-                days_after_prev_game = str(days_after_prev_game_int) + ' after'
-                #print("days_after_prev_game: " + days_after_prev_game)
+                    days_after_prev_game_int = (game_date_obj - prev_game_date_obj).days
+                    days_after_prev_game = str(days_after_prev_game_int) + ' after'
+                    #print("days_after_prev_game: " + days_after_prev_game)
 
-                for stat_idx in range(len(all_stats_dicts.values())):
-                    stat_dict = list(all_stats_dicts.values())[stat_idx]
-                    stat = game_stats[stat_idx]
+                    
                     if not days_after_prev_game in stat_dict.keys():
                         stat_dict[days_after_prev_game] = {}
                     stat_dict[days_after_prev_game][game_idx] = stat
 
-            
+                
 
-            
+                
 
-            # condition: day of week
-            # add keys for each day of the week so we can see performance by day of week
-            # only add key for current dow bc we dont need to see all dows here
-            
-            game_dow = row['Date'].lower().split()[0].lower() # 'wed 2/15'[0]='wed'
-            current_dow = todays_games_date_obj.strftime('%a').lower()
-            #print('current_dow: ' + str(current_dow))
-            if current_dow == game_dow:
-                #print("found same game day of week: " + game_dow)
-                for stat_idx in range(len(all_stats_dicts.values())):
-                    stat_dict = list(all_stats_dicts.values())[stat_idx]
-                    stat = game_stats[stat_idx]
+                # condition: day of week
+                # add keys for each day of the week so we can see performance by day of week
+                # only add key for current dow bc we dont need to see all dows here
+                
+                game_dow = row['Date'].lower().split()[0].lower() # 'wed 2/15'[0]='wed'
+                current_dow = todays_games_date_obj.strftime('%a').lower()
+                #print('current_dow: ' + str(current_dow))
+                if current_dow == game_dow:
+                    #print("found same game day of week: " + game_dow)
                     if not game_dow in stat_dict.keys():
                         stat_dict[game_dow] = {}
                     stat_dict[game_dow][game_idx] = stat
-                #print("stat_dict: " + str(stat_dict))
+                    #print("stat_dict: " + str(stat_dict))
 
 
-            # todo: # condition: day of week
+                # todo: # condition: day of week
 
 
-            # condition: teammates out
-            # condition: teammates in
-            # condition: opponent team and players
-            #====Players in Game stats
-            # get game players from all game players dict
-            #game_players = []
-            #teammates = []
-            #opponents = []
-            #print('game_players: ' + str(game_players))
-            # get current players from roster minus inactive players
-            # we get current players when we know about the current game 
-            
-            current_players = { 'away': [], 'home': [] } # we get current players from team rosters
-            #print('current_players: ' + str(current_players))
-            current_teammates = [] # if blank then show all possible combos/lineups
-            #print('current_teammates: ' + str(current_teammates))
+                # condition: teammates out
+                # condition: teammates in
+                # condition: opponent team and players
+                #====Players in Game stats
+                # get game players from all game players dict
+                #game_players = []
+                #teammates = []
+                #opponents = []
+                #print('game_players: ' + str(game_players))
+                # get current players from roster minus inactive players
+                # we get current players when we know about the current game 
+                
+                current_players = { 'away': [], 'home': [] } # we get current players from team rosters
+                #print('current_players: ' + str(current_players))
+                current_teammates = [] # if blank then show all possible combos/lineups
+                #print('current_teammates: ' + str(current_teammates))
 
-            # we need to get the game key so that we can determine the players in this game
-            # we got away/home team from vs|@ in opp field in game log
-            game_key = away_abbrev + ' ' + home_abbrev + ' ' + game_date_string
-            #print('game_key: ' + str(game_key))
-            # if we do not have the game box score bc it does not exist yet then pass to the next game
-            # the order we fill the stats dict depends on the order of games played bc we are going game by game
-            if season_year in all_players_in_games_dict.keys() and len(all_players_in_games_dict[season_year].keys()) > 0:
-                # if game key not in dict then we dont have info about it
-                # but if we have dict but missing this game then it is error bc we already read all players in games
-                if game_key in all_players_in_games_dict[season_year].keys():
+                # we need to get the game key so that we can determine the players in this game
+                # we got away/home team from vs|@ in opp field in game log
+                game_key = away_abbrev + ' ' + home_abbrev + ' ' + game_date_string
+                #print('game_key: ' + str(game_key))
+                # if we do not have the game box score bc it does not exist yet then pass to the next game
+                # the order we fill the stats dict depends on the order of games played bc we are going game by game
+                if season_year in all_players_in_games_dict.keys() and len(all_players_in_games_dict[season_year].keys()) > 0:
+                    # if game key not in dict then we dont have info about it
+                    # but if we have dict but missing this game then it is error bc we already read all players in games
+                    if game_key in all_players_in_games_dict[season_year].keys():
 
-                    game_players = all_players_in_games_dict[season_year][game_key] # {away:{starters:[],bench:[]},home:{starters:[],bench:[]}}
-                    #print('game_players: ' + str(game_players))
+                        game_players = all_players_in_games_dict[season_year][game_key] # {away:{starters:[],bench:[]},home:{starters:[],bench:[]}}
+                        #print('game_players: ' + str(game_players))
 
-                    # condition: game teammates
-                    # {starters:[],bench:[]}
-                    # also add game opps bc depends on actual opp players out as well
-                    # get probs for games against individual players and get weighted avg for all players, to get more sample size
-                    # as well as prob for only games with exact opp players but very small sample misleading
-                    game_teammates = game_players['away']
-                    if player_team == home_abbrev:
-                        game_teammates = game_players['home']
+                        # condition: game teammates
+                        # {starters:[],bench:[]}
+                        # also add game opps bc depends on actual opp players out as well
+                        # get probs for games against individual players and get weighted avg for all players, to get more sample size
+                        # as well as prob for only games with exact opp players but very small sample misleading
+                        game_teammates = game_players['away']
+                        if player_team == home_abbrev:
+                            game_teammates = game_players['home']
 
-                    # get full list of teammates this game without separating start and bench
-                    # bc we loop thru all teammates to see who is in and out
-                    game_teammates_list = []
-                    for teammates in game_teammates.values():
-                        for teammate in teammates:
-                            game_teammates_list.append(teammate)
+                        # get full list of teammates this game without separating start and bench
+                        # bc we loop thru all teammates to see who is in and out
+                        game_teammates_list = []
+                        for teammates in game_teammates.values():
+                            for teammate in teammates:
+                                game_teammates_list.append(teammate)
 
-                    # we need players in alphabetical string to easily compare to other games
-                    # might as well compare strings bc need str as key
-                    game_teammates_str = generate_players_string(game_teammates_list)
-                    # OR we could compare each player in list
-                    # but then what would we use as key? names in order so first 5 are starters and remaining are bench
-                    # order matters bc it is in order of position and therefore matchup 
-                    # but it is also arbitrary so could mislead and reduce sample size
-                    # ideally get both samples only in order by position and samples where order does not matter as long as the players played together
-                    # first say order does not matter and then get where order matters
-                    # bc we can get more samples which should improve accuracy
-                    # still separate starters and bench
-                    
-                    # condition: starters
-                    starters = game_teammates['starters']
-                    # organize alphabetically regardless of position bc we can get more samples 
-                    # where they played together but at different positions they still play like they play?
-                    # get both but first favor sample size
-                    starters_str = generate_players_string(starters) + ' start'
+                        # we need players in alphabetical string to easily compare to other games
+                        # might as well compare strings bc need str as key
+                        game_teammates_str = generate_players_string(game_teammates_list)
+                        # OR we could compare each player in list
+                        # but then what would we use as key? names in order so first 5 are starters and remaining are bench
+                        # order matters bc it is in order of position and therefore matchup 
+                        # but it is also arbitrary so could mislead and reduce sample size
+                        # ideally get both samples only in order by position and samples where order does not matter as long as the players played together
+                        # first say order does not matter and then get where order matters
+                        # bc we can get more samples which should improve accuracy
+                        # still separate starters and bench
+                        
+                        # condition: starters
+                        starters = game_teammates['starters']
+                        # organize alphabetically regardless of position bc we can get more samples 
+                        # where they played together but at different positions they still play like they play?
+                        # get both but first favor sample size
+                        starters_str = generate_players_string(starters) + ' start'
 
-                    # condition: bench
-                    bench = game_teammates['bench']
-                    bench_str = generate_players_string(bench) + ' bench'
+                        # condition: bench
+                        bench = game_teammates['bench']
+                        bench_str = generate_players_string(bench) + ' bench'
 
-                    # did current player start or come off bench?
-                    # condition: player start or team unit/part (start/bench)
-                    player_start = 'start'
-                    if player_abbrev in bench_str:
-                        player_start = 'bench'
+                        # did current player start or come off bench?
+                        # condition: player start or team unit/part (start/bench)
+                        player_start = 'start'
+                        if player_abbrev in bench_str:
+                            player_start = 'bench'
 
-                    # only add key for current teammates bc we dont need to see all teammates here
-                    # if no inactive players given then we can see all previous games with any (even 1) of current teammates
-                    # but what if a prev game has a player that is not playing in current game?
-                    # then that player completely changes the composition of stats
-                    # does the prev game have to have all the current teammates to pass the check?
-                    # or can it be missing a current player? 
-                    # if prev game is missing current player then that will completely change the comp also
-                    # if we are not sure who is playing in current game then show all possible teammates
-                    # once we get current roster, we can narrow it down to those possible players
-                    # then we can narrow it down further when we get inactive players list for the current game
-                    #current_teammates_in_prev_game = determiner.determine_current_teammates_in_game(game_teammates, current_teammates)
-                    #if len(current_teammates_in_prev_game) > 0: # if any of the current teammates are in the prev game of interest, then add to stats dict for review
-                        #print("found same game teammates: " + game_teammates)
+                        # only add key for current teammates bc we dont need to see all teammates here
+                        # if no inactive players given then we can see all previous games with any (even 1) of current teammates
+                        # but what if a prev game has a player that is not playing in current game?
+                        # then that player completely changes the composition of stats
+                        # does the prev game have to have all the current teammates to pass the check?
+                        # or can it be missing a current player? 
+                        # if prev game is missing current player then that will completely change the comp also
+                        # if we are not sure who is playing in current game then show all possible teammates
+                        # once we get current roster, we can narrow it down to those possible players
+                        # then we can narrow it down further when we get inactive players list for the current game
+                        #current_teammates_in_prev_game = determiner.determine_current_teammates_in_game(game_teammates, current_teammates)
+                        #if len(current_teammates_in_prev_game) > 0: # if any of the current teammates are in the prev game of interest, then add to stats dict for review
+                            #print("found same game teammates: " + game_teammates)
 
-                    # conditions related to players in games
-                    # teammates and opps
-                    # starters and bench
-                    for stat_idx in range(len(all_stats_dicts.values())):
-                        stat_dict = list(all_stats_dicts.values())[stat_idx]
-                        stat = game_stats[stat_idx]
+                        # conditions related to players in games
+                        # teammates and opps
+                        # starters and bench
 
                         # condition: game teammates
                         if not game_teammates_str in stat_dict.keys():
@@ -608,43 +594,380 @@ def generate_player_all_stats_dicts(player_name, player_game_log, opponent, all_
                                     stat_dict[teammate_out_key] = {}
                                 stat_dict[teammate_out_key][game_idx] = stat
 
-                    #print("stat_dict: " + str(stat_dict))
-
-
-                    # condition: teammate
-                    # for each player/teammate in game, make a new record or add to existing record
-                    # {starters:[],bench:[]}
-                    # for teammates in game_teammates.values():
-                    #     #print('teammate: ' + teammate)
-                    #     for teammate in teammates:
-                    # for teammate in game_teammates_list:
-                    #     for stat_idx in range(len(all_stats_dicts.values())):
-                    #         stat_dict = list(all_stats_dicts.values())[stat_idx]
-                    #         stat = game_stats[stat_idx]
-                    #         if not teammate in stat_dict.keys():
-                    #             stat_dict[teammate] = {}
-                    #         stat_dict[teammate][game_idx] = stat
                         #print("stat_dict: " + str(stat_dict))
 
 
-                    # condition: teammate out
-                    # for each teammate out of game (dnp inactive injured), make a new record or add to existing record
-                    # we need to know all possible teammates, which we get above, once per player
-                    # in all_teammates, we only want teammates this season bc if all seasons then misleading data
-                    # for teammate in all_teammates:
-                    #     if teammate not in game_teammates_list: # teammate out
-                    #         teammate_out_key = teammate + ' out'
-                    #         for stat_idx in range(len(all_stats_dicts.values())):
-                    #             stat_dict = list(all_stats_dicts.values())[stat_idx]
-                    #             stat = game_stats[stat_idx]
-
-                    #             if not teammate_out_key in stat_dict.keys():
-                    #                 stat_dict[teammate_out_key] = {}
-                    #             stat_dict[teammate_out_key][game_idx] = stat
+                        # condition: teammate
+                        # for each player/teammate in game, make a new record or add to existing record
+                        # {starters:[],bench:[]}
+                        # for teammates in game_teammates.values():
+                        #     #print('teammate: ' + teammate)
+                        #     for teammate in teammates:
+                        # for teammate in game_teammates_list:
+                        #     for stat_idx in range(len(all_stats_dicts.values())):
+                        #         stat_dict = list(all_stats_dicts.values())[stat_idx]
+                        #         stat = game_stats[stat_idx]
+                        #         if not teammate in stat_dict.keys():
+                        #             stat_dict[teammate] = {}
+                        #         stat_dict[teammate][game_idx] = stat
                             #print("stat_dict: " + str(stat_dict))
 
-                else:
-                    print('Warning: Game key not in players in games dict so box score not available!')
+
+                        # condition: teammate out
+                        # for each teammate out of game (dnp inactive injured), make a new record or add to existing record
+                        # we need to know all possible teammates, which we get above, once per player
+                        # in all_teammates, we only want teammates this season bc if all seasons then misleading data
+                        # for teammate in all_teammates:
+                        #     if teammate not in game_teammates_list: # teammate out
+                        #         teammate_out_key = teammate + ' out'
+                        #         for stat_idx in range(len(all_stats_dicts.values())):
+                        #             stat_dict = list(all_stats_dicts.values())[stat_idx]
+                        #             stat = game_stats[stat_idx]
+
+                        #             if not teammate_out_key in stat_dict.keys():
+                        #                 stat_dict[teammate_out_key] = {}
+                        #             stat_dict[teammate_out_key][game_idx] = stat
+                                #print("stat_dict: " + str(stat_dict))
+
+                    else:
+                        print('Warning: Game key not in players in games dict so box score not available!')
+
+
+
+
+
+            # define away/home team so we can determine teammates/opponents in players in game
+            # player team for this game
+            #player_team = list(player_teams[player_name][season_year].keys())[-1]# current team
+            # away_abbrev = player_team
+
+            # game_opp_str = row['OPP'] #player_game_log.loc[game_idx, 'OPP']
+            # game_opp_abbrev = reader.read_team_abbrev(game_opp_str) # remove leading characters and change irregular abbrevs
+            # home_abbrev = game_opp_abbrev
+
+            # if re.search('vs',game_opp_str):
+
+            #     # values is list of dicts
+            #     for stat_idx in range(len(all_stats_dicts.values())):
+            #         stat_dict = list(all_stats_dicts.values())[stat_idx]
+            #         stat = game_stats[stat_idx]
+
+            #         stat_dict['home'][game_idx] = stat
+
+                
+            #     away_abbrev = game_opp_abbrev
+            #     home_abbrev = player_team
+
+                
+            # else: # if not home then away
+            #     for stat_idx in range(len(all_stats_dicts.values())):
+            #         stat_dict = list(all_stats_dicts.values())[stat_idx]
+            #         stat = game_stats[stat_idx]
+            #         stat_dict['away'][game_idx] = stat
+
+                
+            #print('away_abbrev: ' + away_abbrev)
+            #print('home_abbrev: ' + home_abbrev)
+
+            # matchup against opponent
+            # only add key for current opp bc we dont need to see all opps here
+            # look for irregular abbrevs like NO and NY
+            # opponent in form 'gsw' but game log in form 'gs'
+            # if we do not know the current opponent then show all opps
+            #game_log_team_abbrev = re.sub('vs|@','',player_game_log.loc[game_idx, 'OPP'].lower()) # eg 'gs'
+            # game_log_team_abbrev = reader.read_team_abbrev(row['OPP'])#(player_game_log.loc[game_idx, 'OPP'])
+            # #print('game_log_team_abbrev: ' + game_log_team_abbrev)
+            # #opp_abbrev = opponent # default if regular
+            # #print('opp_abbrev: ' + opp_abbrev)
+
+            # # irregular_abbrevs = {'nop':'no', 'nyk':'ny', 'sas': 'sa', 'gsw':'gs' } # for these match the first 3 letters of team name instead
+            # # if opp_abbrev in irregular_abbrevs.keys():
+            # #     #print("irregular abbrev: " + team_abbrev)
+            # #     opp_abbrev = irregular_abbrevs[opp_abbrev]
+
+            # # if we do not know the current opponent 
+            # # or if we are not given a specific opponent (bc we may want to compare opps)
+            # # then show all opps
+            # if opponent == game_log_team_abbrev or opponent == '':
+            #     #print('opp_abbrev == game_log_team_abbrev')
+            #     for stat_idx in range(len(all_stats_dicts.values())):
+            #         stat_dict = list(all_stats_dicts.values())[stat_idx]
+            #         stat = game_stats[stat_idx]
+            #         if not game_log_team_abbrev in stat_dict.keys():
+            #             stat_dict[game_log_team_abbrev] = {}
+            #         stat_dict[game_log_team_abbrev][game_idx] = stat
+
+                
+            # # condition: time before
+            # # condition: time after
+            # # see if this game is 1st or 2nd night of back to back bc we want to see if pattern for those conditions
+            # init_game_date_string = row['Date'].lower().split()[1] # 'wed 2/15'[1]='2/15'
+            # game_mth = init_game_date_string.split('/')[0]
+            # final_season_year = season_year
+            # if int(game_mth) > 9:
+            #     final_season_year = str(int(season_year) - 1)
+            # game_date_string = init_game_date_string + "/" + final_season_year
+            # #print("game_date_string: " + str(game_date_string))
+            # game_date_obj = datetime.strptime(game_date_string, '%m/%d/%Y')
+            # #print("game_date_obj: " + str(game_date_obj))
+
+            # # if current loop is most recent game (idx 0) then today's game is the next game, if current season
+            # # if last game of prev season then next game after idx 0 (bc from recent to distant) is next season game 1
+            # if game_idx == '0': # see how many days after prev game is date of today's projected lines
+            #     # already defined or passed todays_games_date_obj
+            #     # todays_games_date_obj = datetime.strptime(todays_games_date, '%m/%d/%y')
+            #     # print("todays_games_date_obj: " + str(todays_games_date_obj))
+            #     current_year = datetime.today().year
+            #     current_mth = datetime.today().month
+            #     if int(current_mth) in range(10,13):
+            #         current_year += 1
+            #     if season_year == current_year: # current year
+            #         # change to get from team schedule page
+            #         # instead of assuming they play today
+            #         next_game_date_obj = todays_games_date_obj # today's game is the next game relative to the previous game
+            #     else:
+            #         next_game_date_obj = game_date_obj # should be 0 unless we want to get date of next season game
+            # #print("next_game_date_obj: " + str(next_game_date_obj))
+            # # no need to get next game date like this bc we can see last loop
+            # # else: # if not most recent game then we can see the following game in the game log at prev idx
+            # #     next_game_date_string = player_game_log.loc[game_idx-1, 'Date'].lower().split()[1] + "/" + season_year
+            # #     print("next_game_date_string: " + str(next_game_date_string))
+            # #     next_game_date_obj = datetime.strptime(next_game_date_string, '%m/%d/%y')
+            # #     print("next_game_date_obj: " + str(next_game_date_obj))
+
+            # days_before_next_game_int = (next_game_date_obj - game_date_obj).days
+            # days_before_next_game = str(days_before_next_game_int) + ' before'
+            # #print("days_before_next_game: " + days_before_next_game)
+
+            # for stat_idx in range(len(all_stats_dicts.values())):
+            #     stat_dict = list(all_stats_dicts.values())[stat_idx]
+            #     stat = game_stats[stat_idx]
+            #     if not days_before_next_game in stat_dict.keys():
+            #         stat_dict[days_before_next_game] = {}
+            #     stat_dict[days_before_next_game][game_idx] = stat
+
+            # init_prev_game_date_string = ''
+            # prev_game_idx = int(game_idx) + 1
+            # if len(player_game_log.index) > prev_game_idx:
+            #     init_prev_game_date_string = player_game_log.loc[str(prev_game_idx), 'Date'].lower().split()[1]
+            
+            #     prev_game_mth = init_prev_game_date_string.split('/')[0]
+            #     final_season_year = season_year
+            #     if int(prev_game_mth) > 9:
+            #         final_season_year = str(int(season_year) - 1)
+            #     prev_game_date_string = init_prev_game_date_string + "/" + final_season_year
+            #     #print("prev_game_date_string: " + str(prev_game_date_string))
+            #     prev_game_date_obj = datetime.strptime(prev_game_date_string, '%m/%d/%Y')
+            #     #print("prev_game_date_obj: " + str(prev_game_date_obj))
+
+            #     days_after_prev_game_int = (game_date_obj - prev_game_date_obj).days
+            #     days_after_prev_game = str(days_after_prev_game_int) + ' after'
+            #     #print("days_after_prev_game: " + days_after_prev_game)
+
+            #     for stat_idx in range(len(all_stats_dicts.values())):
+            #         stat_dict = list(all_stats_dicts.values())[stat_idx]
+            #         stat = game_stats[stat_idx]
+            #         if not days_after_prev_game in stat_dict.keys():
+            #             stat_dict[days_after_prev_game] = {}
+            #         stat_dict[days_after_prev_game][game_idx] = stat
+
+            
+
+            
+
+            # # condition: day of week
+            # # add keys for each day of the week so we can see performance by day of week
+            # # only add key for current dow bc we dont need to see all dows here
+            
+            # game_dow = row['Date'].lower().split()[0].lower() # 'wed 2/15'[0]='wed'
+            # current_dow = todays_games_date_obj.strftime('%a').lower()
+            # #print('current_dow: ' + str(current_dow))
+            # if current_dow == game_dow:
+            #     #print("found same game day of week: " + game_dow)
+            #     for stat_idx in range(len(all_stats_dicts.values())):
+            #         stat_dict = list(all_stats_dicts.values())[stat_idx]
+            #         stat = game_stats[stat_idx]
+            #         if not game_dow in stat_dict.keys():
+            #             stat_dict[game_dow] = {}
+            #         stat_dict[game_dow][game_idx] = stat
+            #     #print("stat_dict: " + str(stat_dict))
+
+
+            # # todo: # condition: day of week
+
+
+            # # condition: teammates out
+            # # condition: teammates in
+            # # condition: opponent team and players
+            # #====Players in Game stats
+            # # get game players from all game players dict
+            # #game_players = []
+            # #teammates = []
+            # #opponents = []
+            # #print('game_players: ' + str(game_players))
+            # # get current players from roster minus inactive players
+            # # we get current players when we know about the current game 
+            
+            # current_players = { 'away': [], 'home': [] } # we get current players from team rosters
+            # #print('current_players: ' + str(current_players))
+            # current_teammates = [] # if blank then show all possible combos/lineups
+            # #print('current_teammates: ' + str(current_teammates))
+
+            # # we need to get the game key so that we can determine the players in this game
+            # # we got away/home team from vs|@ in opp field in game log
+            # game_key = away_abbrev + ' ' + home_abbrev + ' ' + game_date_string
+            # #print('game_key: ' + str(game_key))
+            # # if we do not have the game box score bc it does not exist yet then pass to the next game
+            # # the order we fill the stats dict depends on the order of games played bc we are going game by game
+            # if season_year in all_players_in_games_dict.keys() and len(all_players_in_games_dict[season_year].keys()) > 0:
+            #     # if game key not in dict then we dont have info about it
+            #     # but if we have dict but missing this game then it is error bc we already read all players in games
+            #     if game_key in all_players_in_games_dict[season_year].keys():
+
+            #         game_players = all_players_in_games_dict[season_year][game_key] # {away:{starters:[],bench:[]},home:{starters:[],bench:[]}}
+            #         #print('game_players: ' + str(game_players))
+
+            #         # condition: game teammates
+            #         # {starters:[],bench:[]}
+            #         # also add game opps bc depends on actual opp players out as well
+            #         # get probs for games against individual players and get weighted avg for all players, to get more sample size
+            #         # as well as prob for only games with exact opp players but very small sample misleading
+            #         game_teammates = game_players['away']
+            #         if player_team == home_abbrev:
+            #             game_teammates = game_players['home']
+
+            #         # get full list of teammates this game without separating start and bench
+            #         # bc we loop thru all teammates to see who is in and out
+            #         game_teammates_list = []
+            #         for teammates in game_teammates.values():
+            #             for teammate in teammates:
+            #                 game_teammates_list.append(teammate)
+
+            #         # we need players in alphabetical string to easily compare to other games
+            #         # might as well compare strings bc need str as key
+            #         game_teammates_str = generate_players_string(game_teammates_list)
+            #         # OR we could compare each player in list
+            #         # but then what would we use as key? names in order so first 5 are starters and remaining are bench
+            #         # order matters bc it is in order of position and therefore matchup 
+            #         # but it is also arbitrary so could mislead and reduce sample size
+            #         # ideally get both samples only in order by position and samples where order does not matter as long as the players played together
+            #         # first say order does not matter and then get where order matters
+            #         # bc we can get more samples which should improve accuracy
+            #         # still separate starters and bench
+                    
+            #         # condition: starters
+            #         starters = game_teammates['starters']
+            #         # organize alphabetically regardless of position bc we can get more samples 
+            #         # where they played together but at different positions they still play like they play?
+            #         # get both but first favor sample size
+            #         starters_str = generate_players_string(starters) + ' start'
+
+            #         # condition: bench
+            #         bench = game_teammates['bench']
+            #         bench_str = generate_players_string(bench) + ' bench'
+
+            #         # did current player start or come off bench?
+            #         # condition: player start or team unit/part (start/bench)
+            #         player_start = 'start'
+            #         if player_abbrev in bench_str:
+            #             player_start = 'bench'
+
+            #         # only add key for current teammates bc we dont need to see all teammates here
+            #         # if no inactive players given then we can see all previous games with any (even 1) of current teammates
+            #         # but what if a prev game has a player that is not playing in current game?
+            #         # then that player completely changes the composition of stats
+            #         # does the prev game have to have all the current teammates to pass the check?
+            #         # or can it be missing a current player? 
+            #         # if prev game is missing current player then that will completely change the comp also
+            #         # if we are not sure who is playing in current game then show all possible teammates
+            #         # once we get current roster, we can narrow it down to those possible players
+            #         # then we can narrow it down further when we get inactive players list for the current game
+            #         #current_teammates_in_prev_game = determiner.determine_current_teammates_in_game(game_teammates, current_teammates)
+            #         #if len(current_teammates_in_prev_game) > 0: # if any of the current teammates are in the prev game of interest, then add to stats dict for review
+            #             #print("found same game teammates: " + game_teammates)
+
+            #         # conditions related to players in games
+            #         # teammates and opps
+            #         # starters and bench
+            #         for stat_idx in range(len(all_stats_dicts.values())):
+            #             stat_dict = list(all_stats_dicts.values())[stat_idx]
+            #             stat = game_stats[stat_idx]
+
+            #             # condition: game teammates
+            #             if not game_teammates_str in stat_dict.keys():
+            #                 stat_dict[game_teammates_str] = {}
+            #             stat_dict[game_teammates_str][game_idx] = stat
+
+            #             # condition: game starters
+            #             if not starters_str in stat_dict.keys():
+            #                 stat_dict[starters_str] = {}
+            #             stat_dict[starters_str][game_idx] = stat
+
+            #             # condition: game bench
+            #             if not bench_str in stat_dict.keys():
+            #                 stat_dict[bench_str] = {}
+            #             stat_dict[bench_str][game_idx] = stat
+
+            #             # condition: player start
+            #             if not player_start in stat_dict.keys():
+            #                 stat_dict[player_start] = {}
+            #             stat_dict[player_start][game_idx] = stat
+
+            #             # condition: teammate
+            #             for teammate in game_teammates_list:
+            #                 if not teammate in stat_dict.keys():
+            #                     stat_dict[teammate] = {}
+            #                 stat_dict[teammate][game_idx] = stat
+
+            #             # condition: teammate out
+            #             for teammate in player_teammates[season_year]:
+            #                 # print('teammate: ' + teammate)
+            #                 # print('game_teammates_list: ' + str(game_teammates_list))
+            #                 if teammate not in game_teammates_list: # teammate out
+            #                     #print('teammate out')
+            #                     teammate_out_key = teammate + ' out'
+
+            #                     if not teammate_out_key in stat_dict.keys():
+            #                         stat_dict[teammate_out_key] = {}
+            #                     stat_dict[teammate_out_key][game_idx] = stat
+
+            #         #print("stat_dict: " + str(stat_dict))
+
+
+            #         # condition: teammate
+            #         # for each player/teammate in game, make a new record or add to existing record
+            #         # {starters:[],bench:[]}
+            #         # for teammates in game_teammates.values():
+            #         #     #print('teammate: ' + teammate)
+            #         #     for teammate in teammates:
+            #         # for teammate in game_teammates_list:
+            #         #     for stat_idx in range(len(all_stats_dicts.values())):
+            #         #         stat_dict = list(all_stats_dicts.values())[stat_idx]
+            #         #         stat = game_stats[stat_idx]
+            #         #         if not teammate in stat_dict.keys():
+            #         #             stat_dict[teammate] = {}
+            #         #         stat_dict[teammate][game_idx] = stat
+            #             #print("stat_dict: " + str(stat_dict))
+
+
+            #         # condition: teammate out
+            #         # for each teammate out of game (dnp inactive injured), make a new record or add to existing record
+            #         # we need to know all possible teammates, which we get above, once per player
+            #         # in all_teammates, we only want teammates this season bc if all seasons then misleading data
+            #         # for teammate in all_teammates:
+            #         #     if teammate not in game_teammates_list: # teammate out
+            #         #         teammate_out_key = teammate + ' out'
+            #         #         for stat_idx in range(len(all_stats_dicts.values())):
+            #         #             stat_dict = list(all_stats_dicts.values())[stat_idx]
+            #         #             stat = game_stats[stat_idx]
+
+            #         #             if not teammate_out_key in stat_dict.keys():
+            #         #                 stat_dict[teammate_out_key] = {}
+            #         #             stat_dict[teammate_out_key][game_idx] = stat
+            #                 #print("stat_dict: " + str(stat_dict))
+
+            #     else:
+            #         print('Warning: Game key not in players in games dict so box score not available!')
 
 
 
@@ -3367,6 +3690,8 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, all_players_teams={}, all_
                 #print('prev_val: ' + str(prev_val))
                 # is it useful to get prev val under current conditions? possibly but could be misleading unless looking at larger sample
             
+            # integrate overs and unders in same loop
+            #val_probs_dict: {1: {'all 2023 regular prob': 1.0, 'all 2023 full prob': 1.0,...},...
             for val, val_probs_dict in stat_probs_dict.items():
                 #print('\n===Val: ' + str(val) + '===\n')
                 #print('val_probs_dict: ' + str(val_probs_dict))
@@ -3418,12 +3743,9 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, all_players_teams={}, all_
                 #print('stat_val_probs_dict: ' + str(stat_val_probs_dict))
                 all_stat_prob_dicts.append(stat_val_probs_dict)
 
-            #print('all_stat_prob_dicts: ' + str(all_stat_prob_dicts))
 
-            # repeat for unders
-            print('repeat probs for unders')
-            for val, val_probs_dict in stat_probs_dict.items():
-                #stat_val_probs_dict['val'] = str(val) + '-'
+                # repeat for under
+                #print('repeat prob for under')
                 if val > 1: # for zero we only want exactly 0 prob not over under bc 1+/- includes 1 and cannot go below 0
                     under_val = val - 1
                     val_str = str(under_val) + '-'
@@ -3455,6 +3777,45 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, all_players_teams={}, all_
                     # one row for each val which has all conditions
                     #print('stat_val_probs_dict: ' + str(stat_val_probs_dict))
                     all_stat_prob_dicts.append(stat_val_probs_dict)
+
+
+            #print('all_stat_prob_dicts: ' + str(all_stat_prob_dicts))
+
+            # repeat for unders
+            # print('repeat probs for unders')
+            # for val, val_probs_dict in stat_probs_dict.items():
+            #     #stat_val_probs_dict['val'] = str(val) + '-'
+            #     if val > 1: # for zero we only want exactly 0 prob not over under bc 1+/- includes 1 and cannot go below 0
+            #         under_val = val - 1
+            #         val_str = str(under_val) + '-'
+            #         stat_val_probs_dict = {'player': player, 'team': player_team, 'stat': stat_name, 'val': val_str }
+            #         #for conditions, prob in val_probs_dict.items():
+            #         for conditions in all_conditions:
+            #             prob = 0
+            #             #per_unit_prob = 0
+            #             if conditions in val_probs_dict.keys():
+            #                 prob = val_probs_dict[conditions]
+            #                 #per_unit_conditions = conditions + ' per unit'
+            #                 #per_unit_prob = val_probs_dict[per_unit_conditions]
+            #             #print('over prob: ' + str(prob))
+            #             stat_val_probs_dict[conditions] = 100 - round(prob * 100)
+            #             #stat_val_probs_dict[per_unit_conditions] = 100 - round(per_unit_prob * 100)
+
+            #         prob = val_probs_dict['true prob']
+            #         #print('over prob: ' + str(prob))
+            #         stat_val_probs_dict['true prob'] = 100 - round(prob * 100)
+            #         #print('under prob: ' + str(stat_val_probs_dict['true prob']))
+
+            #         # add more fields for ref
+            #         #stat_val_probs_dict['prev val'] = val_probs_dict['prev val']
+            #         stat_val_probs_dict['prev val'] = prev_val
+            #         for cond_key, cond_val in player_current_conditions.items():
+            #             stat_val_probs_dict[cond_key] = cond_val
+            #         stat_val_probs_dict['game'] = game_num
+
+            #         # one row for each val which has all conditions
+            #         #print('stat_val_probs_dict: ' + str(stat_val_probs_dict))
+            #         all_stat_prob_dicts.append(stat_val_probs_dict)
 
             #print('all_stat_prob_dicts: ' + str(all_stat_prob_dicts))
 
@@ -4251,15 +4612,15 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
         read_new_game_ids = settings['read new game ids']
     #print('read_new_game_ids: ' + str(read_new_game_ids))
 
-    all_players_in_games_dict = {} 
+    all_players_in_games_dict = {}
+    all_players_teammates = {} 
     if find_players == True:
         print('FIND PLAYERS')
         # if we already have saved prev seasons then will only return this season games
         all_players_in_games_dict = reader.read_all_players_in_games(all_player_season_logs_dict, all_players_teams, current_year_str, init_player_stat_dicts, read_new_game_ids)#, season_year) # go thru players in all_player_season_logs_dict to get game ids
 
-
-    # read all players teammates from season logs and all players in games
-    all_players_teammates = reader.read_all_players_teammates(all_player_season_logs_dict, all_players_in_games_dict, current_year_str, todays_date)
+        # read all players teammates from season logs and all players in games
+        all_players_teammates = reader.read_all_players_teammates(all_player_season_logs_dict, all_players_in_games_dict, current_year_str, todays_date)
 
     irreg_play_time = settings['irreg play time']
 
@@ -4310,8 +4671,12 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
         #player_team = reader.read_player_team(player_name, player_id, player_teams, read_new_teams=False) #player_teams[player_name]
 
         #print('projected_lines_dict passed to generate stat dict: ' + str(projected_lines_dict))
-        init_player_stat_dict = init_player_stat_dicts[player_name]
-        player_teammates = all_players_teammates[player_name]
+        init_player_stat_dict = {}
+        if player_name in init_player_stat_dicts.keys():
+            init_player_stat_dict = init_player_stat_dicts[player_name]
+        player_teammates = {}
+        if player_name in all_players_teammates.keys():
+            player_teammates = all_players_teammates[player_name]
         player_stat_dict = generate_player_stat_dict(player_name, player_season_logs, todays_games_date_obj, all_players_in_games_dict, all_players_teams, current_year_str, game_teams=game_teams, init_player_stat_dict=init_player_stat_dict, find_players=find_players, player_position=player_position, player_teammates=player_teammates)
 
         # gen all outcomes shows streaks
@@ -4489,29 +4854,129 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
     final_prop_dicts = available_prop_dicts
     if len(high_prob_props) > 0:
         final_prop_dicts = high_prob_props
-    if 'ev' in final_prop_dicts[0].keys():
+
+    # if ev, read odds
+    if len(final_prop_dicts) > 0 and 'ev' in final_prop_dicts[0].keys():
         #print('ev found')
         plus_ev_props = isolator.isolate_plus_ev_props(final_prop_dicts)
         
         # 3. out of remaining options, sort by ev
+        # plus_ev_props = [{field:val,...},...]
         sort_keys = ['ev']
         plus_ev_props = sorter.sort_dicts_by_keys(plus_ev_props, sort_keys)
         prop_tables.append(plus_ev_props)
         sheet_names.append('+EV')
 
         # 4. iso top x remaining options
+        # top is meaningless bc we do not know how many picks in a set is ideal
+        # so define different strategies and combos
+        # eg top ev w/ high prob, or top prob w/ +ev
+        # for top ev w/ hig prob, sort by ev
+        # if 2 options for single player stat, take higher ev
+        # for top prob w/ +ev, sort by prob
+        # if 2 options for single player stat, take higher prob
         dk_max_allowed = 20
         fd_max_allowed = 25
         # ideal max depends on cumulative ev
         top_options = plus_ev_props[0:dk_max_allowed]
         #print('top_options: ' + str(top_options))
 
+        top_ev_props = []
+        for main_prop in plus_ev_props:
+            # ensure at least 2 picks from this game
+            # remove if only 1
+            # main_prop_game = main_prop['game']
+            # for compare_prop in plus_ev_props:
+            #     compare_prop_game = compare_prop['game']
+
+            # given list of dicts, see if any matching vals
+            # determine multiple props in same game
+            if determiner.determine_multiple_dicts_with_val(main_prop, 'game', plus_ev_props):
+                # if enough options, proceed
+
+                # see if duplicate player stat
+                # prop_player = main_prop['player']
+                # prop_stat = main_prop['stat']
+                vals = ['player', 'stat']
+                # if determine duplicate, take highest ev of duplicates
+                if determiner.determine_multiple_dicts_with_vals(main_prop, vals, plus_ev_props):
+                    # if highest ev of the duplicates
+                    duplicate_props = isolator.isolate_duplicate_props(main_prop, vals, plus_ev_props)
+                    if determiner.determine_highest_ev_prop(main_prop, duplicate_props):
+                        top_ev_props.append(main_prop)
+                else:
+                    top_ev_props.append(main_prop)
+
+        # now top ev props only has props with at least 2 per game
+        # and only top ev of duplicates
+        # and sorted by ev
+        # now we want all same game options
+        # -sorted by stat, so we can make selections per stat
+        # -AND sorted by highest ev, so we can add props to other combos
+        # AND max picks option
+        # AND make fcn to pick top x props, before sorting for selection
+        # AND make fcn to pick all combos of props with x (eg +100) joint odds
+        # 1. same game options, sorted by stat
+        sort_keys = ['game', 'stat', 'player']
+        sg_top_ev_props_by_stat = sorter.sort_dicts_by_str_keys(top_ev_props, sort_keys)
+        prop_tables.append(sg_top_ev_props_by_stat)
+        sheet_names.append('SG +EV Stats')
+        # 2. same game, sort by ev
+        sort_keys = ['game', 'ev']
+        sg_top_ev_props = sorter.sort_dicts_by_str_keys(top_ev_props, sort_keys)
+        prop_tables.append(sg_top_ev_props)
+        sheet_names.append('SG +EV')
+        # 3. max picks
+        max_picks_top_ev_props = top_ev_props[0:dk_max_allowed]
+        remaining_top_ev_props = top_ev_props[dk_max_allowed:] # after cutoff by platform limit
+        # in top remaining picks, ensure >1 per game
+        # add here if only prop available for game 
+        # so we can see if we should keep this and remove another one 
+        # or remove this and add one to another game that already has >1 prop
+        individual_props = [] 
+        replacement_props = []
+        # max_picks_top_ev_props = [{},...]
+        for main_prop in max_picks_top_ev_props:
+            # if only prop in game, individual prop
+            if not determiner.determine_multiple_dicts_with_val(main_prop, 'game', max_picks_top_ev_props):
+                individual_props.append(main_prop)
+                # replace with next highest ev
+                for remaining_prop in remaining_top_ev_props:
+                    # if already other picks from this game in top picks, 
+                    # then consider replace in max_picks_top_ev_props
+                    # OR if this individ prop is very high ev, 
+                    # consider replacing a lower ev prop in a game with >2 props
+                    if determiner.determine_val_in_dicts(remaining_prop, 'game', max_picks_top_ev_props):
+                        replacement_props.append(remaining_prop)
+
+                    # compare same game next highest if available to next highest remaining overall
+                    # if next highest in game = next highest overall, replace
+                    # if next highest in game < next highest overall, need to compute joint ev
+                    # OR just set an acceptable range difference
+
+        prop_tables.append(max_picks_top_ev_props)
+        sheet_names.append('Max +EV')
+
+
+        top_prob_props = []
+
+        # max profit props makes a combo of max allowed props
+        # how does it pick the max profit, while keeping +ev?
+        # sort by profit only after remaining +ev props with no other distinguishing factors
+        # need to get actual odds of joint combo props
+        # to make sure it is +ev max profit
+        # in theory, max profit = max ev
+        # BUT if we account for bet spread, it may be worth putting a very small amount on a low prob, high return
+        max_profit_props = []
+
+
         # 5. sort by game and team and stat
-        sort_keys = ['game', 'team', 'stat']
-        top_options = sorter.sort_dicts_by_str_keys(top_options, sort_keys)
-        #writer.list_dicts(top_options, desired_order)
-        prop_tables.append(top_options)
-        sheet_names.append('Top')
+        # OR game, stat, player
+        # sort_keys = ['game', 'stat', 'player']#['game', 'team', 'stat']
+        # top_options = sorter.sort_dicts_by_str_keys(top_options, sort_keys)
+        # #writer.list_dicts(top_options, desired_order)
+        # prop_tables.append(top_options)
+        # sheet_names.append('Top')
 
         s1_props = top_options
 
@@ -4519,7 +4984,7 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
 
         prop_tables = list(reversed(prop_tables))#.reverse() #[top_options, plus_ev_props, high_prob_props, available_prop_dicts]
         sheet_names = list(reversed(sheet_names))#.reverse() #['Top', '+EV', 'High Prob', 'All'] #, 'Rare' # rare shows those where prev val is anomalous so unlikely to repeat anomaly (eg player falls in bottom 10% game)
-        
+            
     
 
     #writer.list_dicts(s1_props, desired_order)
@@ -4533,7 +4998,7 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
     # todo: to fully predict current player stats, must predict teammate and opponent stats and prioritize and align with totals
     #print('final prop_tables: ' + str(prop_tables))
     #print('sheet_names: ' + str(sheet_names))
-    writer.write_prop_tables(prop_tables, sheet_names, desired_order)
+    writer.write_prop_tables(prop_tables, sheet_names, desired_order, todays_date)
 
     # pass player outcomes to another fcn to compute cumulative joint prob and ev?
     # do we need to return anything? we can always return whatever the final print is
