@@ -3367,6 +3367,23 @@ def generate_joint_odds(american_odds):
     print('joint_odds: ' + str(joint_odds))
     return joint_odds
 
+def generate_joint_ev_of_props(max_picks_top_ev_props):
+    print('\n===Generate Joint EV===\n')
+    print('max_picks_top_ev_props: ' + str(max_picks_top_ev_props))
+    probs = []
+    odds = []
+    for prop in max_picks_top_ev_props:
+        prop_prob = prop['true prob']
+        probs.append(prop_prob)
+        prop_odds = prop['odds']
+        odds.append(prop_odds)
+    joint_prob = generate_joint_prob(probs)
+    joint_odds = generate_joint_prob(odds)
+    ev = generate_joint_ev(joint_prob, joint_odds)
+
+    print('ev: ' + str(ev))
+    return ev
+
 
 # given joint odds as decimal odds
 # bc need to convert am to dec before getting joint by multiplying
@@ -3845,9 +3862,11 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, all_players_teams={}, all_
                     val_str = str(val)
                 stat_val_probs_dict = {'player': player, 'team': player_team, 'stat': stat_name, 'val': val_str }
                 #for conditions, prob in val_probs_dict.items():
+                # if condition not in val probs dict
+                # then this player did not play in this condition, so show NA
                 for conditions in all_conditions:
                     #print('\n===Conditions: ' + str(conditions) + '===\n')
-                    prob = 0
+                    #prob = 0
                     #per_unit_prob = 0
                     if conditions in val_probs_dict.keys():
                         prob = val_probs_dict[conditions]
@@ -3855,10 +3874,14 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, all_players_teams={}, all_
                         #per_unit_conditions = conditions + ' per unit'
                         #per_unit_prob = val_probs_dict[per_unit_conditions]
                         #per_unit_prob = per_unit_probs_dict[player][stat_name][val][conditions] #val_probs_dict[per_unit_conditions]
-                    #print('prob: ' + str(prob))
-                    stat_val_probs_dict[conditions] = round(prob * 100)
-                    #stat_val_probs_dict[per_unit_conditions] = round(per_unit_prob * 100)
-
+                        #print('prob: ' + str(prob))
+                        stat_val_probs_dict[conditions] = round(prob * 100)
+                        #stat_val_probs_dict[per_unit_conditions] = round(per_unit_prob * 100)
+                    
+                    # if condition not in val probs dict
+                    # then this player did not play in this condition, so show NA
+                    else:
+                        stat_val_probs_dict[conditions] = 'NA'
 
                 # add keys to dict used for ref but not yet to gen true prob
                 # otherwise it will use string value to compute prob
@@ -3896,16 +3919,22 @@ def generate_all_stat_prob_dicts(all_stat_probs_dict, all_players_teams={}, all_
                     stat_val_probs_dict = {'player': player, 'team': player_team, 'stat': stat_name, 'val': val_str }
                     #for conditions, prob in val_probs_dict.items():
                     for conditions in all_conditions:
-                        prob = 0
+                        #prob = 0
                         #per_unit_prob = 0
                         if conditions in val_probs_dict.keys():
                             prob = val_probs_dict[conditions]
                             #per_unit_conditions = conditions + ' per unit'
                             #per_unit_prob = val_probs_dict[per_unit_conditions]
-                        #print('over prob: ' + str(prob))
-                        stat_val_probs_dict[conditions] = 100 - round(prob * 100)
-                        #stat_val_probs_dict[per_unit_conditions] = 100 - round(per_unit_prob * 100)
+                            #print('over prob: ' + str(prob))
+                            stat_val_probs_dict[conditions] = 100 - round(prob * 100)
+                            #stat_val_probs_dict[per_unit_conditions] = 100 - round(per_unit_prob * 100)
 
+                        # if condition not in val probs dict
+                        # then this player did not play in this condition, so show NA
+                        else:
+                            stat_val_probs_dict[conditions] = 'NA'
+
+                    # only need to calculate true prob for under here bc true prob for over already computed in val probs dict
                     prob = val_probs_dict['true prob']
                     #print('over prob: ' + str(prob))
                     stat_val_probs_dict['true prob'] = 100 - round(prob * 100)
@@ -5002,14 +5031,14 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
     print('\n===Generate Prop Combos===\n')
     # if ev, read odds
     # final_prop_dicts = [{player:p, game:g, ...},...]
-    p1 = {'player':'kyrie', 'game':'3', 'stat':'pts', 'ev':3, 'odds':'100', 'true prob':100}
-    p2 = {'player':'kobe', 'game':'1', 'stat':'pts', 'ev':3, 'odds':'100', 'true prob':100}
-    p3 = {'player':'kobe', 'game':'1', 'stat':'pts', 'ev':2, 'odds':'100', 'true prob':100}
-    p4 = {'player':'dame', 'game':'2', 'stat':'pts', 'ev':2, 'odds':'100', 'true prob':100}
-    p5 = {'player':'trae', 'game':'4', 'stat':'pts', 'ev':1, 'odds':'100', 'true prob':100}
-    p6 = {'player':'trae', 'game':'4', 'stat':'ast', 'ev':1, 'odds':'100', 'true prob':100}
-    p7 = {'player':'luka', 'game':'3', 'stat':'pts', 'ev':1, 'odds':'100', 'true prob':100}
-    final_prop_dicts = [p1, p2, p3, p4, p5, p6, p7]
+    # p1 = {'player':'kyrie', 'game':'3', 'stat':'pts', 'ev':3, 'odds':'100', 'true prob':100}
+    # p2 = {'player':'kobe', 'game':'1', 'stat':'pts', 'ev':3, 'odds':'100', 'true prob':100}
+    # p3 = {'player':'kobe', 'game':'1', 'stat':'pts', 'ev':2, 'odds':'100', 'true prob':100}
+    # p4 = {'player':'dame', 'game':'2', 'stat':'pts', 'ev':2, 'odds':'100', 'true prob':100}
+    # p5 = {'player':'trae', 'game':'4', 'stat':'pts', 'ev':1, 'odds':'100', 'true prob':100}
+    # p6 = {'player':'trae', 'game':'4', 'stat':'ast', 'ev':1, 'odds':'100', 'true prob':100}
+    # p7 = {'player':'luka', 'game':'3', 'stat':'pts', 'ev':1, 'odds':'100', 'true prob':100}
+    # final_prop_dicts = [p1, p2, p3, p4, p5, p6, p7]
     if len(final_prop_dicts) > 0 and 'ev' in final_prop_dicts[0].keys():
         #print('ev found')
         plus_ev_props = isolator.isolate_plus_ev_props(final_prop_dicts)
@@ -5175,6 +5204,10 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
         prop_tables.append(max_picks_top_ev_props)
         sheet_names.append('Max +EV')
 
+        ev_max_picks_top_ev = generate_joint_ev_of_props(max_picks_top_ev_props)
+        joint_evs = [{'ev max picks top ev': ev_max_picks_top_ev}]
+        prop_tables.append(joint_evs)
+        sheet_names.append('Joint EVs')
 
         top_prob_props = []
 
