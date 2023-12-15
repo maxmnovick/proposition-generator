@@ -953,7 +953,7 @@ def write_all_player_stat_probs(all_player_stat_probs):
 # AND write 1 sheet for each strategy
 def write_prop_tables(prop_dicts, sheet_names, desired_order, todays_date=datetime.today().strftime('%m-%d-%y')):
     print('\n===Write Prop Tables===\n')
-    print('prop_dicts: ' + str(prop_dicts))
+    #print('prop_dicts: ' + str(prop_dicts))
 
     # book name = prop tables
     book_name = 'data/prop tables - ' + todays_date + '.xlsx'

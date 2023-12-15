@@ -26,6 +26,8 @@ import math # using log10 to scale sample size relative to condition weight
 
 import copy # need to compare init saved data to final data bc only overwrite saved data if changed
 
+import converter # convert am to dec odds so we can get joint odds
+
 # sort alphabetical and lower for comparison to other games
 # might as well compare strings bc need str as key
 # players_list = [j. brown sg,...]
@@ -3285,6 +3287,142 @@ def generate_all_consistent_stat_dicts(all_player_consistent_stats, all_player_s
 
     return sorted_consistent_stat_dicts
 
+def generate_valid_top_ev_props(plus_ev_props):
+    print('\n===Generate Valid Top EV Props===\n')
+    top_ev_props = []
+    # p1 = {'player':'kyrie', 'game':'3', 'stat':'pts', 'ev':3}
+    # p2 = {'player':'kobe', 'game':'1', 'stat':'pts', 'ev':3}
+    # p3 = {'player':'kobe', 'game':'1', 'stat':'pts', 'ev':2}
+    # p4 = {'player':'dame', 'game':'2', 'stat':'pts', 'ev':2}
+    # p5 = {'player':'trae', 'game':'4', 'stat':'pts', 'ev':1}
+    # p6 = {'player':'trae', 'game':'4', 'stat':'ast', 'ev':1}
+    # p7 = {'player':'luka', 'game':'3', 'stat':'pts', 'ev':1}
+    for main_prop in plus_ev_props:
+        print('\nmain_prop: ' + str(main_prop))
+        # ensure at least 2 picks from this game
+        # remove if only 1
+        # main_prop_game = main_prop['game']
+        # for compare_prop in plus_ev_props:
+        #     compare_prop_game = compare_prop['game']
+
+        # 1. first look for duplicates
+        # 2. take highest ev
+        # 3. and then remove single pick games
+        fields = ['player', 'stat']
+        # if determine duplicate, take highest ev of duplicates
+        if determiner.determine_multiple_dicts_with_vals(main_prop, fields, plus_ev_props):
+            # if highest ev of the duplicates
+            duplicate_props = isolator.isolate_duplicate_dicts(main_prop, fields, plus_ev_props)
+            if determiner.determine_highest_ev_prop(main_prop, duplicate_props):
+                # remove lower ev props
+                # before adding to list need to check if only prop in game
+                top_ev_props.append(main_prop)
+        else:
+            top_ev_props.append(main_prop)
+
+    print('top_ev_props: ' + str(top_ev_props))
+
+    print('\n===Validate Props===\n')
+    # now removed duplicates, so check if >1 props per game
+    # p1 = {'player':'kyrie', 'game':'3', 'stat':'pts', 'ev':3}
+    # p2 = {'player':'kobe', 'game':'1', 'stat':'pts', 'ev':3}
+    # p4 = {'player':'dame', 'game':'2', 'stat':'pts', 'ev':2}
+    # p5 = {'player':'trae', 'game':'4', 'stat':'pts', 'ev':1}
+    # p6 = {'player':'trae', 'game':'4', 'stat':'ast', 'ev':1}
+    # p7 = {'player':'luka', 'game':'3', 'stat':'pts', 'ev':1}
+    valid_top_ev_props = [] # >1 per game
+    for main_prop in top_ev_props:
+        print('\nmain_prop: ' + str(main_prop))
+        # given list of dicts, see if any matching vals
+        # determine multiple props in same game
+        if determiner.determine_multiple_dicts_with_val(main_prop, 'game', top_ev_props):
+            # if enough options, proceed
+            valid_top_ev_props.append(main_prop)
+
+    print('valid_top_ev_props: ' + str(valid_top_ev_props))
+    return valid_top_ev_props
+
+# probs given out of 100 so convert to 1 before multiplying
+def generate_joint_prob(probs):
+    print('\n===Generate Joint Probs===\n')
+    print('probs: ' + str(probs))
+    
+    joint_prob = probs[0] / 100
+    for prob in probs[1:]:
+        joint_prob *= prob / 100
+
+    print('joint_prob: ' + str(joint_prob))
+    return joint_prob
+
+def generate_joint_odds(american_odds):
+    print('\n===Generate Joint Odds===\n')
+
+    print('american_odds: ' + str(american_odds))
+    
+    joint_odds = converter.convert_american_to_decimal_odds(american_odds[0])
+    for odds in american_odds[1:]:
+        decimal_odds = converter.convert_american_to_decimal_odds(odds)
+        joint_odds *= decimal_odds
+
+    print('joint_odds: ' + str(joint_odds))
+    return joint_odds
+
+
+# given joint odds as decimal odds
+# bc need to convert am to dec before getting joint by multiplying
+def generate_joint_ev(joint_prob, joint_odds):
+    print('\n===Generate Joint EV===\n')
+    print('joint_prob: ' + str(joint_prob))
+    print('joint_odds: ' + str(joint_odds))
+
+    stake = 1
+    payout = stake * joint_odds
+    print('payout: ' + str(payout))
+    profit_multiplier = payout - stake # need to subtract stake here unlike with american odds bc added 1 to get decimal odds
+    print('profit_multiplier: ' + str(profit_multiplier))
+        
+    prob_over = joint_prob
+    print('prob_over: ' + str(prob_over))
+    prob_under = 1 - prob_over
+    print('prob_under: ' + str(prob_under))
+    profit = profit_multiplier * prob_over 
+    loss = stake * prob_under
+    ev = "%.2f" % (profit - loss)
+
+    print('ev: ' + str(ev))
+    return ev
+
+# input american odds bc that is given
+# prob given out of 100 bc from final all stat probs?
+def generate_ev(prob, odds):
+    print('\n===Generate EV===\n')
+    print('prob: ' + str(prob))
+    print('odds: ' + str(odds))
+
+    # now we have odds return profit/loss
+    # so get ev = e(x) = xp
+    #+200=200/100=2, -200=100/200=1/2
+    ev = 0 # if no odds
+    if odds != 'NA' and odds != '?':
+        conv_factor = 100 # american odds system shows how much to put in to profit 100
+        profit_multiplier = int(odds) / conv_factor
+        if re.search('-',odds):
+            profit_multiplier = conv_factor / -int(odds)
+        print('profit_multiplier: ' + str(profit_multiplier))
+        
+        prob_over = prob / 100
+        print('prob_over: ' + str(prob_over))
+        prob_under = 1 - prob_over
+        print('prob_under: ' + str(prob_under))
+        spent = 1 # unit
+        profit = profit_multiplier * prob_over 
+        loss = spent * prob_under
+        # "%.2f" % () returns accurate 2 decimal places instead of round(2) which always rounds up
+        ev = "%.2f" % (profit - loss)
+    
+    print('ev: ' + str(ev))
+    return ev
+
 # stat_dict: {'player name': 'Trevelin Queen', 'stat name': 'ast', 'prob val': 0, 'prob': 100...
 def generate_available_prop_dicts(stat_dicts, game_teams=[], player_teams={}, cur_yr=''):
     print('\n===Generate Available Prop Dicts===\n')
@@ -3353,21 +3491,27 @@ def generate_available_prop_dicts(stat_dicts, game_teams=[], player_teams={}, cu
         #+200=200/100=2, -200=100/200=1/2
         ev = 0 # if no odds
         if odds != 'NA' and odds != '?':
+            true_prob = stat_dict['true prob']
+            print('true_prob: ' + str(true_prob))
+
+            #ev = generate_ev(prob, odds)
+            print('\n===Generate EV for Prob, Odds: ' + str(true_prob) + ', ' + str(odds) + '===\n')
+
             conv_factor = 100 # american odds system shows how much to put in to profit 100
             profit_multipier = int(odds) / conv_factor
             if re.search('-',odds):
                 profit_multipier = conv_factor / -int(odds)
             print('profit_multipier: ' + str(profit_multipier))
-            true_prob = stat_dict['true prob']
-            print('true_prob: ' + str(true_prob))
+            
             prob_over = true_prob / 100
             print('prob_over: ' + str(prob_over))
             prob_under = 1 - prob_over
             print('prob_under: ' + str(prob_under))
             spent = 1 # unit
+            # "%.2f" % () returns accurate 2 decimal places instead of round(2) which always rounds up
             ev = "%.2f" % (profit_multipier * prob_over - spent * prob_under)
-            print('ev: ' + str(ev))
-
+        
+        print('ev: ' + str(ev))
         stat_dict['ev'] = ev
         
         # if team odds saved locally then no need to read again from internet same day bc unchanged?
@@ -4855,7 +4999,17 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
     if len(high_prob_props) > 0:
         final_prop_dicts = high_prob_props
 
+    print('\n===Generate Prop Combos===\n')
     # if ev, read odds
+    # final_prop_dicts = [{player:p, game:g, ...},...]
+    p1 = {'player':'kyrie', 'game':'3', 'stat':'pts', 'ev':3, 'odds':'100', 'true prob':100}
+    p2 = {'player':'kobe', 'game':'1', 'stat':'pts', 'ev':3, 'odds':'100', 'true prob':100}
+    p3 = {'player':'kobe', 'game':'1', 'stat':'pts', 'ev':2, 'odds':'100', 'true prob':100}
+    p4 = {'player':'dame', 'game':'2', 'stat':'pts', 'ev':2, 'odds':'100', 'true prob':100}
+    p5 = {'player':'trae', 'game':'4', 'stat':'pts', 'ev':1, 'odds':'100', 'true prob':100}
+    p6 = {'player':'trae', 'game':'4', 'stat':'ast', 'ev':1, 'odds':'100', 'true prob':100}
+    p7 = {'player':'luka', 'game':'3', 'stat':'pts', 'ev':1, 'odds':'100', 'true prob':100}
+    final_prop_dicts = [p1, p2, p3, p4, p5, p6, p7]
     if len(final_prop_dicts) > 0 and 'ev' in final_prop_dicts[0].keys():
         #print('ev found')
         plus_ev_props = isolator.isolate_plus_ev_props(final_prop_dicts)
@@ -4878,35 +5032,15 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
         dk_max_allowed = 20
         fd_max_allowed = 25
         # ideal max depends on cumulative ev
-        top_options = plus_ev_props[0:dk_max_allowed]
+        #top_options = plus_ev_props[0:dk_max_allowed]
         #print('top_options: ' + str(top_options))
 
-        top_ev_props = []
-        for main_prop in plus_ev_props:
-            # ensure at least 2 picks from this game
-            # remove if only 1
-            # main_prop_game = main_prop['game']
-            # for compare_prop in plus_ev_props:
-            #     compare_prop_game = compare_prop['game']
+        valid_top_ev_props = generate_valid_top_ev_props(plus_ev_props)
 
-            # given list of dicts, see if any matching vals
-            # determine multiple props in same game
-            if determiner.determine_multiple_dicts_with_val(main_prop, 'game', plus_ev_props):
-                # if enough options, proceed
-
-                # see if duplicate player stat
-                # prop_player = main_prop['player']
-                # prop_stat = main_prop['stat']
-                vals = ['player', 'stat']
-                # if determine duplicate, take highest ev of duplicates
-                if determiner.determine_multiple_dicts_with_vals(main_prop, vals, plus_ev_props):
-                    # if highest ev of the duplicates
-                    duplicate_props = isolator.isolate_duplicate_props(main_prop, vals, plus_ev_props)
-                    if determiner.determine_highest_ev_prop(main_prop, duplicate_props):
-                        top_ev_props.append(main_prop)
-                else:
-                    top_ev_props.append(main_prop)
-
+        # p1 = {'player':'kyrie', 'game':'3', 'stat':'pts', 'ev':3}
+        # p5 = {'player':'trae', 'game':'4', 'stat':'pts', 'ev':1}
+        # p6 = {'player':'trae', 'game':'4', 'stat':'ast', 'ev':1}
+        # p7 = {'player':'luka', 'game':'3', 'stat':'pts', 'ev':1}
         # now top ev props only has props with at least 2 per game
         # and only top ev of duplicates
         # and sorted by ev
@@ -4917,18 +5051,27 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
         # AND make fcn to pick top x props, before sorting for selection
         # AND make fcn to pick all combos of props with x (eg +100) joint odds
         # 1. same game options, sorted by stat
+        print('\n===same game, sort by stat===\n')
         sort_keys = ['game', 'stat', 'player']
-        sg_top_ev_props_by_stat = sorter.sort_dicts_by_str_keys(top_ev_props, sort_keys)
+        sg_top_ev_props_by_stat = sorter.sort_dicts_by_str_keys(valid_top_ev_props, sort_keys)
         prop_tables.append(sg_top_ev_props_by_stat)
         sheet_names.append('SG +EV Stats')
         # 2. same game, sort by ev
+        print('\n===same game, sort by ev===\n')
         sort_keys = ['game', 'ev']
-        sg_top_ev_props = sorter.sort_dicts_by_str_keys(top_ev_props, sort_keys)
+        sg_top_ev_props = sorter.sort_dicts_by_str_keys(valid_top_ev_props, sort_keys)
         prop_tables.append(sg_top_ev_props)
         sheet_names.append('SG +EV')
         # 3. max picks
-        max_picks_top_ev_props = top_ev_props[0:dk_max_allowed]
-        remaining_top_ev_props = top_ev_props[dk_max_allowed:] # after cutoff by platform limit
+        print('\n===Max Picks===\n')
+        #max_picks_top_ev_props = generate_max_picks_top_ev_props(top_ev_props, dk_max_allowed)
+        test_num_props = 2 # dk_max_allowed
+        # p1 = {'player':'kyrie', 'game':'3', 'stat':'pts', 'ev':3}
+        # p5 = {'player':'trae', 'game':'4', 'stat':'pts', 'ev':1}
+        max_picks_top_ev_props = valid_top_ev_props[0:test_num_props]
+        # p6 = {'player':'trae', 'game':'4', 'stat':'ast', 'ev':1}
+        # p7 = {'player':'luka', 'game':'3', 'stat':'pts', 'ev':1}
+        remaining_top_ev_props = valid_top_ev_props[test_num_props:] # after cutoff by platform limit, include all picks just split in 2
         # in top remaining picks, ensure >1 per game
         # add here if only prop available for game 
         # so we can see if we should keep this and remove another one 
@@ -4938,45 +5081,70 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
         # max_picks_top_ev_props = [{},...]
         for main_prop_idx in range(len(max_picks_top_ev_props)):
             main_prop = max_picks_top_ev_props[main_prop_idx]
-            top_ev_remaining_prop = {}
-            if len(remaining_top_ev_props) > 0:
-                top_ev_remaining_prop = remaining_top_ev_props[0]
 
-            # if only prop in game, individual prop
+            # if only prop in game, individual prop, so need to determine which prop to replace
             if not determiner.determine_multiple_dicts_with_val(main_prop, 'game', max_picks_top_ev_props):
+                # remaining_top_ev_props =
+                # p6 = {'player':'trae', 'game':'4', 'stat':'ast', 'ev':1}
+                # p7 = {'player':'luka', 'game':'3', 'stat':'pts', 'ev':1}
+                top_ev_remaining_prop = {}
+                if len(remaining_top_ev_props) > 0:
+                    top_ev_remaining_prop = remaining_top_ev_props[0]
+                
                 individual_props.append(main_prop)
                 # replace with next highest ev
                 # first look in remaining props to see if same game prop available
                 # if not, replace with highest ev in remaining props (idx=0)
                 #if determiner.determine_same_game_prop(main_prop, remaining_top_ev_props):
+                # main_game = main_prop['game']
+                # if main_game in remaining_top_ev_props.values():
                 if determiner.determine_val_in_dicts(main_prop, 'game', remaining_top_ev_props):
+                
+                    print('\n===Same Game Props===\n')
                     # consider next highest evs
                     # get joint ev and compare to other option
-                    sg_props = isolator.isolate_sg_props(main_prop)
+                    # p7 = {'player':'luka', 'game':'3', 'stat':'pts', 'ev':1}
+                    sg_props = isolator.isolate_sg_props(main_prop, remaining_top_ev_props)
                     sg_prop = isolator.isolate_highest_ev_prop(sg_props) # next highest same game prop if available
-                    main_prop_joint_ev = main_prop['ev'] * sg_prop['ev']
+                    
+                    multiplied_evs = main_prop['ev'] * sg_prop['ev']
+                    print('main multiplied_evs: ' + str(multiplied_evs))
+                    joint_odds = generate_joint_odds([main_prop['odds'], sg_prop['odds']])
+                    joint_prob = generate_joint_prob([main_prop['true prob'], sg_prop['true prob']])
+                    main_prop_joint_ev = generate_joint_ev(joint_prob, joint_odds) #main_prop['ev'] * sg_prop['ev']
                     print('main_prop_joint_ev: ' + str(main_prop_joint_ev))
 
+                    print('\n===Next Highest Props===\n')
                     # find lowest available to take out from a game with >2 picks
                     # if next highest sg prop +*? main prop > sum/product? of 2 lowest top ev props
                     # then use sg prop instead of overall prop
+                    # max_picks_top_ev_props = 
+                    # p1 = {'player':'kyrie', 'game':'3', 'stat':'pts', 'ev':3}
+                    # p5 = {'player':'trae', 'game':'4', 'stat':'pts', 'ev':1}
                     low_ev_top_prop = max_picks_top_ev_props[-1]
-                    replacement_prop_joint_ev = low_ev_top_prop['ev'] * top_ev_remaining_prop['ev']
+                    multiplied_evs = low_ev_top_prop['ev'] * top_ev_remaining_prop['ev']
+                    print('replacement multiplied_evs: ' + str(multiplied_evs))
+                    joint_odds = generate_joint_odds([low_ev_top_prop['odds'], top_ev_remaining_prop['odds']])
+                    joint_prob = generate_joint_prob([low_ev_top_prop['true prob'], top_ev_remaining_prop['true prob']]) #low_ev_top_prop['true prob'] * top_ev_remaining_prop['true prob']
+                    replacement_prop_joint_ev = generate_joint_ev(joint_prob, joint_odds)
                     print('replacement_prop_joint_ev: ' + str(replacement_prop_joint_ev))
 
-                    if main_prop_joint_ev > replacement_prop_joint_ev:
+                    # >= bc prefer to keep picks across different games
+                    if main_prop_joint_ev >= replacement_prop_joint_ev:
                         # keep main prop and sgp
                         # remove bottom of max picks
-                        max_picks_top_ev_props.pop()
+                        max_picks_top_ev_props = max_picks_top_ev_props[:-1]
                         max_picks_top_ev_props.append(sg_prop)
                     else: #
                         #replacement_prop = remaining_top_ev_props[0]
-                        max_picks_top_ev_props.pop(main_prop_idx)
+                        max_picks_top_ev_props = max_picks_top_ev_props[:main_prop_idx] + max_picks_top_ev_props[main_prop_idx+1:]
                         max_picks_top_ev_props.append(top_ev_remaining_prop)
 
                 else: # no sg props available so replace with top of remaining props
-                    max_picks_top_ev_props.pop(main_prop_idx)
+                    max_picks_top_ev_props = max_picks_top_ev_props[:-1]
                     max_picks_top_ev_props.append(top_ev_remaining_prop)
+
+                
 
                 # for remaining_prop in remaining_top_ev_props:
                 #     # if a remaining prop is from the same game as a prop in max picks
@@ -5002,6 +5170,8 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
                     # if next highest in game < next highest overall, need to compute joint ev
                     # OR just set an acceptable range difference
 
+        print('max_picks_top_ev_props: ' + str(max_picks_top_ev_props))
+
         prop_tables.append(max_picks_top_ev_props)
         sheet_names.append('Max +EV')
 
@@ -5026,7 +5196,7 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], toda
         # prop_tables.append(top_options)
         # sheet_names.append('Top')
 
-        s1_props = top_options
+        #s1_props = top_options
 
         #print('prop_tables before reverse: ' + str(prop_tables))
 

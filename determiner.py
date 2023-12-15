@@ -1667,3 +1667,129 @@ def determine_player_full_name(player, team, all_players_teams):
 
     print('full_name: ' + full_name)
     return full_name
+
+# given main prop and fields, find vals in those fields
+# keys = fields = ['player', 'stat']
+def determine_multiple_dicts_with_vals(main_dict, keys, dict_list):
+    print('\n===Determine Multiple Dicts with Vals===\n')
+    print('main_dict: ' + str(main_dict))
+    print('keys: ' + str(keys))
+
+    multiple = False
+
+    # need list of all vals in dicts at each key
+    # so we can compare vals
+    count = 0 # list includes main dict so we need to find 2
+    for dict in dict_list:
+        # check if matches all keys
+        key_match = True
+        for key in keys:
+            main_val = main_dict[key]
+            dict_val = dict[key]
+            # if matches, check next key
+            # if does not match, check next dict
+            if main_val != dict_val:
+                key_match = False
+                break
+
+        # if made it through all keys with all matching
+        # then multiple = true
+        if key_match == True:
+            count += 1
+            if count > 1:
+                multiple = True
+                break
+
+    # if checked all dicts without match, then multiple false
+
+    return multiple
+
+# given main prop and fields, find vals in those fields
+def determine_multiple_dicts_with_val(main_dict, key, dict_list):
+    print('\n===Determine Multiple Dicts with Val===\n')
+    print('main_dict: ' + str(main_dict))
+    print('key: ' + str(key))
+
+    multiple = False
+
+    main_val = main_dict[key]
+    # see if this val is in >1 dicts in list 
+    count = 0
+    for dict in dict_list:
+        dict_val = dict[key]
+        if main_val == dict_val:
+            count += 1
+
+        if count > 1:
+            print('found multiple')
+            multiple = True
+            break
+
+    #print('multiple: ' + str(multiple))
+    return multiple
+
+def determine_vals_in_dict(main_dict, keys, dict):
+    print('\n===Determine Vals in Dict===\n')
+
+    vals_in_dict = True
+
+    for key in keys:
+        main_val = main_dict[key]
+        dict_val = dict[key]
+        if main_val != dict_val:
+            print('vals not in dict')
+            vals_in_dict = False
+            break
+
+    #print('vals_in_dict: ' + str(vals_in_dict))
+    return vals_in_dict
+
+def determine_val_in_dicts(main_dict, key, remaining_dicts):
+    print('\n===Determine Val in Dicts===\n')
+
+    val_in_dict = False 
+
+    main_val = main_dict[key]
+    print('main_val: ' + str(main_val))
+    for dict in remaining_dicts:
+        dict_val = dict[key]
+        if main_val == dict_val:
+            print('found val in dict')
+            val_in_dict = True
+            break
+
+    return val_in_dict
+
+# determine highest value dict
+def determine_highest_value_dict(main_dict, duplicate_dicts, key):
+    print('\n===Determine Highest Value Dict===\n')
+
+    highest = True
+
+    main_val = main_dict[key]
+
+    for prop in duplicate_dicts:
+        dup_val = prop[key]
+        if dup_val > main_val:
+            print('not highest')
+            highest = False
+            break
+
+    return highest
+
+# determine highest value dict
+def determine_highest_ev_prop(main_prop, duplicate_props):
+    print('\n===Determine Highest EV Prop===\n')
+
+    highest = True
+
+    main_ev = main_prop['ev']
+
+    for prop in duplicate_props:
+        dup_ev = prop['ev']
+        if dup_ev > main_ev:
+            print('not highest')
+            highest = False
+            break
+
+    return highest

@@ -2772,7 +2772,9 @@ def read_all_players_in_games(all_player_season_logs_dict, all_players_teams, cu
 									# game_box_scores_dict = {away:df, home:df}
 									# currently returns empty dict if results already saved
 									game_box_scores_dict = read_game_box_scores(game_key, game_espn_id, read_new_game_ids=read_new_game_ids)
-
+									# if returned no box scores, then bc too many requests, so stop reading new ids
+									if len(game_box_scores_dict.keys()) == 0:
+										read_new_game_ids = False
 									# now that we have box scores we can isolate stats of interest, starting with player name
 									# given box scores for each team, return lists of teammates and opponents or home/away?
 									# need to save as home away so we only need to read once per game and not once per player

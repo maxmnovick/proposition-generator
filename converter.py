@@ -1,5 +1,7 @@
 # converter.py
 
+import re # need to see if negative sign in odds string
+
 def convert_dict_to_list(dict, desired_order=[]):
 
     dict_list = []
@@ -95,3 +97,17 @@ def convert_player_abbrev_to_name(player_abbrev, player_team):
 
 
     return player_name
+
+# american odds given as string from internet
+def convert_american_to_decimal_odds(american_odds):
+    print('\n===Convert American to Decimal Odds===\n')
+    print('american_odds: ' + str(american_odds))
+    decimal_odds = 0.0
+
+    if re.search('-',american_odds):
+        decimal_odds = "%.2f" % ((100 / -int(american_odds)) + 1)
+    else:
+        decimal_odds = "%.2f" % ((int(american_odds) / 100) + 1)
+    
+    print('decimal_odds: ' + str(decimal_odds))
+    return float(decimal_odds)

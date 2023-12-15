@@ -5,6 +5,9 @@
 import re
 from tabulate import tabulate # display output
 
+import determiner # determine vals in dict to isolate
+import sorter # sort dicts by key to get highest ev dict
+
 def isolate_games(raw_data):
     print("\n===Isolate Games===\n")
     print("raw_data: " + str(raw_data))
@@ -136,7 +139,7 @@ def isolate_keys_in_dict(regex, dict):
 
 
 def isolate_high_prob_props(prop_dicts):
-    print('\n===Isolate High Prop Props===\n')
+    print('\n===Isolate High Prob Props===\n')
 
     high_prob_props = []
 
@@ -161,3 +164,49 @@ def isolate_plus_ev_props(prop_dicts):
 
     #print('plus_ev_props: ' + str(plus_ev_props))
     return plus_ev_props
+
+def isolate_duplicate_dicts(main_dict, keys, dict_list):
+    print('\n===Isolate Duplicate Dicts===\n')
+
+    duplicate_dicts = []
+
+    # already determined duplicates before running this
+    #if determiner.determine_multiple_dicts_with_vals()
+
+    for dict in dict_list:
+        if determiner.determine_vals_in_dict(main_dict, keys, dict):
+            duplicate_dicts.append(dict)
+        
+    print('duplicate_dicts: ' + str(duplicate_dicts))
+    return duplicate_dicts
+
+def isolate_sg_props(main_prop, remaining_top_ev_props):
+    sg_props = []
+
+    main_game = main_prop['game']
+    for prop in remaining_top_ev_props:
+        prop_game = prop['game']
+        if main_game == prop_game:
+            sg_props.append(prop)
+
+    print('sg_props: ' + str(sg_props))
+    return sg_props
+
+def isolate_highest_ev_prop(sg_props):
+    
+    # Isolate by manul sort
+    # init_prop = sg_props[0]
+    
+    # highest_prop = init_prop
+
+    # prev_highest_ev = init_prop['ev']
+    # for prop in sg_props:
+    #     prop_ev = prop['ev']
+    #     if prop_ev > prev_highest_ev:
+    #         highest_prop = prop
+    #         prev_highest_ev = prop_ev
+
+    # Iso by auto sort
+    highest_prop = sorter.sort_dicts_by_key(sg_props, 'ev', reverse=True)[0]
+    print('highest_prop: ' + str(highest_prop))
+    return highest_prop
