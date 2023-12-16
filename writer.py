@@ -954,16 +954,24 @@ def write_all_player_stat_probs(all_player_stat_probs):
 def write_prop_tables(prop_dicts, sheet_names, desired_order, todays_date=datetime.today().strftime('%m-%d-%y')):
     print('\n===Write Prop Tables===\n')
     #print('prop_dicts: ' + str(prop_dicts))
+    print('sheet_names: ' + str(sheet_names))
+    print('desired_order: ' + str(desired_order))
 
     # book name = prop tables
     book_name = 'data/prop tables - ' + todays_date + '.xlsx'
     print('book_name: ' + str(book_name))
     writer = pd.ExcelWriter(book_name)
 
+    init_desired_order = desired_order
     for table_idx in range(len(prop_dicts)):
         dict = prop_dicts[table_idx]
 
         sheet_name = sheet_names[table_idx]
+
+        if sheet_name == 'Joint EVs':
+            desired_order = ['ev max picks top ev']
+        else:
+            desired_order = init_desired_order
 
         table_df = pd.DataFrame(dict, columns=desired_order)
 
@@ -976,7 +984,7 @@ def write_prop_tables(prop_dicts, sheet_names, desired_order, todays_date=dateti
 # so here we separate to write cur and prev separately
 # bc prev stays same while cur changes each new game
 # need cur_yr bc only cur yr changes
-def write_cur_and_prev(init_dict, final_dict, cur_file, prev_file, cur_yr, player_name=''):
+def write_cur_and_prev(init_dict, final_dict, cur_file, prev_file, cur_yr, subject_name=''):
     print('\n===Write Cur and Prev===\n')
     print('cur_yr: ' + str(cur_yr))
 
@@ -1027,8 +1035,8 @@ def write_cur_and_prev(init_dict, final_dict, cur_file, prev_file, cur_yr, playe
     #print('init_prev_dict: ' + str(init_prev_dict))
     #print('final_prev_dict: ' + str(final_prev_dict))
     if not init_cur_dict == final_cur_dict:
-        print(player_name + ' CURRENT year data changed so write to file')
+        print(subject_name + ' CURRENT year data changed so write to file')
         write_json_to_file(final_cur_dict, cur_file, 'w')
     if not init_prev_dict == final_prev_dict:
-        print(player_name + ' PREVIOUS year data changed so write to file')
+        print(subject_name + ' PREVIOUS year data changed so write to file')
         write_json_to_file(final_prev_dict, prev_file, 'w')

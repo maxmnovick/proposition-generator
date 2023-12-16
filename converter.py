@@ -111,3 +111,39 @@ def convert_american_to_decimal_odds(american_odds):
     
     print('decimal_odds: ' + str(decimal_odds))
     return float(decimal_odds)
+
+
+def convert_team_abbrev_to_name(team_abbrev):
+    team_names = {'atl':'atlanta hawks', 
+                    'bos':'boston celtics', 
+                    'bkn':'brooklyn nets', 
+                    'cha':'charlotte hornets', 
+                    'chi':'chicago bulls',
+                    'cle':'cleveland cavaliers',
+                    'dal':'dallas mavericks',
+                    'den':'denver nuggets',
+                    'det':'detroit pistons',
+                    'gsw':'golden state warriors',
+                    'hou':'houston rockets',
+                    'ind':'indiana pacers',
+                    'lac':'la clippers',
+                    'lal':'los angeles lakers',
+                    'mem':'memphis grizzlies',
+                    'mia':'miami heat',
+                    'mil':'milwaukee bucks',
+                    'min':'minnesota timberwolves',
+                    'nop':'new orleans pelicans',
+                    'nyk':'new york knicks',
+                    'okc':'oklahoma city thunder',
+                    'orl':'orlando magic',
+                    'phi':'philadelphia 76ers',
+                    'phx':'phoenix suns',
+                    'por':'portland trail blazers',
+                    'sac':'sacramento kings',
+                    'sas':'san antonio spurs',
+                    'tor':'toronto raptors',
+                    'uta':'utah jazz',
+                    'wsh':'washington wizards'} # could get from fantasy pros table but simpler to make once bc only 30 immutable vals
+
+
+    return team_names[team_abbrev]
