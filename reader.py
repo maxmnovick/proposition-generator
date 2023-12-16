@@ -3991,8 +3991,8 @@ def read_all_lineups(players, all_players_teams, rosters, all_teams_players, cur
 					all_lineups[lineup_team]['start'] = starters
 					all_lineups[lineup_team]['out'] = out
 					all_lineups[lineup_team]['probable'] = probable
-					all_lineups[lineup_team]['questionable'] = questionable
-					all_lineups[lineup_team]['doubtful'] = doubtful
+					all_lineups[lineup_team]['question'] = questionable
+					all_lineups[lineup_team]['doubt'] = doubtful
 
 
 	# determine bench by seeing difference between all teammates, starters, and out
@@ -4024,7 +4024,7 @@ def read_all_lineups(players, all_players_teams, rosters, all_teams_players, cur
 			# AND shows if teammate was in box score no longer on team so not on bench
 			starters = lineup['start']
 			out = lineup['out']
-			doubtful = lineup['doubtful']
+			doubtful = lineup['doubt']
 			print('starters: ' + str(starters))
 			print('out: ' + str(out))
 			print('doubtful: ' + str(doubtful))

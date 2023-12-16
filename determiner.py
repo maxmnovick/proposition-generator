@@ -1277,16 +1277,26 @@ def determine_unit_time_period(all_player_stat_probs, all_player_stat_dicts={}, 
     #print('unit_time_period: ' + str(unit_time_period))
     return unit_time_period
 
-
+# all_current_conditions: {'marvin bagley iii': {'loc': 'away', 'start': 'bench'}, 'bojan bogdanovic': {'loc':...
+# all_cur_conds: ['all', 'away', 'bench', 'start', '', 'home']
 def determine_all_current_conditions(all_current_conditions):
+    print('\n===Determine All Current Conditions===\n')
+    print('all_current_conditions: ' + str(all_current_conditions))
 
     all_cur_conds = ['all']
 
-    for player_cur_conds in all_current_conditions.values():
+    for player, player_cur_conds in all_current_conditions.items():
+        print('\nplayer_cur_conds: ' + str(player_cur_conds))
         for cond_val in player_cur_conds.values():
-            if cond_val not in all_cur_conds:
-                all_cur_conds.append(cond_val)
+            print('cond_val: ' + str(cond_val))
+            if cond_val != '':
+                if cond_val not in all_cur_conds:
+                    print('add cond val')
+                    all_cur_conds.append(cond_val)
+            else:
+                print('Warning: Blank cond_val! ' + player.title())
 
+    print('all_cur_conds: ' + str(all_cur_conds))
     return all_cur_conds
 
 # determine game num so we can sort by game
@@ -1310,7 +1320,7 @@ def determine_game_num(game_teams, player_team):
 # based on input game teams
 # player_teams = {player:{year:{team:gp,...},...}
 def determine_player_game_location(player, game_teams, player_team):
-    print('\n===Determine Player Game Location: ' + player + '===\n')
+    print('\n===Determine Player Game Location: ' + player.title() + '===\n')
     print('player_team: ' + player_team)
 
     player_current_location = ''
@@ -1367,11 +1377,13 @@ def determine_player_start(player, player_abbrev, player_team_lineup):
     # given starters not bench so only make starter if shown in list?
     # problem is questionable players are still listed as starters
     # if they are expected to start then still consider them a starter
-    player_start = 'bench'
+    player_start = 'bench' # player may not be in bench if not played
     start_key = 'start'
 
     if player in player_team_lineup[start_key]:# or player_abbrev in player_team_lineup[bench_key]:
         player_start = start_key
+    # elif player in player_team_lineup[bench_key]:# or player_abbrev in player_team_lineup[bench_key]:
+    #     player_start = bench_key
 
     print('player_start: ' + str(player_start))
     return player_start
@@ -1540,19 +1552,24 @@ def determine_player_team_by_date(player, player_teams, row):
 #list(player_teams[player][cur_yr].keys())[-1] # current team
 # can we take first year in teams list instead of cur yr?
 # player_teams = {year:{team:gp,...},...
-def determine_player_current_team(player, player_teams, cur_yr=''):
+def determine_player_current_team(player, player_teams, cur_yr='', rosters={}):
     #print('\n===Determine Player Current Team: ' + player.title() + '===\n')
     #print('player_teams: ' + str(player_teams))
     cur_team = ''
 
-    if len(player_teams.keys()) > 0:
-        if cur_yr in player_teams.keys():
-            cur_team = list(player_teams[cur_yr].keys())[-1]
-        # {team:gp,...}
-        else:
-            recent_yr_teams = list(player_teams.values())[-1] # most recent yr
-            if len(recent_yr_teams.keys()) > 0:
-                cur_team = list(recent_yr_teams.keys())[-1] # most recent team
+    if len(rosters.keys()) > 0:
+        for team, roster in rosters.items():
+            if player in roster:
+                cur_team = team
+    if cur_team == '': # could not find player in rosters so maybe not player of interest but maybe player of comparison
+        if len(player_teams.keys()) > 0:
+            if cur_yr in player_teams.keys():
+                cur_team = list(player_teams[cur_yr].keys())[-1]
+            # {team:gp,...}
+            else:
+                recent_yr_teams = list(player_teams.values())[-1] # most recent yr
+                if len(recent_yr_teams.keys()) > 0:
+                    cur_team = list(recent_yr_teams.keys())[-1] # most recent team
     # should always have player teams bc all lineups are same players as input
     # else: # need to get current team from internet
     #     cur_team = reader.read_player_current_team()
@@ -1594,8 +1611,8 @@ def determine_opponent_team(player, player_teams, game_teams):
 # use to see if started or bench
 # bc lineups shows player abbrev
 def determine_player_abbrev(player_name):
-    print('\n===Determine Player Abbrev: ' + player_name.title() + '===\n')
-    print('player_name: ' + str(player_name))
+    #print('\n===Determine Player Abbrev: ' + player_name.title() + '===\n')
+    #print('player_name: ' + str(player_name))
     #player_abbrev = ''
 
     # if already 1 letter in first name
@@ -1615,7 +1632,7 @@ def determine_player_abbrev(player_name):
             player_abbrev += ' ' + name
 
     player_abbrev = player_abbrev.lower()
-    print('player_abbrev: ' + player_abbrev)
+    #print('player_abbrev: ' + player_abbrev)
     return player_abbrev
 
 # def determine_player_abbrev(player_name):
@@ -1710,7 +1727,7 @@ def determine_player_full_name(player, team, all_players_teams, game_key=''):
         player = re.sub('\s[a-z]+$', '', player)#.strip()
 
         
-    print('player: \'' + str(player) + '\'')
+    #print('player: \'' + str(player) + '\'')
     if player in all_players_teams.keys():
         full_name = player
     else: # could use all players teams or rosters
@@ -1738,12 +1755,12 @@ def determine_player_full_name(player, team, all_players_teams, game_key=''):
             #print('player_abbrev: ' + str(player_abbrev))
             # if we find matching player name or abbrev, check if teams match
             player_abbrev_names = player_abbrev.split()
-            print('player: \'' + player + '\'')
-            print('player_abbrev: \'' + player_abbrev + '\'')
-            print('player_name: ' + player_name)
+            # print('player: \'' + player + '\'')
+            # print('player_abbrev: \'' + player_abbrev + '\'')
+            # print('player_name: ' + player_name)
             if re.search(player,player_abbrev) or re.search(player,player_name):
-                print('team: ' + str(team))
-                print('cur_team: ' + cur_team)
+                # print('team: ' + str(team))
+                # print('cur_team: ' + cur_team)
                 if len(season_teams) > 0:
                     if team in season_teams:
                         full_name = player_name

@@ -4532,16 +4532,22 @@ def generate_player_unit_stat_probs(player_stat_dict, player_name, player_season
 # all lineups has random combo of full names and abbrevs so check both
 # all_lineups = {team:{starters:[Klay Thompson, D. Green,...],out:[],bench:[],unknown:[]},...}
 # player_teams = {year:team:gp}
-def generate_player_current_conditions(player, game_teams, player_teams, all_lineups={}, player_abbrev='', cur_yr=''):
+def generate_player_current_conditions(player, game_teams, player_teams, all_lineups={}, player_abbrev='', cur_yr='', rosters={}):
     print('\n===Generate Player Current Conditions: ' + player.title() + '===\n')
 
     player_current_conditions = {}
 
-    player_team = determiner.determine_player_current_team(player, player_teams, cur_yr) #list(player_teams[player][cur_yr].keys())[-1] # current team
+    # if player traded but not played this yr then need to get team from rosters
+    # why not get team from rosters bc that always has current teams?
+    player_team = determiner.determine_player_current_team(player, player_teams, cur_yr, rosters) #list(player_teams[player][cur_yr].keys())[-1] # current team
     print('player_team: ' + str(player_team))
 
     # condition: location
-    player_current_conditions['loc'] = determiner.determine_player_game_location(player, game_teams, player_team)
+    cur_loc = determiner.determine_player_game_location(player, game_teams, player_team)
+    if cur_loc != '':
+        player_current_conditions['loc'] = cur_loc
+    else:
+        print('Warning: cur_loc blank! ' + player.title())
     
     # condition: teammates and opps lineups
     # https://www.rotowire.com/basketball/nba-lineups.php
@@ -4574,6 +4580,8 @@ def generate_player_current_conditions(player, game_teams, player_teams, all_lin
 
 # make dict of all current conditions for each player so we can use to compute true prob
 # all_current_conditions = {p1:{loc:l1, city:c1, dow:d1, tod:t1,...}, p2:{},...} OR {player1:[c1,c2,...], p2:[],...}
+# if player on new team but has not yet played (eg injury) then only consider current conditions if they are specifically noted as playing? 
+# cant bc only lists starters and out
 def generate_all_current_conditions(players, game_teams, all_players_teams, rosters, find_players, cur_yr, all_teams_players):
     print('\n===Generate All Current Conditions===\n')
 
@@ -4616,7 +4624,7 @@ def generate_all_current_conditions(players, game_teams, all_players_teams, rost
     for player in players:
         player_teams = all_players_teams[player]
         # need to pass all lineups bc opponent lineups matter too
-        player_curr_conds = generate_player_current_conditions(player, game_teams, player_teams, all_lineups, cur_yr=cur_yr)
+        player_curr_conds = generate_player_current_conditions(player, game_teams, player_teams, all_lineups, cur_yr=cur_yr, rosters=rosters)
 
         all_current_conditions[player] = player_curr_conds
 
@@ -5215,6 +5223,9 @@ def generate_players_outcomes(settings={}, players_names=[], game_teams=[], team
 
         print('max_picks_top_ev_props: ' + str(max_picks_top_ev_props))
 
+        # sort by game and stat for easy selection
+        sort_keys = ['game', 'stat']
+        max_picks_top_ev_props = sorter.sort_dicts_by_str_keys(max_picks_top_ev_props, sort_keys)
         prop_tables.append(max_picks_top_ev_props)
         sheet_names.append('Max +EV')
 
