@@ -2872,11 +2872,58 @@ def read_all_players_in_games(all_player_season_logs_dict, all_players_teams, cu
 	print('all_players_in_games_dict: ' + str(all_players_in_games_dict))
 	return all_players_in_games_dict
 
+# for each game in games dict, 
+# determine full name associated with abbrev
+# given team at time of game
+def read_all_players_abbrevs(all_players_in_games_dict, all_players_teams):
+	print('\n===Read All Players Abbrevs===\n')
+
+	all_players_abbrevs = {}
+	for year, year_players_in_games_dict in all_players_in_games_dict.items():
+		year_players_abbrevs = {} # name: abbrev,...
+
+		for game_key, game_players in year_players_in_games_dict.items():
+			print('game_key: ' + str(game_key))
+			print('game_players: ' + str(game_players))
+
+			game_data = game_key.split()
+			if len(game_data) > 2:
+				away_team = game_data[0]
+				print('away_team: ' + str(away_team))
+				home_team = game_data[1]
+				print('home_team: ' + str(home_team))
+
+			for loc, game_team_players in game_players.items():
+				print('loc: ' + str(loc))
+				team = home_team
+				if loc == 'away':
+					team = away_team
+				print('game_team_players: ' + str(game_team_players))
+				for team_part in game_team_players.values():
+					print('team_part: ' + str(team_part))
+					for player_abbrev in team_part:
+						print('player_abbrev: ' + str(player_abbrev))
+
+						# if abbrev already in year_players_abbrevs
+						# no need to run again
+						if player_abbrev not in year_players_abbrevs.values():
+
+							player_name = determiner.determine_player_full_name(player_abbrev, team, all_players_teams, game_key)
+							
+							year_players_abbrevs[player_name] = player_abbrev
+
+
+		all_players_abbrevs[year] = year_players_abbrevs
+
+	print('all_players_abbrevs: ' + str(all_players_abbrevs))
+	return all_players_abbrevs
+
 # year_players_in_games_dict = {game:{away:{starters:[],bench:[]},home:starters:[],bench:[]}}
 # need all_players_teams to determine player full name
 # bc we get abbrev in box score players in games
 # and we want to compare to lineups with full names
-def read_team_players(team, year_players_in_games_dict, all_players_teams):
+# all_players_abbrevs = {jaylen brown: j brown sg, ...}
+def read_team_players(team, year_players_in_games_dict, all_players_teams, all_players_abbrevs={}):
 	print('\n===Read Team Players for ' + team.upper() + '===\n')
 	
 	team_players = []
@@ -2908,7 +2955,14 @@ def read_team_players(team, year_players_in_games_dict, all_players_teams):
 					print('team_part: ' + str(team_part))
 					for player in team_part:
 						print('player: ' + str(player))
-						player_name = determiner.determine_player_full_name(player, team, all_players_teams, game_key)#converter.convert_player_abbrev_to_name(player)
+						player_name = ''
+						if len(all_players_abbrevs.keys()) > 0:
+							for name, abbrev in all_players_abbrevs.items():
+								if player == abbrev:
+									player_name = name
+						else:
+							player_name = determiner.determine_player_full_name(player, team, all_players_teams, game_key)#converter.convert_player_abbrev_to_name(player)
+						# now we have both full name and abbrevs from players in games dict
 						if player_name not in team_players and player_name != '': # blank if player gone and never read
 							team_players.append(player_name)
 							print('team_players: ' + str(team_players))
@@ -2921,7 +2975,7 @@ def read_team_players(team, year_players_in_games_dict, all_players_teams):
 # all_teams_players = {year:{team:[players],...},...}
 # season_teams_players = {team:[players],...}
 # year_players_in_games_dict = {game:{away:{starters:[],bench:[]},home:starters:[],bench:[]}}
-def read_season_teams_players(year, year_players_in_games_dict, init_all_teams_players, teams, all_players_teams):
+def read_season_teams_players(year, year_players_in_games_dict, init_all_teams_players, teams, all_players_teams, all_players_abbrevs):
 	print('\n===Read Season Teams Players: ' + str(year) + '===\n')
 	#print('year_players_in_games_dict: ' + str(year_players_in_games_dict))
 	print('init_all_teams_players: ' + str(init_all_teams_players))
@@ -2936,7 +2990,7 @@ def read_season_teams_players(year, year_players_in_games_dict, init_all_teams_p
 	# for each team, read players
 	for team in teams:
 		if team not in season_teams_players.keys():
-			team_players = read_team_players(team, year_players_in_games_dict, all_players_teams)
+			team_players = read_team_players(team, year_players_in_games_dict, all_players_teams, all_players_abbrevs)
 			season_teams_players[team] = team_players
 	
 
@@ -2979,7 +3033,7 @@ def read_season_teams_players(year, year_players_in_games_dict, init_all_teams_p
 # players they played with at any point in the season, each season
 # all_teams_players = {year:{team:[players],...},...}
 # all_players_in_games_dict = {year:{game:{away:{starters:[],bench:[]},home:starters:[],bench:[]}}
-def read_all_teams_players(all_players_in_games_dict, rosters, cur_yr, todays_date, all_players_teams):
+def read_all_teams_players(all_players_in_games_dict, rosters, cur_yr, todays_date, all_players_teams, all_players_abbrevs):
 	print('\n===Read All Teams Players===\n')
 
 	teams = list(rosters.keys())
@@ -3002,7 +3056,7 @@ def read_all_teams_players(all_players_in_games_dict, rosters, cur_yr, todays_da
 	# year_players_in_games_dict = {game:{away:{starters:[],bench:[]},home:starters:[],bench:[]}}
 	for year, year_players_in_games_dict in all_players_in_games_dict.items():
 		# player_teammates = {year:[teammates],...}
-		season_teams_players = read_season_teams_players(year, year_players_in_games_dict, all_teams_players, teams, all_players_teams)
+		season_teams_players = read_season_teams_players(year, year_players_in_games_dict, all_teams_players, teams, all_players_teams, all_players_abbrevs)
 
 		all_teams_players[year] = season_teams_players
 

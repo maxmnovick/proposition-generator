@@ -1691,6 +1691,7 @@ def determine_player_season_teams(player, game_key, player_teams):
 # all_players_teams = {player:{year:{team:gp,...},...}}
 # player = D. Green or Draymond Green
 # player = K. Towns to karl anthony towns
+# player = K Towns PF to karl anthony towns
 # use game_key to get player team at game time
 def determine_player_full_name(player, team, all_players_teams, game_key=''):
     print('\n===Determine Player Full Name: ' + player.title() + '===\n')
