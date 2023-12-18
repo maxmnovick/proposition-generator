@@ -204,18 +204,26 @@ def convert_conditions_dict_to_list(conditions_dict, all_players_abbrevs, all_pl
 
     conditions_list = []
 
+    game_players_cond_keys = ['out', 'starters', 'bench']
+
     for cond_key, cond_val in conditions_dict.items():
         
-        if cond_key == 'out':
-            for out_player in cond_val:
-                print('\nout_player: ' + str(out_player))
+        if cond_key in game_players_cond_keys:#== 'out':
+            for game_player in cond_val:
+                print('\ngame_player: ' + str(game_player))
                 # need to convert player full name to abbrev with position to compare to condition titles
                 # at this point we have determined full names from abbrevs so we can refer to that list
                 # NEXT: save player abbrevs for everyone played with
-                out_player_abbrev = convert_player_name_to_abbrev(out_player, all_players_abbrevs, all_players_teams, all_players_in_games_dict, season_years, cur_yr)
+                game_player_abbrev = convert_player_name_to_abbrev(game_player, all_players_abbrevs, all_players_teams, all_players_in_games_dict, season_years, cur_yr)
                 
+                # for single player change starters to starter or starting so it can be plural or singular
                 # D Green PF out
-                final_cond_val = out_player_abbrev + ' out' # D Green PF out
+                # remove s from starters for single player
+                final_cond_key = cond_key
+                if cond_key == 'starters':
+                    if not re.search(',',cond_key):
+                        final_cond_key = cond_key.rstrip('s')
+                final_cond_val = game_player_abbrev + ' ' + final_cond_key # D Green PF out
                 print('final_cond_val: ' + str(final_cond_val))
                 
                 conditions_list.append(final_cond_val)

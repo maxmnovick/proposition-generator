@@ -66,7 +66,7 @@ game_teams = [('wsh','phx')]#, ('nop','lal')
 # we make it true to read new teams after trades, which tells it to overwrite existing file or make a new file with the date in the title
 teams_current_rosters = reader.read_teams_rosters(game_teams, read_new_teams) # {team:roster,...}
 players_names = reader.read_players_from_rosters(teams_current_rosters)#reader.read_teams_players(game_teams, read_new_teams) #generator.generate_players_names(teams) # generate is wrong term bc we are not computing anything only reading players on each team
-#players_names = ['trae young'] # use for testing
+#players_names = ['deni avdija'] # use for testing
 
 
 # if we get rosters instead of player names then read all players on rosters

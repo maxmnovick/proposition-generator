@@ -2866,6 +2866,8 @@ def read_all_players_in_games(all_player_season_logs_dict, all_players_teams, cu
 					# if read new box scores from internet
 					# may need to append to file each game if internet connection fails
 					# so when we rerun it resumes where it left off
+					# need all players in games for all seasons to get player abbrevs
+					# so should we save abbrevs or just all seasons games? abbrevs in compressed result
 					if season_year == cur_yr and not init_cur_yr_game_players_dict == all_players_in_games_dict:
 						writer.write_json_to_file(all_players_in_games_dict, filepath, 'w')
 
@@ -2940,10 +2942,18 @@ def read_player_abbrev(player, all_players_teams, season_year, all_players_in_ga
 # for each game in games dict, 
 # determine full name associated with abbrev
 # given team at time of game lac phx 4/9/2023
-def read_all_players_abbrevs(all_players_in_games_dict, all_players_teams):
+# all_players_abbrevs: {'2024': {'kyle kuzma': 'K Kuzma SF',...
+def read_all_players_abbrevs(all_players_in_games_dict, all_players_teams, cur_yr, todays_date):
 	print('\n===Read All Players Abbrevs===\n')
 
-	all_players_abbrevs = {}
+	# if cur_yr == '':
+	# 	cur_yr = determiner.determine_current_season_year()
+	all_players_cur_abbrevs_filename = 'data/all players abbrevs - ' + cur_yr + ' - ' + todays_date + '.json'
+	all_players_prev_abbrevs_filename = 'data/all players abbrevs - prev.json'
+	init_all_players_abbrevs = read_cur_and_prev_json(all_players_cur_abbrevs_filename,all_players_prev_abbrevs_filename)
+	print('init_all_players_abbrevs: ' + str(init_all_players_abbrevs))
+	all_players_abbrevs = copy.deepcopy(init_all_players_abbrevs) #{}
+
 	for year, year_players_in_games_dict in all_players_in_games_dict.items():
 		print('\nyear: ' + str(year))
 		year_players_abbrevs = {} # name: abbrev,...
@@ -2989,6 +2999,9 @@ def read_all_players_abbrevs(all_players_in_games_dict, all_players_teams):
 						print('WARNING unknown_names: ' + str(unknown_names))
 
 		all_players_abbrevs[year] = year_players_abbrevs
+
+	if not init_all_players_abbrevs == all_players_abbrevs:
+		writer.write_cur_and_prev(init_all_players_abbrevs, all_players_abbrevs, all_players_cur_abbrevs_filename, all_players_prev_abbrevs_filename, cur_yr, player_name)
 
 	print('all_players_abbrevs: ' + str(all_players_abbrevs))
 	return all_players_abbrevs
