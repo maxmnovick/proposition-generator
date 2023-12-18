@@ -2,6 +2,8 @@
 
 import re # need to see if negative sign in odds string
 
+import reader # read player abbrevs
+
 def convert_dict_to_list(dict, desired_order=[]):
 
     dict_list = []
@@ -147,3 +149,94 @@ def convert_team_abbrev_to_name(team_abbrev):
 
 
     return team_names[team_abbrev]
+
+# Convert Player Name to Abbrev: damion lee
+def convert_player_name_to_abbrev(out_player, all_players_abbrevs, all_players_teams, all_players_in_games_dict, season_years=[], cur_yr=''):
+    print('\n===Convert Player Name to Abbrev: ' + out_player.title() + '===\n')
+    print('all_players_abbrevs: ' + str(all_players_abbrevs))
+
+    out_player_abbrev = ''
+
+    # it is looking for cur yr so how does it handle players who played last yr but are still on team but not playing this yr?
+    # player does not register on teams list if not played this yr so need to check roster
+    # if player of interest has not played with player this yr 
+    # but did play with them previous seasons and they are listed as out, then this is a case of player still on team but stopped playing time for any reason
+    # should we loop thru all yrs until we find abbrev? 
+    # really only need 1 yr bc player still on team but not played so unlikely to be on team without playing for more than a yr but possible
+    if len(season_years) == 0 and cur_yr != '':
+        if cur_yr in all_players_abbrevs.keys() and out_player in all_players_abbrevs[cur_yr].keys():
+            out_player_abbrev = all_players_abbrevs[cur_yr][out_player] #converter.convert_player_name_to_abbrev(out_player)
+        else:
+            if cur_yr in all_players_teams.keys() and out_player in all_players_teams[cur_yr].keys():
+                # out_player_teams = all_players_teams[cur_yr][out_player]
+                # out_player_team = determiner.determine_player_current_team(out_player, out_player_teams, cur_yr, rosters)
+                out_player_abbrev = reader.read_player_abbrev(out_player, all_players_teams, cur_yr, all_players_in_games_dict)
+            else:
+                print('Warning: out player not in all players current teams! ' + out_player)
+    else:
+        for year in season_years:
+            print('\nyear: ' + str(year))
+            if year in all_players_abbrevs.keys() and out_player in all_players_abbrevs[year].keys():
+                year_players_abbrevs = all_players_abbrevs[year]
+                print('year_players_abbrevs: ' + str(year_players_abbrevs))
+                out_player_abbrev = year_players_abbrevs[out_player] #converter.convert_player_name_to_abbrev(out_player)
+            else:
+                if year in all_players_teams.keys() and out_player in all_players_teams[year].keys():
+                    out_player_abbrev = reader.read_player_abbrev(out_player, all_players_teams, year, all_players_in_games_dict)
+                else:
+                    print('Warning: out player not in all players current teams! ' + out_player)
+
+            if out_player_abbrev != '':
+                break
+
+    print('out_player_abbrev: ' + str(out_player_abbrev))
+    return out_player_abbrev
+
+# convert cond dict to list
+#all_current_conditions: {'cole anthony': {'loc': 'away', 'out': ['wendell carter jr', 'markelle fultz'], 'start...
+# all_current_conditions = {p1:{out:[m fultz pg], loc:l1, city:c1, dow:d1, tod:t1,...}, p2:{},...} OR {player1:[c1,c2,...], p2:[],...}
+# list = away, 'p1 out', 'p2 out', ...
+# need to expand list values
+# conditions_list = [m fultz pg out, away, ...]
+def convert_conditions_dict_to_list(conditions_dict, all_players_abbrevs, all_players_teams, all_players_in_games_dict, player='', season_years=[], cur_yr=''):
+    print('\n===Convert Conditions Dict to List: ' + player.title() + '===\n')
+    print('all_players_abbrevs: ' + str(all_players_abbrevs))
+
+    conditions_list = []
+
+    for cond_key, cond_val in conditions_dict.items():
+        
+        if cond_key == 'out':
+            for out_player in cond_val:
+                print('\nout_player: ' + str(out_player))
+                # need to convert player full name to abbrev with position to compare to condition titles
+                # at this point we have determined full names from abbrevs so we can refer to that list
+                # NEXT: save player abbrevs for everyone played with
+                out_player_abbrev = convert_player_name_to_abbrev(out_player, all_players_abbrevs, all_players_teams, all_players_in_games_dict, season_years, cur_yr)
+                
+                # D Green PF out
+                final_cond_val = out_player_abbrev + ' out' # D Green PF out
+                print('final_cond_val: ' + str(final_cond_val))
+                
+                conditions_list.append(final_cond_val)
+
+        else:
+            conditions_list.append(cond_val)
+
+    print('conditions_list: ' + str(conditions_list))
+    return conditions_list
+
+# all_conditions_dicts = {p1:{out:[m fultz pg], loc:l1, city:c1, dow:d1, tod:t1,...}, p2:{},...} OR {player1:[c1,c2,...], p2:[],...}
+# all_conditions_lists = {p1:[m fultz pg out, away, ...],...
+def convert_all_conditions_dicts_to_lists(all_conditions_dicts, all_players_abbrevs, all_players_teams, all_players_in_games_dict, season_years=[], cur_yr=''):
+    print('\n===Convert All Conditions Dicts to Lists===\n')
+    print('all_players_abbrevs: ' + str(all_players_abbrevs))
+
+    all_conditions_lists = {}
+
+    for player, cond_dict in all_conditions_dicts.items():
+        cond_list = convert_conditions_dict_to_list(cond_dict, all_players_abbrevs, all_players_teams, all_players_in_games_dict, player, season_years, cur_yr)
+        all_conditions_lists[player] = cond_list
+
+    print('all_conditions_lists: ' + str(all_conditions_lists))
+    return all_conditions_lists

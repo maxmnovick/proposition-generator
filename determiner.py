@@ -536,7 +536,7 @@ def determine_regular_season_games(player_game_log):
 
 def determine_season_part_games(player_game_log, season_part='regular'):
 
-    print('\n===Determine Season Games for Player: ' + season_part + '===\n')
+    #print('\n===Determine Season Games for Player: ' + season_part + '===\n')
     #print('player_game_log:\n' + str(player_game_log))
 
     season_part_games_df = pd.DataFrame()
@@ -1277,19 +1277,30 @@ def determine_unit_time_period(all_player_stat_probs, all_player_stat_dicts={}, 
     #print('unit_time_period: ' + str(unit_time_period))
     return unit_time_period
 
+# all unique conds for all players so we can display all players in same table with NA for stats that dont have condition
 # all_current_conditions: {'marvin bagley iii': {'loc': 'away', 'start': 'bench'}, 'bojan bogdanovic': {'loc':...
-# all_cur_conds: ['all', 'away', 'bench', 'start', '', 'home']
-def determine_all_current_conditions(all_current_conditions):
+# input: all_cur_conds_lists = {p1:[m fultz pg out, away, ...],...}
+# output: all_cur_conds: ['all', 'away', 'm fultz pg out', 'bench', 'start', 'home']
+def determine_all_current_conditions(all_current_conditions, all_cur_conds_lists):
     print('\n===Determine All Current Conditions===\n')
     print('all_current_conditions: ' + str(all_current_conditions))
+    print('all_cur_conds_lists: ' + str(all_cur_conds_lists))
 
     all_cur_conds = ['all']
 
-    for player, player_cur_conds in all_current_conditions.items():
-        print('\nplayer_cur_conds: ' + str(player_cur_conds))
-        for cond_val in player_cur_conds.values():
+    #for player, player_cur_conds in all_current_conditions.items():
+    # player_cur_conds = [m fultz pg out, away, ...]
+    for player, player_cur_conds in all_cur_conds_lists.items():
+        print('\nplayer: ' + player.title())
+        print('player_cur_conds: ' + str(player_cur_conds))
+        #for cond_key, cond_val in player_cur_conds.items():
+            #print('cond_key: ' + str(cond_key))
+        for cond_val in player_cur_conds:
             print('cond_val: ' + str(cond_val))
             if cond_val != '':
+                # if cond_key == 'out': # cond_val = []
+                #     for out_player in cond_val:
+                #         out_player_abbrev = converter.convert_player_name_to_abbrev()
                 if cond_val not in all_cur_conds:
                     print('add cond val')
                     all_cur_conds.append(cond_val)
@@ -1301,9 +1312,9 @@ def determine_all_current_conditions(all_current_conditions):
 
 # determine game num so we can sort by game
 def determine_game_num(game_teams, player_team):
-    print('\n===Determine Game Num===\n')
-    print('game_teams: ' + str(game_teams))
-    print('player_team: ' + str(player_team))
+    #print('\n===Determine Game Num===\n')
+    #print('game_teams: ' + str(game_teams))
+    #print('player_team: ' + str(player_team))
     game_num = 0
     for game_idx in range(len(game_teams)):
         game = game_teams[game_idx]
@@ -1311,7 +1322,7 @@ def determine_game_num(game_teams, player_team):
             game_num = game_idx + 1
             break
 
-    print('game_num: ' + str(game_num))
+    #print('game_num: ' + str(game_num))
     return game_num
 
 
@@ -1420,6 +1431,7 @@ def determine_need_box_score(season_year, cur_yr, season_part, init_player_stat_
     # seeing that any team players condition has been saved shows us that we ran with find players turned on
     # bc we only add those conditions if we know team players
     team_players_conditions = ['start','bench'] # if either of these are keys in stat dict then we already saved box scores
+    # cond keys tells us if we have already read player data from box scores
     condition_keys = []
     if season_year in init_player_stat_dict.keys():
         condition_keys = list(init_player_stat_dict[season_year][season_part].values())[0].keys()
@@ -1557,6 +1569,9 @@ def determine_player_current_team(player, player_teams, cur_yr='', rosters={}):
     #print('player_teams: ' + str(player_teams))
     cur_team = ''
 
+    if cur_yr == '':
+        cur_yr = determine_current_season_year()
+
     if len(rosters.keys()) > 0:
         for team, roster in rosters.items():
             if player in roster:
@@ -1645,8 +1660,8 @@ def determine_player_abbrev(player_name):
 #     return abbrev
 
 def determine_season_year(game_date):
-    print('\n===Determine Season Year===\n')
-    print('game_date: ' + game_date)
+    #print('\n===Determine Season Year===\n')
+    #print('game_date: ' + game_date)
 
     date_data = game_date.split('/')
     game_mth = date_data[0]
@@ -1655,7 +1670,7 @@ def determine_season_year(game_date):
     if int(game_mth) > 9:
         season_year = str(int(game_yr) + 1)
 
-    print('season_year: ' + season_year)
+    #print('season_year: ' + season_year)
     return season_year
     
 
@@ -1672,17 +1687,19 @@ def determine_player_team_by_game(player, game_key, player_teams):
 
 # player_teams = {year:{team:gp,...},...}}
 def determine_player_season_teams(player, game_key, player_teams):
-    print('\n===Determine Player ' + player.title() + ' Season Teams: ' + game_key.upper() + '===\n')
+    #print('\n===Determine Player ' + player.title() + ' Season Teams: ' + game_key.upper() + '===\n')
 
     teams = []
 
-    game_date = game_key.split()[2]
-    season_yr = determine_season_year(game_date)
-    if season_yr in player_teams.keys():
-        for team in player_teams[season_yr].keys():
-            teams.append(team)
 
-    print('teams: ' + str(teams))
+    if len(game_key) > 0:
+        game_date = game_key.split()[-1]
+        season_yr = determine_season_year(game_date)
+        if season_yr in player_teams.keys():
+            for team in player_teams[season_yr].keys():
+                teams.append(team)
+
+    #print('teams: ' + str(teams))
     return teams
 
 # if given abbrev like D. Green need to know team or position to get full name

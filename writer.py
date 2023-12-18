@@ -976,7 +976,8 @@ def write_prop_tables(prop_dicts, sheet_names, desired_order, todays_date=dateti
         #desired_order = [x.title() for x in desired_order]
         table_df = pd.DataFrame(dict, columns=desired_order)
         table_df.columns = [x.title() for x in table_df.columns]
-        table_df['Player'] = table_df['Player'].str.title() 
+        if 'Player' in table_df.keys():
+            table_df['Player'] = table_df['Player'].str.title() 
 
         table_df.to_excel(writer,sheet_name)
 
