@@ -1283,31 +1283,31 @@ def determine_unit_time_period(all_player_stat_probs, all_player_stat_dicts={}, 
 # output: all_cur_conds: ['all', 'away', 'm fultz pg out', 'bench', 'start', 'home']
 def determine_all_current_conditions(all_current_conditions, all_cur_conds_lists):
     print('\n===Determine All Current Conditions===\n')
-    print('all_current_conditions: ' + str(all_current_conditions))
-    print('all_cur_conds_lists: ' + str(all_cur_conds_lists))
+    #print('all_current_conditions: ' + str(all_current_conditions))
+    #print('all_cur_conds_lists: ' + str(all_cur_conds_lists))
 
     all_cur_conds = ['all']
 
     #for player, player_cur_conds in all_current_conditions.items():
     # player_cur_conds = [m fultz pg out, away, ...]
     for player, player_cur_conds in all_cur_conds_lists.items():
-        print('\nplayer: ' + player.title())
-        print('player_cur_conds: ' + str(player_cur_conds))
+        #print('\nplayer: ' + player.title())
+        #print('player_cur_conds: ' + str(player_cur_conds))
         #for cond_key, cond_val in player_cur_conds.items():
             #print('cond_key: ' + str(cond_key))
         for cond_val in player_cur_conds:
-            print('cond_val: ' + str(cond_val))
+            #print('cond_val: ' + str(cond_val))
             if cond_val != '':
                 # if cond_key == 'out': # cond_val = []
                 #     for out_player in cond_val:
                 #         out_player_abbrev = converter.convert_player_name_to_abbrev()
                 if cond_val not in all_cur_conds:
-                    print('add cond val')
+                    #print('add cond val')
                     all_cur_conds.append(cond_val)
             else:
                 print('Warning: Blank cond_val! ' + player.title())
 
-    print('all_cur_conds: ' + str(all_cur_conds))
+    #print('all_cur_conds: ' + str(all_cur_conds))
     return all_cur_conds
 
 # determine game num so we can sort by game
@@ -1417,7 +1417,7 @@ def determine_key_in_stat_dict(desired_keys, stat_dict_keys):
 # init_player_stat_dict = {"2023": {"regular": {"pts": {"all": {"0": 14,...
 def determine_need_box_score(season_year, cur_yr, season_part, init_player_stat_dict):
 
-    print('\n===Determine Need Box Score===\n')
+    #print('\n===Determine Need Box Score===\n')
 
     need_box_score = False
 
@@ -1435,7 +1435,7 @@ def determine_need_box_score(season_year, cur_yr, season_part, init_player_stat_
     condition_keys = []
     if season_year in init_player_stat_dict.keys():
         condition_keys = list(init_player_stat_dict[season_year][season_part].values())[0].keys()
-    print('condition_keys: ' + str(condition_keys))
+    #print('condition_keys: ' + str(condition_keys))
 
     # could remove determine key in stat dict if we always run with find players on
     # but we cannot do that so we could ensure only save stat dict if we have
@@ -1503,12 +1503,12 @@ def determine_player_team_each_game(player, season_part_game_log, teams, games_p
 # if reg season, game idx starts before playoffs
 # if post or full season, game idx starts at 0
 def determine_player_team_idx(player, player_team_idx, game_idx, row, games_played, teams_reg_and_playoff_games_played):
-    print('\n===Determine Player Team Idx: ' + player.title() + '===\n')
+    #print('\n===Determine Player Team Idx: ' + player.title() + '===\n')
 
     # if type == postseason, then player team idx always =0
     # game type = season part
     game_type = row['Type']
-    print('game_type: ' + str(game_type))
+    #print('game_type: ' + str(game_type))
 
     # if postseason then after trade deadline so last team this yr
     # postseason maybe playin listed after reg season
@@ -1539,7 +1539,7 @@ def determine_player_team_idx(player, player_team_idx, game_idx, row, games_play
                 teams_reg_and_playoff_games_played += games_played[player_team_idx]                
 
 
-    print('player_team_idx: ' + str(player_team_idx))
+    #print('player_team_idx: ' + str(player_team_idx))
     return player_team_idx
 
 # we need to add date of first game on team to player teams dict
@@ -1572,10 +1572,14 @@ def determine_player_current_team(player, player_teams, cur_yr='', rosters={}):
     if cur_yr == '':
         cur_yr = determine_current_season_year()
 
+    # more reliable to take from rosters 
+    # bc player teams will only show if they actually played this season
     if len(rosters.keys()) > 0:
         for team, roster in rosters.items():
             if player in roster:
                 cur_team = team
+                break
+
     if cur_team == '': # could not find player in rosters so maybe not player of interest but maybe player of comparison
         if len(player_teams.keys()) > 0:
             if cur_yr in player_teams.keys():
@@ -1589,21 +1593,31 @@ def determine_player_current_team(player, player_teams, cur_yr='', rosters={}):
     # else: # need to get current team from internet
     #     cur_team = reader.read_player_current_team()
 
+    if cur_team == '':
+        print('Warning: Player cur team blank! ' + player.title())
+
     #print('cur_team: ' + cur_team)
     return cur_team
 
 # given todays game matchups
 # output opponent team
 # game_teams = [('mil','mia'),...]
-def determine_opponent_team(player, player_teams, game_teams):
+# player_teams = {'2018': {'mia': 69}, '2019...
+# player_teams = {year:{team:gp,...},...
+def determine_opponent_team(player, player_teams, game_teams, cur_yr='', rosters={}):
     print('\n===Determine Player Opponent Team: ' + player.title() + '===\n')
+    #print('player_teams: ' + str(player_teams))
+    #print('game_teams: ' + str(game_teams))
+    
     opp_team = ''
 
-    player_team = determine_player_current_team(player, player_teams)
+    player_team = determine_player_current_team(player, player_teams, cur_yr, rosters)
 
     # look for player team in games
+    # game = ('mil','mia')
     for game in game_teams:
         for team_idx in range(len(game)):
+            # team = 'mil'
             team = game[team_idx]
             if player_team == team: # found game in list of games
                 opp_team_idx = 0
@@ -1626,7 +1640,7 @@ def determine_opponent_team(player, player_teams, game_teams):
 # use to see if started or bench
 # bc lineups shows player abbrev
 def determine_player_abbrev(player_name):
-    #print('\n===Determine Player Abbrev: ' + player_name.title() + '===\n')
+    print('\n===Determine Player Abbrev: ' + player_name.title() + '===\n')
     #print('player_name: ' + str(player_name))
     #player_abbrev = ''
 
@@ -1647,7 +1661,7 @@ def determine_player_abbrev(player_name):
             player_abbrev += ' ' + name
 
     player_abbrev = player_abbrev.lower()
-    #print('player_abbrev: ' + player_abbrev)
+    print('player_abbrev: ' + player_abbrev)
     return player_abbrev
 
 # def determine_player_abbrev(player_name):
@@ -1702,6 +1716,36 @@ def determine_player_season_teams(player, game_key, player_teams):
     #print('teams: ' + str(teams))
     return teams
 
+# player = Jal Williams 
+# player_name = jalen williams
+# player_abbrev = j williams. do we need?
+# determine match if first word and second word match
+# cannot compare whole words bc irregular abbrevs
+def determine_player_abbrev_match(main_player, compare_player):
+    print('\n===Determine Player Abbrev Match===\n')
+    print('main_player: ' + str(main_player))
+    print('compare_player: ' + str(compare_player))
+
+    match = True
+
+    main_player_names = main_player.split()
+    compare_player_names = compare_player.split()
+    # if they have different number of words in name then diff player
+    if len(main_player_names) != len(compare_player_names):
+        match = False
+    else:
+        for name_idx in range(len(main_player_names)):
+            # jal
+            main_name = main_player_names[name_idx]
+            num_letters = len(main_name)
+            # jalen        
+            compare_name = compare_player_names[name_idx]
+            if not main_name == compare_name[:num_letters]:
+                match = False
+                break 
+
+    return match
+
 # if given abbrev like D. Green need to know team or position to get full name
 # already given team so use that
 # check which player in all players teams list with this team has this abbrev
@@ -1710,6 +1754,8 @@ def determine_player_season_teams(player, game_key, player_teams):
 # player = K. Towns to karl anthony towns
 # player = K Towns PF to karl anthony towns
 # use game_key to get player team at game time
+# the team passed here is the team of the player at game time 
+# but we need to connect his full name to his stats page where he may not be listed if he did play yet this season
 def determine_player_full_name(player, team, all_players_teams, game_key=''):
     print('\n===Determine Player Full Name: ' + player.title() + '===\n')
     print('team: ' + str(team))
@@ -1736,25 +1782,35 @@ def determine_player_full_name(player, team, all_players_teams, game_key=''):
     player = re.sub('-',' ',player)
     
 
-    # if already using only first initial
+    # if already using only first initial or abbrev?
     # we need to remove position at end of name before comparing
     #if len(game_key) > 0:
     player_names = player.split()
     # if dot then comes from lineup page so no position at end
-    if len(player_names[0]) == 1 and not re.search('\.',init_player):
-        player = re.sub('\s[a-z]+$', '', player)#.strip()
+    # we do not know how many letters are in first word of abbrev
+    # so how to tell if in format Jal Williams F
+    # if cant tell letter case then look for specific letters as last letters (f, g, c)
+    #if len(player_names[0]) == 1 and not re.search('\.',init_player):
+    if len(player_names) > 2 and re.search('[fgc]$',player):
+        player = re.sub('\s[a-z]+$', '', player)#.strip() # D Green PF -> d green
 
         
     #print('player: \'' + str(player) + '\'')
-    if player in all_players_teams.keys():
+    if player in all_players_teams.keys(): # if already given full name
         full_name = player
     else: # could use all players teams or rosters
+        # player_teams = {yr:team:gp} = {'2024':{}}
         for player_name, player_teams in all_players_teams.items():
+            print('\nplayer_name: ' + str(player_name))
+            print('player_teams: ' + str(player_teams))
             # look at current team bc we are comparing to current lineup
             # if player just traded then has no log with this team
             # compare name: 
             # player_name = draymond green, always full bc already standardized in all players teams from team rosters
             # player abbrev = d green
+            # cannot simplify like this if given any abbrevs with more than 1 letter in first name bc same abbrevs on same team need unique abbrevs
+            # player = Jal Williams 
+            # player_name = jalen williams
             player_abbrev = determine_player_abbrev(player_name)
 
             cur_team = determine_player_current_team(player_name, player_teams)
@@ -1772,11 +1828,19 @@ def determine_player_full_name(player, team, all_players_teams, game_key=''):
             #print('player: ' + str(player))
             #print('player_abbrev: ' + str(player_abbrev))
             # if we find matching player name or abbrev, check if teams match
+            # player_abbrev = k anthony towns
+            # player abbrev = j williams
             player_abbrev_names = player_abbrev.split()
             # print('player: \'' + player + '\'')
             # print('player_abbrev: \'' + player_abbrev + '\'')
             # print('player_name: ' + player_name)
-            if re.search(player,player_abbrev) or re.search(player,player_name):
+            # player = Jal Williams
+            # player_name = jalen williams
+            # player_abbrev = j williams. do we need?
+            # determine match if first word and second word match
+            # cannot compare whole words bc irregular abbrevs
+            if determine_player_abbrev_match(player, player_name):
+            #if re.search(player,player_abbrev) or re.search(player,player_name):
                 # print('team: ' + str(team))
                 # print('cur_team: ' + cur_team)
                 if len(season_teams) > 0:
@@ -1804,9 +1868,9 @@ def determine_player_full_name(player, team, all_players_teams, game_key=''):
 # given main prop and fields, find vals in those fields
 # keys = fields = ['player', 'stat']
 def determine_multiple_dicts_with_vals(main_dict, keys, dict_list):
-    print('\n===Determine Multiple Dicts with Vals===\n')
-    print('main_dict: ' + str(main_dict))
-    print('keys: ' + str(keys))
+    #print('\n===Determine Multiple Dicts with Vals===\n')
+    #print('main_dict: ' + str(main_dict))
+    #print('keys: ' + str(keys))
 
     multiple = False
 
@@ -1839,9 +1903,9 @@ def determine_multiple_dicts_with_vals(main_dict, keys, dict_list):
 
 # given main prop and fields, find vals in those fields
 def determine_multiple_dicts_with_val(main_dict, key, dict_list):
-    print('\n===Determine Multiple Dicts with Val===\n')
-    print('main_dict: ' + str(main_dict))
-    print('key: ' + str(key))
+    #print('\n===Determine Multiple Dicts with Val===\n')
+    #print('main_dict: ' + str(main_dict))
+    #print('key: ' + str(key))
 
     multiple = False
 
@@ -1854,7 +1918,7 @@ def determine_multiple_dicts_with_val(main_dict, key, dict_list):
             count += 1
 
         if count > 1:
-            print('found multiple')
+            #print('found multiple')
             multiple = True
             break
 
@@ -1862,7 +1926,7 @@ def determine_multiple_dicts_with_val(main_dict, key, dict_list):
     return multiple
 
 def determine_vals_in_dict(main_dict, keys, dict):
-    print('\n===Determine Vals in Dict===\n')
+    #print('\n===Determine Vals in Dict===\n')
 
     vals_in_dict = True
 
@@ -1870,7 +1934,7 @@ def determine_vals_in_dict(main_dict, keys, dict):
         main_val = main_dict[key]
         dict_val = dict[key]
         if main_val != dict_val:
-            print('vals not in dict')
+            #print('vals not in dict')
             vals_in_dict = False
             break
 
@@ -1878,16 +1942,16 @@ def determine_vals_in_dict(main_dict, keys, dict):
     return vals_in_dict
 
 def determine_val_in_dicts(main_dict, key, remaining_dicts):
-    print('\n===Determine Val in Dicts===\n')
+    #print('\n===Determine Val in Dicts===\n')
 
     val_in_dict = False 
 
     main_val = main_dict[key]
-    print('main_val: ' + str(main_val))
+    #print('main_val: ' + str(main_val))
     for dict in remaining_dicts:
         dict_val = dict[key]
         if main_val == dict_val:
-            print('found val in dict')
+            #print('found val in dict')
             val_in_dict = True
             break
 

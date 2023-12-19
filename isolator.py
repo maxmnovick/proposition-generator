@@ -177,7 +177,7 @@ def isolate_duplicate_dicts(main_dict, keys, dict_list):
         if determiner.determine_vals_in_dict(main_dict, keys, dict):
             duplicate_dicts.append(dict)
         
-    print('duplicate_dicts: ' + str(duplicate_dicts))
+    #print('duplicate_dicts: ' + str(duplicate_dicts))
     return duplicate_dicts
 
 def isolate_sg_props(main_prop, remaining_top_ev_props):
@@ -189,7 +189,7 @@ def isolate_sg_props(main_prop, remaining_top_ev_props):
         if main_game == prop_game:
             sg_props.append(prop)
 
-    print('sg_props: ' + str(sg_props))
+    #print('sg_props: ' + str(sg_props))
     return sg_props
 
 def isolate_highest_ev_prop(sg_props):
@@ -208,5 +208,5 @@ def isolate_highest_ev_prop(sg_props):
 
     # Iso by auto sort
     highest_prop = sorter.sort_dicts_by_key(sg_props, 'ev', reverse=True)[0]
-    print('highest_prop: ' + str(highest_prop))
+    #print('highest_prop: ' + str(highest_prop))
     return highest_prop

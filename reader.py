@@ -351,21 +351,21 @@ def read_all_player_espn_ids(player_names, player_of_interest=''):
 # we will convert away home to teammates opponents given current player of interest
 # game_box_scores_dict = {away:df, home:df}
 def read_players_in_box_score(game_box_scores_dict):
-	print("\n===Read Players in Box Score===\n")
+	#print("\n===Read Players in Box Score===\n")
 
 	players_in_box_score_dict = {'away':{'starters':[],'bench':[]},'home':{'starters':[],'bench':[]}}
 
 	#team_idx = 0
 	if len(game_box_scores_dict.keys()) > 0:
 		for loc, players_dict in players_in_box_score_dict.items():
-			print('\nloc:' + str(loc))
-			print('players_dict:' + str(players_dict))
+			#print('\nloc:' + str(loc))
+			#print('players_dict:' + str(players_dict))
 			team_box_score = game_box_scores_dict[loc]
-			print('team_box_score:' + str(team_box_score))
+			#print('team_box_score:' + str(team_box_score))
 			#home_team_box_score = game_box_scores[1]
 
 			players = team_box_score[0].drop(0).to_list()
-			print('players:' + str(players))
+			#print('players:' + str(players))
 
 			# remove periods and positions from player names
 			final_players = []
@@ -385,7 +385,7 @@ def read_players_in_box_score(game_box_scores_dict):
 				# first initial, last name, and position match but not team
 				#player = re.sub('[A-Z]+$','',player).strip()
 
-			print('final_players:' + str(final_players))
+			#print('final_players:' + str(final_players))
 
 			# split list into starters and bench
 			bench_idx = 5 # bc always 5 starters
@@ -402,7 +402,7 @@ def read_players_in_box_score(game_box_scores_dict):
 		#team_idx += 1
 
 	# players_in_box_score_dict = {away:{starters:[],bench:[]},home:{starters:[],bench:[]}}
-	print('players_in_box_score_dict: ' + str(players_in_box_score_dict))
+	#print('players_in_box_score_dict: ' + str(players_in_box_score_dict))
 	return players_in_box_score_dict
 
 
@@ -544,7 +544,7 @@ def read_game_box_scores(game_key, game_id='', existing_game_ids_dict={}, init_c
 					# print('player_box_score_df:\n' + str(player_box_score_df))
 
 					player_box_score_df['Game'] = game_key
-					print('player_box_score_df:\n' + str(player_box_score_df))
+					#print('player_box_score_df:\n' + str(player_box_score_df))
 
 					# get the index of the first row with dnp
 					# player_minutes_df = player_box_score_df[0]
@@ -673,7 +673,7 @@ def read_game_box_scores(game_key, game_id='', existing_game_ids_dict={}, init_c
 
 	
 	# game_box_scores_dict = {away:df, home:df}
-	print("game_box_scores_dict: " + str(game_box_scores_dict))
+	#print("game_box_scores_dict: " + str(game_box_scores_dict))
 	return game_box_scores_dict # can return this df directly or first arrange into list but seems simpler and more intuitive to keep df so we can access elements by keyword
 
 # read tables in websites with pandas pd dataframes
@@ -2694,8 +2694,8 @@ def read_all_players_in_games(all_player_season_logs_dict, all_players_teams, cu
 	
 
 	for player_name, player_season_logs in all_player_season_logs_dict.items():
-		print('\n===Read Players in Games for: ' + player_name.title() + '===\n')
-		print('player_season_logs: ' + str(player_season_logs))
+		#print('\n===Read Players in Games for: ' + player_name.title() + '===\n')
+		#print('player_season_logs: ' + str(player_season_logs))
 
 		# init_player_stat_dict = {"2023": {"regular": {"pts": {"all": {"0": 14,...
 		init_player_stat_dict = init_player_stat_dicts[player_name]
@@ -2714,7 +2714,7 @@ def read_all_players_in_games(all_player_season_logs_dict, all_players_teams, cu
 
 		#year_idx = 0 # 1st yr is cur yr which we treat different than prev yrs bc it changes with each new game
 		for season_year, player_season_log in player_season_logs.items():
-			print('season_year: ' + season_year)
+			#print('season_year: ' + season_year)
 
 			# separate by year bc we want to get all teammates in a given yr, not all yrs
 			# bc if measure when teammate out for all yrs then they will be out most games and have different effect
@@ -2759,7 +2759,7 @@ def read_all_players_in_games(all_player_season_logs_dict, all_players_teams, cu
 						regseason_game_log = determiner.determine_season_part_games(player_season_log_df)
 						if len(regseason_game_log.index) > 0:
 							num_playoff_games = int(regseason_game_log.index[0])
-					print('num_playoff_games: ' + str(num_playoff_games))
+					#print('num_playoff_games: ' + str(num_playoff_games))
 
 
 					#players_in_game = [] # unordered list of all players in game independent of team
@@ -2780,7 +2780,7 @@ def read_all_players_in_games(all_player_season_logs_dict, all_players_teams, cu
 					num_recent_reg_games = 0
 					if len(games_played) > 0:
 						num_recent_reg_games = games_played[0] # num reg games with most recent team
-					print('num_recent_reg_games: ' + str(num_recent_reg_games))
+					#print('num_recent_reg_games: ' + str(num_recent_reg_games))
 					reg_and_playoff_games_played = [num_recent_reg_games + num_playoff_games] + games_played[1:]
 					teams_reg_and_playoff_games_played = int(reg_and_playoff_games_played[player_team_idx])
 
@@ -2789,8 +2789,8 @@ def read_all_players_in_games(all_player_season_logs_dict, all_players_teams, cu
 						# for reg season, idx starts after first playoff game
 						for game_idx, row in season_part_game_log.iterrows():
 							
-							print('\n===Game ' + str(game_idx) + '===')
-							print('row:\n' + str(row))
+							#print('\n===Game ' + str(game_idx) + '===')
+							#print('row:\n' + str(row))
 							# season year-1 for first half of season oct-dec bc we say season year is end of season
 							
 							# we cannot tell team until we know the specific game in the specific season bc player may change teams midseason
@@ -2951,7 +2951,7 @@ def read_all_players_abbrevs(all_players_in_games_dict, all_players_teams, cur_y
 	all_players_cur_abbrevs_filename = 'data/all players abbrevs - ' + cur_yr + ' - ' + todays_date + '.json'
 	all_players_prev_abbrevs_filename = 'data/all players abbrevs - prev.json'
 	init_all_players_abbrevs = read_cur_and_prev_json(all_players_cur_abbrevs_filename,all_players_prev_abbrevs_filename)
-	print('init_all_players_abbrevs: ' + str(init_all_players_abbrevs))
+	#print('init_all_players_abbrevs: ' + str(init_all_players_abbrevs))
 	all_players_abbrevs = copy.deepcopy(init_all_players_abbrevs) #{}
 
 	for year, year_players_in_games_dict in all_players_in_games_dict.items():
@@ -2959,18 +2959,19 @@ def read_all_players_abbrevs(all_players_in_games_dict, all_players_teams, cur_y
 		year_players_abbrevs = {} # name: abbrev,...
 
 		for game_key, game_players in year_players_in_games_dict.items():
-			print('\ngame_key: ' + str(game_key))
-			print('game_players: ' + str(game_players))
+			#print('\ngame_key: ' + str(game_key))
+			#print('game_players: ' + str(game_players))
 
 			game_data = game_key.split()
 			if len(game_data) > 2:
 				away_team = game_data[0]
-				print('away_team: ' + str(away_team))
+				#print('away_team: ' + str(away_team))
 				home_team = game_data[1]
-				print('home_team: ' + str(home_team))
+				#print('home_team: ' + str(home_team))
 
 			for loc, game_team_players in game_players.items():
 				print('\nloc: ' + str(loc))
+				# team of this player in this game
 				team = home_team
 				if loc == 'away':
 					team = away_team
@@ -4036,7 +4037,7 @@ def read_stat_odds(stat_dict, all_players_odds={}):
 # all_teams_players = {year:{team:[players],...},...}
 def read_all_lineups(players, all_players_teams, rosters, all_teams_players, cur_yr):
 	print('\n===Read All Lineups===\n')
-	print('all_teams_players: ' + str(all_teams_players))
+	#print('all_teams_players: ' + str(all_teams_players))
 
 	# could add 'stars' as condition as well as level above starters
 	all_lineups = {}#{'den':{'starters':['reggie jackson'],'bench':[],'out':[],'probable':[],'question':[],'doubt':[]}, 'mia':{'starters':['tyler herro', 'jimmy butler'],'bench':[],'out':[],'probable':[],'question':[],'doubt':[]}}

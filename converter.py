@@ -25,7 +25,7 @@ def convert_dict_to_list(dict, desired_order=[]):
 
 
 def convert_dicts_to_lists(all_consistent_stat_dicts, desired_order=[]):
-    print('\n===Convert Dicts to Lists===\n')
+    #print('\n===Convert Dicts to Lists===\n')
     dict_lists = []
 
     for dict in all_consistent_stat_dicts:
@@ -102,8 +102,8 @@ def convert_player_abbrev_to_name(player_abbrev, player_team):
 
 # american odds given as string from internet
 def convert_american_to_decimal_odds(american_odds):
-    print('\n===Convert American to Decimal Odds===\n')
-    print('american_odds: ' + str(american_odds))
+    #print('\n===Convert American to Decimal Odds===\n')
+    #print('american_odds: ' + str(american_odds))
     decimal_odds = 0.0
 
     if re.search('-',american_odds):
@@ -111,7 +111,7 @@ def convert_american_to_decimal_odds(american_odds):
     else:
         decimal_odds = "%.2f" % ((int(american_odds) / 100) + 1)
     
-    print('decimal_odds: ' + str(decimal_odds))
+    #print('decimal_odds: ' + str(decimal_odds))
     return float(decimal_odds)
 
 
@@ -151,11 +151,11 @@ def convert_team_abbrev_to_name(team_abbrev):
     return team_names[team_abbrev]
 
 # Convert Player Name to Abbrev: damion lee
-def convert_player_name_to_abbrev(out_player, all_players_abbrevs, all_players_teams, all_players_in_games_dict, season_years=[], cur_yr=''):
-    print('\n===Convert Player Name to Abbrev: ' + out_player.title() + '===\n')
-    print('all_players_abbrevs: ' + str(all_players_abbrevs))
+def convert_player_name_to_abbrev(game_player, all_players_abbrevs, all_players_teams, all_players_in_games_dict, season_years=[], cur_yr=''):
+    print('\n===Convert Player Name to Abbrev: ' + game_player.title() + '===\n')
+    #print('all_players_abbrevs: ' + str(all_players_abbrevs))
 
-    out_player_abbrev = ''
+    game_player_abbrev = ''
 
     # it is looking for cur yr so how does it handle players who played last yr but are still on team but not playing this yr?
     # player does not register on teams list if not played this yr so need to check roster
@@ -164,33 +164,33 @@ def convert_player_name_to_abbrev(out_player, all_players_abbrevs, all_players_t
     # should we loop thru all yrs until we find abbrev? 
     # really only need 1 yr bc player still on team but not played so unlikely to be on team without playing for more than a yr but possible
     if len(season_years) == 0 and cur_yr != '':
-        if cur_yr in all_players_abbrevs.keys() and out_player in all_players_abbrevs[cur_yr].keys():
-            out_player_abbrev = all_players_abbrevs[cur_yr][out_player] #converter.convert_player_name_to_abbrev(out_player)
+        if cur_yr in all_players_abbrevs.keys() and game_player in all_players_abbrevs[cur_yr].keys():
+            game_player_abbrev = all_players_abbrevs[cur_yr][game_player] #converter.convert_player_name_to_abbrev(out_player)
         else:
-            if cur_yr in all_players_teams.keys() and out_player in all_players_teams[cur_yr].keys():
+            if cur_yr in all_players_teams.keys() and game_player in all_players_teams[cur_yr].keys():
                 # out_player_teams = all_players_teams[cur_yr][out_player]
                 # out_player_team = determiner.determine_player_current_team(out_player, out_player_teams, cur_yr, rosters)
-                out_player_abbrev = reader.read_player_abbrev(out_player, all_players_teams, cur_yr, all_players_in_games_dict)
+                game_player_abbrev = reader.read_player_abbrev(game_player, all_players_teams, cur_yr, all_players_in_games_dict)
             else:
-                print('Warning: out player not in all players current teams! ' + out_player)
+                print('Warning: Game player not in all players current teams! ' + game_player)
     else:
         for year in season_years:
-            print('\nyear: ' + str(year))
-            if year in all_players_abbrevs.keys() and out_player in all_players_abbrevs[year].keys():
+            #print('\nyear: ' + str(year))
+            if year in all_players_abbrevs.keys() and game_player in all_players_abbrevs[year].keys():
                 year_players_abbrevs = all_players_abbrevs[year]
-                print('year_players_abbrevs: ' + str(year_players_abbrevs))
-                out_player_abbrev = year_players_abbrevs[out_player] #converter.convert_player_name_to_abbrev(out_player)
+                #print('year_players_abbrevs: ' + str(year_players_abbrevs))
+                game_player_abbrev = year_players_abbrevs[game_player] #converter.convert_player_name_to_abbrev(out_player)
             else:
-                if year in all_players_teams.keys() and out_player in all_players_teams[year].keys():
-                    out_player_abbrev = reader.read_player_abbrev(out_player, all_players_teams, year, all_players_in_games_dict)
+                if year in all_players_teams.keys() and game_player in all_players_teams[year].keys():
+                    game_player_abbrev = reader.read_player_abbrev(game_player, all_players_teams, year, all_players_in_games_dict)
                 else:
-                    print('Warning: out player not in all players current teams! ' + out_player)
+                    print('Warning: Game player not in all players teams! ' + game_player + ', ' + str(year))
 
-            if out_player_abbrev != '':
+            if game_player_abbrev != '':
                 break
 
-    print('out_player_abbrev: ' + str(out_player_abbrev))
-    return out_player_abbrev
+    print('game_player_abbrev: ' + str(game_player_abbrev))
+    return game_player_abbrev
 
 # convert cond dict to list
 #all_current_conditions: {'cole anthony': {'loc': 'away', 'out': ['wendell carter jr', 'markelle fultz'], 'start...
