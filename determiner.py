@@ -1195,12 +1195,44 @@ def determine_all_conditions(all_stat_probs_dict):
             # we need to loop thru all val probs dicts bc not all vals reached in all conditions
             # and we need to see all conds reached by any val
             # val_probs_dict: {'all 2023 regular prob': 0.02, 'all 2023 full prob': 0.02...
+            # we know it should have same conds for all yrs even if vals not seen under those conds we put NA
+            # so we can shorten by only looping thru 1 yr
             for val_probs_dict in stat_probs_dict.values():
                 for conditions in val_probs_dict.keys():
                     if conditions not in all_conditions:
                         all_conditions.append(conditions)
 
     return all_conditions
+
+# here we use all stats prob dict so we only have to loop thru condition 1 yr
+# does that save time since we need to loop thru all yrs anyway?
+def determine_all_stat_conds(all_stats_prob_dict):
+    #print('\n===Determine All Stat Conds===\n')
+
+    all_stat_conds = []
+
+    for player_stats_prob_dict in all_stats_prob_dict.values():
+        # all stats should have same conditions bc stat recorded at every value
+        # so we can take first stat probs dict
+        # bc it is for a single player, we know they got at least 1 stat (even 0s) under every condition they played in by definition
+        
+        # stat_probs_dict: {0: {'all 2023 regular prob': 0.02, 'all 2023 full prob': 0.02...
+        #for stat_probs_dict in player_stat_probs_dict.values():
+        stats_prob_dict = list(player_stats_prob_dict.values())
+        if len(stats_prob_dict) > 0:
+            stat_probs_dict = stats_prob_dict[0]
+            
+            # we need to loop thru all val probs dicts bc not all vals reached in all conditions
+            # and we need to see all conds reached by any val
+            # val_probs_dict: {'all 2023 regular prob': 0.02, 'all 2023 full prob': 0.02...
+            # we know it should have same conds for all yrs even if vals not seen under those conds we put NA
+            # so we can shorten by only looping thru 1 yr
+            for val_probs_dict in stat_probs_dict.values():
+                for conditions in val_probs_dict.keys():
+                    if conditions not in all_stat_conds:
+                        all_stat_conds.append(conditions)
+
+    return all_stat_conds
 
 
 # determine sample size for the player stat dict
@@ -1245,7 +1277,7 @@ def determine_probs_sample_size(player_stat_probs_dict, cur_conds):
 # all yrs for single condition
 # player_stat_dict: {2023: {'regular': {'pts': {'all': {0: 18, 1: 19...
 def determine_condition_sample_size(player_stat_dict, condition, part):
-    print('\n===Determine Condition Sample Size: ' + condition + '===\n')
+    #print('\n===Determine Condition Sample Size: ' + condition + '===\n')
 
     sample_size = 0
 
@@ -1257,7 +1289,7 @@ def determine_condition_sample_size(player_stat_dict, condition, part):
                 stat_dict = full_stat_dict[condition]
                 sample_size += len(stat_dict.keys())
 
-    print('sample_size: ' + str(sample_size))
+    #print('sample_size: ' + str(sample_size))
     return sample_size
 
 
@@ -1282,7 +1314,7 @@ def determine_unit_time_period(all_player_stat_probs, all_player_stat_dicts={}, 
 # input: all_cur_conds_lists = {p1:[m fultz pg out, away, ...],...}
 # output: all_cur_conds: ['all', 'away', 'm fultz pg out', 'bench', 'start', 'home']
 def determine_all_current_conditions(all_current_conditions, all_cur_conds_lists):
-    print('\n===Determine All Current Conditions===\n')
+    #print('\n===Determine All Current Conditions===\n')
     #print('all_current_conditions: ' + str(all_current_conditions))
     #print('all_cur_conds_lists: ' + str(all_cur_conds_lists))
 
@@ -1331,16 +1363,16 @@ def determine_game_num(game_teams, player_team):
 # based on input game teams
 # player_teams = {player:{year:{team:gp,...},...}
 def determine_player_game_location(player, game_teams, player_team):
-    print('\n===Determine Player Game Location: ' + player.title() + '===\n')
-    print('player_team: ' + player_team)
+    # print('\n===Determine Player Game Location: ' + player.title() + '===\n')
+    # print('player_team: ' + player_team)
 
     player_current_location = ''
 
     for teams in game_teams:
         away_team = teams[0]
-        print('away_team: ' + str(away_team))
+        #print('away_team: ' + str(away_team))
         home_team = teams[1]
-        print('home_team: ' + str(home_team))
+        #print('home_team: ' + str(home_team))
 
         location = ''
         if player_team == away_team:
@@ -1352,7 +1384,7 @@ def determine_player_game_location(player, game_teams, player_team):
             player_current_location = location
             break # found team in list games so go to next player
 
-    print('player_current_location: ' + str(player_current_location))
+    #print('player_current_location: ' + str(player_current_location))
     return player_current_location
 
 # use current month to tell season yr
@@ -1381,22 +1413,28 @@ def determine_game_year(game_mth, season_year):
 # player = 'full name'
 # player_team_lineup = {'starters':['tyler herro','jimmy butler',...],'bench':[],'out':[],'probable':[],'question':[],'doubt':[]}
 # should have already standardized all lineups before inputting here
-def determine_player_start(player, player_abbrev, player_team_lineup):
-    print('\n===Determine Player Start===\n')
-    print('player_team_lineup: ' + str(player_team_lineup))
+def determine_player_start(player, player_abbrev, player_team_lineup, starters_key=''):
+   #print('\n===Determine Player Start===\n')
+    #print('player_team_lineup: ' + str(player_team_lineup))
     
     # given starters not bench so only make starter if shown in list?
     # problem is questionable players are still listed as starters
     # if they are expected to start then still consider them a starter
-    player_start = 'bench' # player may not be in bench if not played
+    # if player is one of 'starters' then they 'start'
+    # need both bc fact of starting is condition as well as who is starting is separate condition
     start_key = 'start'
+    bench_key = 'bench'
+    player_start = bench_key # player may not be in bench if not played
+    
+    if  starters_key == '':
+        starters_key = 'starters'
 
-    if player in player_team_lineup[start_key]:# or player_abbrev in player_team_lineup[bench_key]:
+    if player in player_team_lineup[starters_key]:# or player_abbrev in player_team_lineup[bench_key]:
         player_start = start_key
     # elif player in player_team_lineup[bench_key]:# or player_abbrev in player_team_lineup[bench_key]:
     #     player_start = bench_key
 
-    print('player_start: ' + str(player_start))
+    #print('player_start: ' + str(player_start))
     return player_start
 
 # see if any of desired keys in stat dict already
@@ -1472,7 +1510,7 @@ def determine_need_stat_dict(player_stat_dict, season_year, find_players=False):
 # if reg season, game idx starts before playoffs
 # if post or full season, game idx starts at 0
 def determine_player_team_each_game(player, season_part_game_log, teams, games_played, teams_reg_and_playoff_games_played):
-    print('\n===Determine Player Team: ' + player + '===\n')
+    #print('\n===Determine Player Team: ' + player + '===\n')
 
     for game_idx, row in season_part_game_log.iterrows():
 
@@ -1480,7 +1518,7 @@ def determine_player_team_each_game(player, season_part_game_log, teams, games_p
 
         # if type == postseason, then player team idx always =0
         game_type = row['Type']
-        print('game_type: ' + str(game_type))
+        #print('game_type: ' + str(game_type))
 
         # if postseason then after trade deadline so last team this yr
         # postseason maybe playin listed after reg season
@@ -1497,7 +1535,7 @@ def determine_player_team_each_game(player, season_part_game_log, teams, games_p
         if len(teams) > player_team_idx:
             player_team = teams[player_team_idx]
 
-    print('player_team: ' + str(player_team))
+    #print('player_team: ' + str(player_team))
     return player_team
 
 # if reg season, game idx starts before playoffs
@@ -1545,7 +1583,7 @@ def determine_player_team_idx(player, player_team_idx, game_idx, row, games_play
 # we need to add date of first game on team to player teams dict
 # player_teams = {team:date,...}
 def determine_player_team_by_date(player, player_teams, row):
-    print('\n===Determine Player Team by Date: ' + player.title() + '===\n')
+    #print('\n===Determine Player Team by Date: ' + player.title() + '===\n')
 
     # if date before next team, stay current team idx
     # if date on or after next team, go to next idx
@@ -1564,9 +1602,11 @@ def determine_player_team_by_date(player, player_teams, row):
 #list(player_teams[player][cur_yr].keys())[-1] # current team
 # can we take first year in teams list instead of cur yr?
 # player_teams = {year:{team:gp,...},...
+# do we always want to return the team, even if they are only practice players?
+# that may lead to wrong results if we only want to consider game players
 def determine_player_current_team(player, player_teams, cur_yr='', rosters={}):
     #print('\n===Determine Player Current Team: ' + player.title() + '===\n')
-    #print('player_teams: ' + str(player_teams))
+
     cur_team = ''
 
     if cur_yr == '':
@@ -1595,6 +1635,9 @@ def determine_player_current_team(player, player_teams, cur_yr='', rosters={}):
 
     if cur_team == '':
         print('Warning: Player cur team blank! ' + player.title())
+        print('player_teams: ' + str(player_teams))
+        print('cur_yr: ' + str(cur_yr))
+        print('rosters: ' + str(rosters))
 
     #print('cur_team: ' + cur_team)
     return cur_team
@@ -1605,7 +1648,7 @@ def determine_player_current_team(player, player_teams, cur_yr='', rosters={}):
 # player_teams = {'2018': {'mia': 69}, '2019...
 # player_teams = {year:{team:gp,...},...
 def determine_opponent_team(player, player_teams, game_teams, cur_yr='', rosters={}):
-    print('\n===Determine Player Opponent Team: ' + player.title() + '===\n')
+    #print('\n===Determine Player Opponent Team: ' + player.title() + '===\n')
     #print('player_teams: ' + str(player_teams))
     #print('game_teams: ' + str(game_teams))
     
@@ -1630,7 +1673,7 @@ def determine_opponent_team(player, player_teams, game_teams, cur_yr='', rosters
         if opp_team != '':
             break
         
-    print('opp_team: ' + opp_team)
+    #print('opp_team: ' + opp_team)
     return opp_team
 
 # jaylen brown -> j brown
@@ -1640,7 +1683,7 @@ def determine_opponent_team(player, player_teams, game_teams, cur_yr='', rosters
 # use to see if started or bench
 # bc lineups shows player abbrev
 def determine_player_abbrev(player_name):
-    print('\n===Determine Player Abbrev: ' + player_name.title() + '===\n')
+    #print('\n===Determine Player Abbrev: ' + player_name.title() + '===\n')
     #print('player_name: ' + str(player_name))
     #player_abbrev = ''
 
@@ -1661,7 +1704,7 @@ def determine_player_abbrev(player_name):
             player_abbrev += ' ' + name
 
     player_abbrev = player_abbrev.lower()
-    print('player_abbrev: ' + player_abbrev)
+    #print('player_abbrev: ' + player_abbrev)
     return player_abbrev
 
 # def determine_player_abbrev(player_name):
@@ -1690,13 +1733,13 @@ def determine_season_year(game_date):
 
 # player_teams = {year:{team:gp,...},...}}
 def determine_player_team_by_game(player, game_key, player_teams):
-    print('\n===Determine Player ' + player.title() + ' Team by Game: ' + game_key.upper() + '===\n')
+    #print('\n===Determine Player ' + player.title() + ' Team by Game: ' + game_key.upper() + '===\n')
 
     game_date = game_key.split()[2]
     season_yr = determine_season_year(game_date)
     team = list(player_teams[season_yr].keys())[-1]
 
-    print('team: ' + team)
+    #print('team: ' + team)
     return team
 
 # player_teams = {year:{team:gp,...},...}}
@@ -1721,16 +1764,25 @@ def determine_player_season_teams(player, game_key, player_teams):
 # player_abbrev = j williams. do we need?
 # determine match if first word and second word match
 # cannot compare whole words bc irregular abbrevs
+# what about v williams compared to vince williams jr?
+# we know same bc team only has 1 v williams
 def determine_player_abbrev_match(main_player, compare_player):
-    print('\n===Determine Player Abbrev Match===\n')
-    print('main_player: ' + str(main_player))
-    print('compare_player: ' + str(compare_player))
+    #print('\n===Determine Player Abbrev Match===\n')
+    #print('main_player: ' + str(main_player))
+    #print('compare_player: ' + str(compare_player))
 
     match = True
 
+    # remove suffixes before comparing bc some sources dont use
+    # and rare 2 players on same team with suffix only difference in name
+    # but not impossible so ideally use teams to see only 1 matching in team
+    main_player = re.sub('(jr|sr|i+)$','',main_player).strip()
+    compare_player = re.sub('(jr|sr|i+)$','',compare_player).strip()
+
     main_player_names = main_player.split()
     compare_player_names = compare_player.split()
-    # if they have different number of words in name then diff player
+    # if they have different number of words in name then diff player?
+    # no bc 1 source might exclude jr or sr but still same player
     if len(main_player_names) != len(compare_player_names):
         match = False
     else:
@@ -1756,9 +1808,9 @@ def determine_player_abbrev_match(main_player, compare_player):
 # use game_key to get player team at game time
 # the team passed here is the team of the player at game time 
 # but we need to connect his full name to his stats page where he may not be listed if he did play yet this season
-def determine_player_full_name(player, team, all_players_teams, game_key=''):
-    print('\n===Determine Player Full Name: ' + player.title() + '===\n')
-    print('team: ' + str(team))
+def determine_player_full_name(player, team, all_players_teams, game_key='', cur_yr='', rosters={}):
+    # print('\n===Determine Player Full Name: ' + player.title() + '===\n')
+    # print('team: ' + str(team))
     #print('all_players_teams: ' + str(all_players_teams))
 
     full_name = ''
@@ -1775,7 +1827,7 @@ def determine_player_full_name(player, team, all_players_teams, game_key=''):
     # player = D. Green -> d green
     # player = Draymond Green -> draymond green
     # player = D Green PF -> d green
-
+    # V. Williams -> v williams
     init_player = player
 
     player = re.sub('\.','',player).lower()
@@ -1801,8 +1853,8 @@ def determine_player_full_name(player, team, all_players_teams, game_key=''):
     else: # could use all players teams or rosters
         # player_teams = {yr:team:gp} = {'2024':{}}
         for player_name, player_teams in all_players_teams.items():
-            print('\nplayer_name: ' + str(player_name))
-            print('player_teams: ' + str(player_teams))
+            # print('\nplayer_name: ' + str(player_name))
+            # print('player_teams: ' + str(player_teams))
             # look at current team bc we are comparing to current lineup
             # if player just traded then has no log with this team
             # compare name: 
@@ -1813,7 +1865,7 @@ def determine_player_full_name(player, team, all_players_teams, game_key=''):
             # player_name = jalen williams
             player_abbrev = determine_player_abbrev(player_name)
 
-            cur_team = determine_player_current_team(player_name, player_teams)
+            cur_team = determine_player_current_team(player_name, player_teams, cur_yr, rosters)
             season_teams = []
             if len(game_key) > 0:
                 # for now get list of teams this season and use either or
@@ -1862,12 +1914,15 @@ def determine_player_full_name(player, team, all_players_teams, game_key=''):
                         full_name = player_name
                         break # found player name
 
-    print('full_name: ' + full_name)
+    #print('full_name: ' + full_name)
     return full_name
 
 # given main prop and fields, find vals in those fields
 # keys = fields = ['player', 'stat']
-def determine_multiple_dicts_with_vals(main_dict, keys, dict_list):
+# allowed player same stat but one over other under!
+# so if same player and stat, check val field for +/-
+# so we need a special field that looks for part of the values to match, in this case the +/- part
+def determine_multiple_dicts_with_vals(main_dict, keys, dict_list, partial_key=''):
     #print('\n===Determine Multiple Dicts with Vals===\n')
     #print('main_dict: ' + str(main_dict))
     #print('keys: ' + str(keys))
@@ -1886,6 +1941,16 @@ def determine_multiple_dicts_with_vals(main_dict, keys, dict_list):
             # if matches, check next key
             # if does not match, check next dict
             if main_val != dict_val:
+                key_match = False
+                break
+
+        # partial split special keys
+        # if made it thru fields with exact match
+        # look for fields with partial match, like +/- in val field
+        if key_match == True:
+            # main_val = 5+ or 5-
+            main_val_sign = re.sub('\d+', '', main_dict[partial_key])
+            if main_val_sign not in dict[partial_key]:
                 key_match = False
                 break
 
@@ -1959,7 +2024,7 @@ def determine_val_in_dicts(main_dict, key, remaining_dicts):
 
 # determine highest value dict
 def determine_highest_value_dict(main_dict, duplicate_dicts, key):
-    print('\n===Determine Highest Value Dict===\n')
+    #print('\n===Determine Highest Value Dict===\n')
 
     highest = True
 
@@ -1968,7 +2033,7 @@ def determine_highest_value_dict(main_dict, duplicate_dicts, key):
     for prop in duplicate_dicts:
         dup_val = prop[key]
         if dup_val > main_val:
-            print('not highest')
+            #print('not highest')
             highest = False
             break
 
@@ -1976,7 +2041,7 @@ def determine_highest_value_dict(main_dict, duplicate_dicts, key):
 
 # determine highest value dict
 def determine_highest_ev_prop(main_prop, duplicate_props):
-    print('\n===Determine Highest EV Prop===\n')
+    #print('\n===Determine Highest EV Prop===\n')
 
     highest = True
 
@@ -1985,7 +2050,7 @@ def determine_highest_ev_prop(main_prop, duplicate_props):
     for prop in duplicate_props:
         dup_ev = prop['ev']
         if dup_ev > main_ev:
-            print('not highest')
+            #print('not highest')
             highest = False
             break
 

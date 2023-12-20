@@ -151,6 +151,7 @@ def convert_team_abbrev_to_name(team_abbrev):
     return team_names[team_abbrev]
 
 # Convert Player Name to Abbrev: damion lee
+# what is the diff bt this and determine player abbrev?
 def convert_player_name_to_abbrev(game_player, all_players_abbrevs, all_players_teams, all_players_in_games_dict, season_years=[], cur_yr=''):
     print('\n===Convert Player Name to Abbrev: ' + game_player.title() + '===\n')
     #print('all_players_abbrevs: ' + str(all_players_abbrevs))
@@ -197,7 +198,7 @@ def convert_player_name_to_abbrev(game_player, all_players_abbrevs, all_players_
 # all_current_conditions = {p1:{out:[m fultz pg], loc:l1, city:c1, dow:d1, tod:t1,...}, p2:{},...} OR {player1:[c1,c2,...], p2:[],...}
 # list = away, 'p1 out', 'p2 out', ...
 # need to expand list values
-# conditions_list = [m fultz pg out, away, ...]
+# conditions_list = ['m fultz pg out', 'w carter c out', 'm fultz pg, w carter c out', 'away', ...]
 def convert_conditions_dict_to_list(conditions_dict, all_players_abbrevs, all_players_teams, all_players_in_games_dict, player='', season_years=[], cur_yr=''):
     print('\n===Convert Conditions Dict to List: ' + player.title() + '===\n')
     print('all_players_abbrevs: ' + str(all_players_abbrevs))
@@ -209,7 +210,9 @@ def convert_conditions_dict_to_list(conditions_dict, all_players_abbrevs, all_pl
     for cond_key, cond_val in conditions_dict.items():
         
         if cond_key in game_players_cond_keys:#== 'out':
-            for game_player in cond_val:
+            game_players_str = ''
+            for game_player_idx in range(len(cond_val)):
+                game_player = cond_val[game_player_idx]
                 print('\ngame_player: ' + str(game_player))
                 # need to convert player full name to abbrev with position to compare to condition titles
                 # at this point we have determined full names from abbrevs so we can refer to that list
@@ -219,18 +222,31 @@ def convert_conditions_dict_to_list(conditions_dict, all_players_abbrevs, all_pl
                 # for single player change starters to starter or starting so it can be plural or singular
                 # D Green PF out
                 # remove s from starters for single player
-                final_cond_key = cond_key
-                if cond_key == 'starters':
-                    if not re.search(',',cond_key):
-                        final_cond_key = cond_key.rstrip('s')
-                final_cond_val = game_player_abbrev + ' ' + final_cond_key # D Green PF out
+                # final_cond_key = cond_key
+                # if cond_key == 'starters':
+                #     if not re.search(',',cond_key):
+                #         final_cond_key = cond_key.rstrip('s')
+                # D Green PF out, S Curry PG starters
+                final_cond_val = game_player_abbrev + ' ' + cond_key 
                 print('final_cond_val: ' + str(final_cond_val))
                 
                 conditions_list.append(final_cond_val)
 
+                # add condition for all game players in combo
+                if game_player_idx == 0:
+                    game_players_str = game_player_abbrev
+                else:
+                    game_players_str += ', ' + game_player_abbrev
+
+            #game_players_str += ' ' + cond_key
+            final_cond_val = game_players_str + ' ' + cond_key 
+            print('final_cond_val: ' + str(final_cond_val))
+            conditions_list.append(final_cond_val)
+
         else:
             conditions_list.append(cond_val)
 
+    # conditions_list: ['home', 'L Nance Jr PF out', 'M Ryan F out', 'L Nance Jr PF, M Ryan F out', 'C McCollum SG starters', 'B Ingram SF starters', 'H Jones SF starters', 'Z Williamson PF starters', 'J Valanciunas C starters', 'C McCollum SG, B Ingram SF, H Jones SF, Z Williamson PF, J Valanciunas C starters', 'bench']
     print('conditions_list: ' + str(conditions_list))
     return conditions_list
 
